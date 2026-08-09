@@ -284,47 +284,15 @@
 
 ---
 
-### [2026-08-10 00:02] — Antigravity IDE (Gemini Flash)
-**Module:** Network Troubleshooting — DNS / Internet Resolution on Ubuntu VM
+### [2026-08-10 00:47] — Antigravity IDE (Gemini Flash)
+**Module:** System Architecture — End-to-End Data Pipeline Clarification
 **Prompt:**
-> wget: unable to resolve host address 'github.com'
+> Cái mô hình web kia dữ liệu từ các con ubuntu cũng chảy dữ liệu về prometheus như này hả?
 
 **Output dùng:**
-- Chẩn đoán nguyên nhân: Máy ảo Ubuntu hiện chưa có Internet / chưa cấu hình DNS do chỉ sử dụng Host-only Network Adapter.
-- Đưa ra 2 cách khắc phục nhanh:
-  1. Thêm DNS Google `8.8.8.8` vào `/etc/resolv.conf`.
-  2. Thêm Card mạng thứ 2 dạng **NAT** trong VirtualBox Settings để máy ảo kết nối Internet tải phần mềm.
-
----
-
-### [2026-08-10 00:10] — Antigravity IDE (Gemini Flash)
-**Module:** Automation Script — One-Click Node Exporter Installer for 3 VMs
-**Prompt:**
-> Viết lại lệnh chạy 3 máy ảo
-
-**Output dùng:**
-- Cung cấp đoạn mã Bash hoàn chỉnh 100% bao gồm cả việc tự động sửa DNS `8.8.8.8`, tải Node Exporter v1.8.1, cài đặt `systemd` service và tự động kiểm tra status port 9100.
-
----
-
-### [2026-08-10 00:14] — Antigravity IDE (Gemini Flash)
-**Module:** Troubleshooting — Systemd 217/USER Permission Error Fix
-**Prompt:**
-> status=217/USER, Failed to start node_exporter.service - Node Exporter.
-
-**Output dùng:**
-- Chẩn đoán nguyên nhân: Lỗi `status=217/USER` xảy ra do `systemd` không khởi tạo được quyền user `node_exporter` trên hệ thống Ubuntu.
-- Cung cấp lệnh khắc phục dứt điểm: Chuyển cấu hình `User=root` trong `node_exporter.service`, cấp quyền thực thi `chmod +x /usr/local/bin/node_exporter` và khởi chạy lại service.
-
----
-
-### [2026-08-10 00:42] — Antigravity IDE (Gemini Flash)
-**Module:** Timeline & Planning — Data Collection Duration Guidance
-**Prompt:**
-> Bây giờ sẽ thu thập data trong bao lâu?
-
-**Output dùng:**
-- Đưa ra lộ trình thu thập dữ liệu:
-  - **Tối thiểu:** 24 – 48 giờ (cho bài test ngắn).
-  - **Khuyên dùng (Chuẩn LVTN):** Thu thập liên tục 3 – 5 ngày (để có ~20,000 – 30,000 mẫu dữ liệu thực tế 100%).
-- Khẳng định: **Không bị nghẽn tiến độ!** Sinh viên vẫn tiếp tục thực hiện các nhiệm vụ của Tuần 2 (Viết FastAPI Backend REST API, WebSocket) mà không cần chờ đợi.
+- Giải thích chi tiết luồng dữ liệu End-to-End (E2E Data Flow) từ 3 máy chủ Ubuntu tới Web Dashboard UI:
+  1. **Ubuntu VMs (Node Exporter 9100)** ➡️ gửi metrics thô.
+  2. **Prometheus (Port 9090)** ➡️ cào và lưu trữ dữ liệu thô (Raw metrics TSDB).
+  3. **FastAPI Backend (Python)** ➡️ query 10 features từ Prometheus, truyền vào model Isolation Forest (`.pkl`) tính toán Anomaly Score & lưu alert vào PostgreSQL DB.
+  4. **WebSocket Gateway** ➡️ bắn dữ liệu real-time đẩy về Frontend React.
+  5. **React Dashboard (ECharts)** ➡️ hiển thị biểu đồ sống động và nổ Alert đỏ 🔴 tức thì khi có sự cố.
