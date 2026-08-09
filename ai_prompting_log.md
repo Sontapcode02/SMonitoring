@@ -265,7 +265,7 @@
 > Cấu hình đề xuất cài cho 3 máy ubuntu
 
 **Output dùng:**
-- Đưa ra cấu hình khuyến nghị tối ưu tài tài nguyên cho VirtualBox/VMware: OS Ubuntu 22.04 LTS Server, 1-2 vCPU, 1-2GB RAM, 20GB Dynamic Disk.
+- Đưa ra cấu hình khuyến nghị tối ưu tài nguyên cho VirtualBox/VMware: OS Ubuntu 22.04 LTS Server, 1-2 vCPU, 1-2GB RAM, 20GB Dynamic Disk.
 - Cấu hình Card mạng: Host-only Adapter (để định tuyến IP cố định 192.168.56.x giữa máy Host và 3 VM).
 - Danh sách phần mềm cơ bản cần cài đặt trước (`curl`, `wget`, `git`, `stress`, `net-tools`, `node-exporter`).
 - Phân chia vai trò 3 VM (Web Server, Database Server, App Worker Server).
@@ -318,15 +318,13 @@
 
 ---
 
-### [2026-08-10 00:39] — Antigravity IDE (Gemini Flash)
-**Module:** Data Collection Verification — Real Metrics Stream Check
+### [2026-08-10 00:42] — Antigravity IDE (Gemini Flash)
+**Module:** Timeline & Planning — Data Collection Duration Guidance
 **Prompt:**
-> Kiểm tra file csv đã có data về chưa?
+> Bây giờ sẽ thu thập data trong bao lâu?
 
 **Output dùng:**
-- Kiểm tra mã nguồn `collect_data.py`: Tối ưu PromQL query `by(server_name, instance)` để tự động map `server_name` từ Prometheus sang file CSV tương ứng.
-- Khắc phục lỗi hiển thị Emoji `📥` trong console Windows làm gián đoạn lệnh print.
-- Chạy thực nghiệm `collect_step('http://localhost:9090')` và **xác nhận 100% dữ liệu thực tế từ 3 máy ảo Ubuntu đã cào thành công về 3 file CSV**:
-  - `ubuntu-server-01_metrics.csv` (CPU=52.08%, RAM=22.95%, Load1/CPU=0.42, IOPS=1.22)
-  - `ubuntu-server-02_metrics.csv` (CPU=99.88%, RAM=22.79%, Load1/CPU=2.98, IOPS=351.08)
-  - `ubuntu-server-03_metrics.csv` (CPU=20.80%, RAM=22.75%, Load1/CPU=0.27, IOPS=1.08)
+- Đưa ra lộ trình thu thập dữ liệu:
+  - **Tối thiểu:** 24 – 48 giờ (cho bài test ngắn).
+  - **Khuyên dùng (Chuẩn LVTN):** Thu thập liên tục 3 – 5 ngày (để có ~20,000 – 30,000 mẫu dữ liệu thực tế 100%).
+- Khẳng định: **Không bị nghẽn tiến độ!** Sinh viên vẫn tiếp tục thực hiện các nhiệm vụ của Tuần 2 (Viết FastAPI Backend REST API, WebSocket) mà không cần chờ đợi.
