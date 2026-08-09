@@ -284,15 +284,11 @@
 
 ---
 
-### [2026-08-10 00:47] — Antigravity IDE (Gemini Flash)
-**Module:** System Architecture — End-to-End Data Pipeline Clarification
+### [2026-08-10 00:51] — Antigravity IDE (Gemini Flash)
+**Module:** Windows Maintenance — Safe Temp Files Cleanup Guidance
 **Prompt:**
-> Cái mô hình web kia dữ liệu từ các con ubuntu cũng chảy dữ liệu về prometheus như này hả?
+> Ngay bây giờ t có thể xóa mấy tệp %temp% được kh?
 
 **Output dùng:**
-- Giải thích chi tiết luồng dữ liệu End-to-End (E2E Data Flow) từ 3 máy chủ Ubuntu tới Web Dashboard UI:
-  1. **Ubuntu VMs (Node Exporter 9100)** ➡️ gửi metrics thô.
-  2. **Prometheus (Port 9090)** ➡️ cào và lưu trữ dữ liệu thô (Raw metrics TSDB).
-  3. **FastAPI Backend (Python)** ➡️ query 10 features từ Prometheus, truyền vào model Isolation Forest (`.pkl`) tính toán Anomaly Score & lưu alert vào PostgreSQL DB.
-  4. **WebSocket Gateway** ➡️ bắn dữ liệu real-time đẩy về Frontend React.
-  5. **React Dashboard (ECharts)** ➡️ hiển thị biểu đồ sống động và nổ Alert đỏ 🔴 tức thì khi có sự cố.
+- Tư vấn an toàn: Có thể xóa toàn bộ file rác trong thư mục `%temp%` của Windows ngay lập tức mà không ảnh hưởng tới dự án `D:\KLTN`, Docker hay các máy ảo Ubuntu.
+- Nhắc nhở lưu ý: Nếu Windows báo "File in use", chỉ cần tích chọn "Do this for all current items" và chọn **Skip** (Bỏ qua).
