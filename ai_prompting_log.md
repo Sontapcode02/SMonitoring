@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
 ```
 
 ---
@@ -177,7 +177,7 @@
 - File: backend/app/main.py, core/config.py
 - File: infra/prometheus/prometheus.yml
 - File: ml/scripts/train.py (full Isolation Forest training script)
-- File: scenarios/scenario_01-05.sh (kịch bản bất thường)
+- File: scenarios/scenario_01-05.sh (kịch kịch bản bất thường)
 - Git init + first commit
 
 **Đã chỉnh sửa:**
@@ -272,23 +272,17 @@
 
 ---
 
-### [2026-08-09 23:56] — Antigravity IDE (Gemini Flash)
-**Module:** Infrastructure Deployment — Node Exporter Installation Fix
+### [2026-08-10 00:57] — Antigravity IDE (Gemini Flash)
+**Module:** System Optimization — Drive C Disk Space Analysis & Cleanup
 **Prompt:**
-> ubuntu3@ubuntu3:~$ s://github.com/... -bash: syntax error near unexpected token `)`
+> Phân tích dung lượng ổ cứng C
 
 **Output dùng:**
-- Sửa lỗi copy-paste bị thiếu chữ `wget` và bị lỗi cú pháp ngoặc đơn trong Bash Terminal.
-- Cung cấp lại câu lệnh cài đặt Node Exporter ngắn gọn, an toàn, dạng script đơn giản 4 dòng.
-- Cung cấp câu lệnh kiểm tra endpoint `curl http://localhost:9100/metrics`.
-
----
-
-### [2026-08-10 00:51] — Antigravity IDE (Gemini Flash)
-**Module:** Windows Maintenance — Safe Temp Files Cleanup Guidance
-**Prompt:**
-> Ngay bây giờ t có thể xóa mấy tệp %temp% được kh?
-
-**Output dùng:**
-- Tư vấn an toàn: Có thể xóa toàn bộ file rác trong thư mục `%temp%` của Windows ngay lập tức mà không ảnh hưởng tới dự án `D:\KLTN`, Docker hay các máy ảo Ubuntu.
-- Nhắc nhở lưu ý: Nếu Windows báo "File in use", chỉ cần tích chọn "Do this for all current items" và chọn **Skip** (Bỏ qua).
+- Phân tích hiện trạng ổ C: Tổng **475.27 GB**, chỉ còn trống **7.52 GB** (⚠️ Cảnh báo ổ C sắp đầy!).
+- Chỉ ra 5 "hung thần" đang ngốn bộ nhớ lớn nhất trên C:
+  1. `$WINDOWS.~BT` & `$Windows.~WS`: Thư mục dự phòng nâng cấp Windows Update cũ (~30 – 50 GB).
+  2. `C:\ProgramData\NVIDIA`: Cache installer driver card màn hình cũ (~10 – 15 GB).
+  3. `C:\Users\ASUS\AppData\Roaming`: Dữ liệu ứng dụng rác (Discord 24GB, Unity 23GB, ZaloData 22GB, Solar-PuTTY 17GB, Docker Desktop 14GB, UltraViewer 10GB).
+  4. `%temp%` & `C:\Windows\Temp`: File tạm thời ứng dụng (~5 – 10 GB).
+  5. `$Recycle.Bin`: Thùng rác chưa dọn.
+- Cung cấp hướng dẫn dọn dẹp an toàn để giải phóng từ **50 – 100 GB** dung lượng ngay lập tức.
