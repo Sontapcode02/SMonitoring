@@ -318,12 +318,11 @@
 
 ---
 
-### [2026-08-10 00:32] — Antigravity IDE (Gemini Flash)
-**Module:** Simulation Architecture — Final Workload Strategy Selection
+### [2026-08-10 00:33] — Antigravity IDE (Gemini Flash)
+**Module:** Data Collection Execution — Launching Real Baseline Traffic & Python Collector
 **Prompt:**
-> Vậy chốt giả lập health như thế nào?
+> Đưa lệnh chạy cái 1 để cào dữ liệu
 
 **Output dùng:**
-- Chốt chiến lược giả lập 2 chế độ rõ ràng:
-  1. **Chế độ Tải nền Bình thường (Normal Baseline):** Chạy script sinh tải nền phân hóa theo đúng vai trò doanh nghiệp 24/7 (Web 15-25% CPU, DB 25-40% CPU + IOPS, App 10-20% CPU).
-  2. **Chế độ Kịch bản Bất thường (Anomaly Testing):** Kích hoạt các script injection (`scenario_01_cpu_spike.sh`, `scenario_02_ram_leak.sh`...) khi thực nghiệm test mô hình ML và quay video demo.
+- Cung cấp các lệnh Bash phân hóa vai trò chạy ngầm cho 3 máy ảo Ubuntu via SSH (Web Server .133, DB Server .132, App Server .134).
+- Cung cấp lệnh PowerShell khởi chạy `python ml/scripts/collect_data.py` trên Windows host để cào dữ liệu liên tục từ Prometheus vào CSV dataset.
