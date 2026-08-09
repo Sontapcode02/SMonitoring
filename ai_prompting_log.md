@@ -229,7 +229,7 @@
 > Các máy VM cần chạy các srv các tác vụ thường có của 1 server kh?
 
 **Output dùng:**
-- Trải lời: Không cần cài ứng dụng phức tạp, nhưng CẦN tạo "Tải bình thường" (Normal Baseline) để model Isolation Forest học được phân phối chuẩn của dữ liệu.
+- Trả lời: Không cần cài ứng dụng phức tạp, nhưng CẦN tạo "Tải bình thường" (Normal Baseline) để model Isolation Forest học được phân phối chuẩn của dữ liệu.
 - Giải thích nguyên lý ML: Nếu server nhàn rỗi 100% (0.1% CPU), độ lệch chuẩn = 0, một tác vụ nền nhỏ của OS sẽ bị phán lầm thành Anomaly.
 - Tạo script `scenarios/generate_normal_traffic.sh` chạy ngầm sinh tải nhẹ biến thiên tự động (CPU 5-15%, I/O nhẹ, ping).
 
@@ -256,3 +256,16 @@
 - Giải thích rõ ràng khái niệm "Chạy thử nghiệm luồng mã nguồn" (Mock / Code pipeline test) vs "Huấn luyện thực tế" (Real Training).
 - Tôi đã cho chạy `train.py` trên bộ dữ liệu giả lập (Synthetic Dataset) để verify 100% rằng code Python, thư viện scikit-learn, joblib và việc lưu file `.pkl` không bị lỗi cú pháp hay thiếu file.
 - Nhấn mạnh: Đây là bước kiểm thử code. Khi em bắt đầu chạy 3 máy chủ thật trong Tuần 3, chúng ta mới bấm nút Train lại trên dữ liệu thật chính thức cho Báo cáo.
+
+---
+
+### [2026-08-09 23:23] — Antigravity IDE (Gemini Flash)
+**Module:** Infrastructure Setup — Recommended Specs for 3 Ubuntu VMs
+**Prompt:**
+> Cấu hình đề xuất cài cho 3 máy ubuntu
+
+**Output dùng:**
+- Đưa ra cấu hình khuyến nghị tối ưu tài nguyên cho VirtualBox/VMware: OS Ubuntu 22.04 LTS Server, 1-2 vCPU, 1-2GB RAM, 20GB Dynamic Disk.
+- Cấu hình Card mạng: Host-only Adapter (để định tuyến IP cố định 192.168.56.x giữa máy Host và 3 VM).
+- Danh sách phần mềm cơ bản cần cài đặt trước (`curl`, `wget`, `git`, `stress`, `net-tools`, `node-exporter`).
+- Phân chia vai trò 3 VM (Web Server, Database Server, App Worker Server).
