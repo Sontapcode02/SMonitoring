@@ -318,11 +318,13 @@
 
 ---
 
-### [2026-08-10 00:36] — Antigravity IDE (Gemini Flash)
-**Module:** Infrastructure Deployment — Web Server Workload Running Confirmation
+### [2026-08-10 00:38] — Antigravity IDE (Gemini Flash)
+**Module:** System Architecture — Prometheus TSDB vs Python Dataset Collector
 **Prompt:**
-> [1] 2779 - Web Server (192.168.199.133) đã bật tải nền (15-25% CPU)!
+> ủa data đã chảy về prometheus r phải chạy file python này nữa hả?
 
 **Output dùng:**
-- Phản hồi xác nhận Web Server (192.168.199.133) đã cài đặt `stress`, `net-tools` và khởi chạy ngầm script tải nền PID 2779 thành công.
-- Hướng dẫn chạy tiếp lệnh tương tự cho máy DB Server (.132) và App Server (.134).
+- Giải thích rõ vai trò khác nhau giữa Prometheus TSDB và Python Dataset Collector:
+  1. **Prometheus:** Cào và lưu trữ dữ liệu Time-Series thô (Raw counters: CPU jiffies, network bytes) trong bộ nhớ đệm TSDB của Docker để phục vụ truy vấn đồ thị real-time PromQL.
+  2. **Python Collector (`collect_data.py`):** Thực hiện Feature Engineering (tính toán chuyển đổi các counter thô thành 10 Features chuẩn: % CPU, MB/s, PPS, IOPS) và xuất ra file CSV dataset lưu trữ lâu dài cho Machine Learning scikit-learn.
+- Làm rõ sang Tuần 2 & Tuần 3 (FastAPI Backend), script collector này sẽ được tích hợp thành Background Task (APScheduler) chạy ngầm tự động trong Backend, người dùng không cần gõ lệnh thủ công.
