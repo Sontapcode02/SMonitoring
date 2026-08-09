@@ -318,11 +318,11 @@
 
 ---
 
-### [2026-08-10 00:33] — Antigravity IDE (Gemini Flash)
-**Module:** Data Collection Execution — Launching Real Baseline Traffic & Python Collector
+### [2026-08-10 00:36] — Antigravity IDE (Gemini Flash)
+**Module:** Infrastructure Deployment — Web Server Workload Running Confirmation
 **Prompt:**
-> Đưa lệnh chạy cái 1 để cào dữ liệu
+> [1] 2779 - Web Server (192.168.199.133) đã bật tải nền (15-25% CPU)!
 
 **Output dùng:**
-- Cung cấp các lệnh Bash phân hóa vai trò chạy ngầm cho 3 máy ảo Ubuntu via SSH (Web Server .133, DB Server .132, App Server .134).
-- Cung cấp lệnh PowerShell khởi chạy `python ml/scripts/collect_data.py` trên Windows host để cào dữ liệu liên tục từ Prometheus vào CSV dataset.
+- Phản hồi xác nhận Web Server (192.168.199.133) đã cài đặt `stress`, `net-tools` và khởi chạy ngầm script tải nền PID 2779 thành công.
+- Hướng dẫn chạy tiếp lệnh tương tự cho máy DB Server (.132) và App Server (.134).
