@@ -325,4 +325,15 @@
 
 **Output dùng:**
 - Cung cấp mã lệnh Bash 1-click tự động cài đặt `stress`, `net-tools` và khởi chạy ngầm script `generate_normal_traffic.sh` trên từng máy ảo Ubuntu via SSH.
-- Script sinh tải nền tự động dao động tự nhiên (CPU 5-15%, I/O đĩa nhẹ, ping mạng) để tạo phân phối chuẩn (normal baseline distribution) cho mô hình Isolation Forest.
+- Script sinh tải nền tự động dao động tự nhiên (CPU 5-15%, I/O đĩa nhẹ, ping) để tạo phân phối chuẩn (normal baseline distribution) cho mô hình Isolation Forest.
+
+---
+
+### [2026-08-10 00:30] — Antigravity IDE (Gemini Flash)
+**Module:** Baseline Assessment — Workload Level Analysis for Production Servers
+**Prompt:**
+> Các con số này có nhỏ quá so với số health thực tế kh?
+
+**Output dùng:**
+- Đánh giá thực tế: Trong các hạ tầng thật, baseline bình thường của server khi không bị dội spike dao động từ 15-30% CPU (Web Server) và 25-45% CPU (DB Server).
+- Cung cấp 3 mức cấu hình nâng tải nền phân hóa theo đúng vai trò của từng máy (Web Server, DB Server, App Server) để dữ liệu có tính đa dạng và sát thực tế nhất.
