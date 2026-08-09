@@ -209,5 +209,14 @@
 - Lý do: Bắt được các kịch bản tấn công/bất thường đặc thù mà 6 chỉ số cơ bản bị sót (SYN Flood gói nhỏ, DB Random 4K IOPS overload, Process Queue Deadlock).
 - Cập nhật `collect_data.py` và `train.py` để hỗ trợ chuẩn hóa và thu thập bộ 10 features.
 
-**Đã chỉnh sửa:**
-- Sử dụng PromQL `rate` 1m window để tính IOPS và PPS chính xác.
+---
+
+### [2026-08-09 21:10] — Antigravity IDE (Gemini Flash)
+**Module:** Concept Clarification — Docker Simulation vs Ubuntu VM
+**Prompt:**
+> Việc giả lập có khác gì với chạy ubuntu trên VM?
+
+**Output dùng:**
+- Phân tích sự khác biệt về bản chất kỹ thuật: Docker share kernel máy Host Windows vs VM có Kernel Linux độc lập.
+- So sánh tác động dữ liệu ML: Docker giả lập khiến cả 3 server có thông số trùng nhau; VM tạo ra dữ liệu thực tế độc lập từng máy chủ.
+- Đưa ra định hướng sử dụng kết hợp: Dùng Docker giả lập khi code thử UI/Backend, dùng VM thật để thu Dataset & làm thực nghiệm bảo vệ LVTN.
