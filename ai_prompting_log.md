@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
 ```
 
 ---
@@ -255,7 +255,7 @@
 **Output dùng:**
 - Giải thích rõ ràng khái niệm "Chạy thử nghiệm luồng mã nguồn" (Mock / Code pipeline test) vs "Huấn luyện thực tế" (Real Training).
 - Tôi đã cho chạy `train.py` trên bộ dữ liệu giả lập (Synthetic Dataset) để verify 100% rằng code Python, thư viện scikit-learn, joblib và việc lưu file `.pkl` không bị lỗi cú pháp hay thiếu file.
-- Nhấn mạnh: Đây là bước kiểm thử code. Khi em bắt đầu chạy 3 máy chủ thật trong Tuần 3, chúng me mới bấm nút Train lại trên dữ liệu thật chính thức cho Báo cáo.
+- Nhấn mạnh: Đây là bước kiểm thử code. Khi em bắt đầu chạy 3 máy chủ thật trong Tuần 3, chúng nó mới bấm nút Train lại trên dữ liệu thật chính thức cho Báo cáo.
 
 ---
 
@@ -318,12 +318,11 @@
 
 ---
 
-### [2026-08-10 00:20] — Antigravity IDE (Gemini Flash)
-**Module:** Troubleshooting — Prometheus ScrapeConfig YAML Syntax Indentation Fix
+### [2026-08-10 00:28] — Antigravity IDE (Gemini Flash)
+**Module:** Workload Simulation — Running Real Background Traffic on 3 VMs
 **Prompt:**
-> err="parsing YAML file /etc/prometheus/prometheus.yml: yaml: unmarshal errors: line 15: field labels not found in type config.ScrapeConfig"
+> Chạy giả lập health thực tế của các server ubuntu
 
 **Output dùng:**
-- Chẩn đoán nguyên nhân: Trường `labels` trong `prometheus.yml` bị thụt lề sai vị trí (nằm ở `scrape_config` thay vì bên trong `static_configs.labels`).
-- Sửa lại thụt lề YAML chuẩn cho [infra/prometheus/prometheus.yml](file:///D:/KLTN/infra/prometheus/prometheus.yml).
-- Khởi động lại container `kltn-prometheus-1` thành công (`STATUS: Up`).
+- Cung cấp mã lệnh Bash 1-click tự động cài đặt `stress`, `net-tools` và khởi chạy ngầm script `generate_normal_traffic.sh` trên từng máy ảo Ubuntu via SSH.
+- Script sinh tải nền tự động dao động tự nhiên (CPU 5-15%, I/O đĩa nhẹ, ping mạng) để tạo phân phối chuẩn (normal baseline distribution) cho mô hình Isolation Forest.
