@@ -294,3 +294,13 @@
 - Đưa ra 2 cách khắc phục nhanh:
   1. Thêm DNS Google `8.8.8.8` vào `/etc/resolv.conf`.
   2. Thêm Card mạng thứ 2 dạng **NAT** trong VirtualBox Settings để máy ảo kết nối Internet tải phần mềm.
+
+---
+
+### [2026-08-10 00:10] — Antigravity IDE (Gemini Flash)
+**Module:** Automation Script — One-Click Node Exporter Installer for 3 VMs
+**Prompt:**
+> Viết lại lệnh chạy 3 máy ảo
+
+**Output dùng:**
+- Cung cấp đoạn mã Bash hoàn chỉnh 100% bao gồm cả việc tự động sửa DNS `8.8.8.8`, tải Node Exporter v1.8.1, cài đặt `systemd` service và tự động kiểm tra status port 9100.
