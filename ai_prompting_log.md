@@ -304,3 +304,14 @@
 
 **Output dùng:**
 - Cung cấp đoạn mã Bash hoàn chỉnh 100% bao gồm cả việc tự động sửa DNS `8.8.8.8`, tải Node Exporter v1.8.1, cài đặt `systemd` service và tự động kiểm tra status port 9100.
+
+---
+
+### [2026-08-10 00:14] — Antigravity IDE (Gemini Flash)
+**Module:** Troubleshooting — Systemd 217/USER Permission Error Fix
+**Prompt:**
+> status=217/USER, Failed to start node_exporter.service - Node Exporter.
+
+**Output dùng:**
+- Chẩn đoán nguyên nhân: Lỗi `status=217/USER` xảy ra do `systemd` không khởi tạo được quyền user `node_exporter` trên hệ thống Ubuntu.
+- Cung cấp lệnh khắc phục dứt điểm: Chuyển cấu hình `User=root` trong `node_exporter.service`, cấp quyền thực thi `chmod +x /usr/local/bin/node_exporter` và khởi chạy lại service.
