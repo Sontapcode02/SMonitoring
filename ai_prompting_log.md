@@ -133,15 +133,12 @@
 
 ---
 
-### [2026-08-10 01:18] — Antigravity IDE (Gemini Flash)
-**Module:** Data Collection Healthcheck — Fresh Dataset Collector Verification
+### [2026-08-10 01:19] — Antigravity IDE (Gemini Flash)
+**Module:** Workload Tuning — Ubuntu 2 High CPU Workload Adjustment
 **Prompt:**
-> Kiểm tra file csv còn đang collect tốt data kh?
+> Sao CPU của Ubuntu 2 cứ 100 hoài d?
 
 **Output dùng:**
-- Thực thi lệnh test thu thập dữ liệu trực tiếp tại mốc thời gian `01:18:45`:
-  - `ubuntu-server-01_metrics.csv` ➡️ CPU=44.19%, RAM=21.19%, Load1/CPU=0.49, IOPS=1.00
-  - `ubuntu-server-02_metrics.csv` ➡️ CPU=100.0%, RAM=22.70%, Load1/CPU=3.10, IOPS=317.29
-  - `ubuntu-server-03_metrics.csv` ➡️ CPU=24.01%, RAM=20.60%, Load1/CPU=0.23, IOPS=0.73
-- Xác nhận: Dữ liệu thực tế 10 features từ 3 máy ảo vẫn đang chảy về file CSV liên tục và rất tốt.
-- Hướng dẫn sinh viên bấm `Ctrl + C` và chạy lại `python ml/scripts/collect_data.py` trên Terminal của mình để tiến trình cập nhật phiên bản mã nguồn mới nhất.
+- Phân tích nguyên nhân: Do máy ảo `ubuntu-server-02` chỉ gán 1 CPU core, nhưng script `normal_traffic.sh` chạy `stress --cpu 2` kết hợp `dd if=/dev/urandom` khiến CPU bị ăn hết 100%.
+- Cung cấp đoạn mã điều chỉnh giảm tải nhẹ cho `ubuntu-server-02` (chuyển sang `stress --cpu 1 --timeout 2s`, `dd if=/dev/zero` và tăng thời gian sleep nghỉ giữa các lần 4-10s).
+- Đưa CPU của `ubuntu-server-02` về mức tải DB Server chuẩn sát thực tế: **25% – 45% CPU**.
