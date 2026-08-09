@@ -1,0 +1,33 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # ── Prometheus tự giám sát ──────────────────────
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # ── Ubuntu Server 1 ─────────────────────────────
+  - job_name: "ubuntu-server-01"
+    static_configs:
+      - targets: ["192.168.x.10:9100"]  # Thay IP thật
+    labels:
+      server_name: "ubuntu-server-01"
+      env: "monitoring"
+
+  # ── Ubuntu Server 2 ─────────────────────────────
+  - job_name: "ubuntu-server-02"
+    static_configs:
+      - targets: ["192.168.x.11:9100"]  # Thay IP thật
+    labels:
+      server_name: "ubuntu-server-02"
+      env: "monitoring"
+
+  # ── Ubuntu Server 3 ─────────────────────────────
+  - job_name: "ubuntu-server-03"
+    static_configs:
+      - targets: ["192.168.x.12:9100"]  # Thay IP thật
+    labels:
+      server_name: "ubuntu-server-03"
+      env: "monitoring"

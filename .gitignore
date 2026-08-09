@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+*.pkl
+*.egg-info/
+node_modules/
+dist/
+.DS_Store
+*.log
+ml/dataset/*.csv
+ml/models/*.pkl
