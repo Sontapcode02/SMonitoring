@@ -319,21 +319,12 @@
 ---
 
 ### [2026-08-10 00:15] — Antigravity IDE (Gemini Flash)
-**Module:** Infrastructure Deployment — Node Exporter Active Running Success
+**Module:** Target Configuration — Swap Real VM IP Addresses
 **Prompt:**
-> Active: active (running) since Sun 2026-08-09 17:14:24 UTC; Listening on address=[::]:9100
+> chỉnh lại máy ubuntu 2 chạy ip 132 còn máy ubuntu1 chạy ip 133
 
 **Output dùng:**
-- Xác nhận Node Exporter đã hoạt động 100% trên port 9100 của máy ảo Ubuntu.
-- Hướng dẫn thực hiện tương tự trên các VM còn lại và kiểm tra IP để liên kết với Prometheus.
-
----
-
-### [2026-08-10 00:15] — Antigravity IDE (Gemini Flash)
-**Module:** Target Configuration — Update Real Ubuntu IP Addresses
-**Prompt:**
-> 192.168.199.132, 192.168.199.133, 192.168.199.134
-
-**Output dùng:**
-- Cập nhật địa chỉ IP thật của 3 máy ảo Ubuntu (`192.168.199.132`, `133`, `134`) vào file cấu hình Prometheus [infra/prometheus/prometheus.yml](file:///D:/KLTN/infra/prometheus/prometheus.yml).
-- Thực hiện kiểm tra kết nối mạng (Test-NetConnection) từ Windows tới Port 9100 của 3 máy ảo Ubuntu.
+- Cập nhật hoán đổi IP chuẩn xác trong [infra/prometheus/prometheus.yml](file:///D:/KLTN/infra/prometheus/prometheus.yml):
+  - `ubuntu-server-01` (Web Server): `192.168.199.133:9100`
+  - `ubuntu-server-02` (DB Server): `192.168.199.132:9100`
+  - `ubuntu-server-03` (App Server): `192.168.199.134:9100`
