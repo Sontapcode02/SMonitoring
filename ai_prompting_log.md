@@ -275,7 +275,7 @@
 ### [2026-08-09 23:56] — Antigravity IDE (Gemini Flash)
 **Module:** Infrastructure Deployment — Node Exporter Installation Fix
 **Prompt:**
-> ubuntu3@ubuntu3:~$ s://github.com/... -bash: syntax error near unexpected token `)'
+> ubuntu3@ubuntu3:~$ s://github.com/... -bash: syntax error near unexpected token `)`
 
 **Output dùng:**
 - Sửa lỗi copy-paste bị thiếu chữ `wget` và bị lỗi cú pháp ngoặc đơn trong Bash Terminal.
@@ -315,3 +315,14 @@
 **Output dùng:**
 - Chẩn đoán nguyên nhân: Lỗi `status=217/USER` xảy ra do `systemd` không khởi tạo được quyền user `node_exporter` trên hệ thống Ubuntu.
 - Cung cấp lệnh khắc phục dứt điểm: Chuyển cấu hình `User=root` trong `node_exporter.service`, cấp quyền thực thi `chmod +x /usr/local/bin/node_exporter` và khởi chạy lại service.
+
+---
+
+### [2026-08-10 00:15] — Antigravity IDE (Gemini Flash)
+**Module:** Infrastructure Deployment — Node Exporter Active Running Success
+**Prompt:**
+> Active: active (running) since Sun 2026-08-09 17:14:24 UTC; Listening on address=[::]:9100
+
+**Output dùng:**
+- Xác nhận Node Exporter đã hoạt động 100% trên port 9100 của máy ảo Ubuntu.
+- Hướng dẫn thực hiện tương tự trên các VM còn lại và kiểm tra IP để liên kết với Prometheus.
