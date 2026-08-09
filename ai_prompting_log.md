@@ -318,17 +318,12 @@
 
 ---
 
-### [2026-08-10 00:31] — Antigravity IDE (Gemini Flash)
-**Module:** Enterprise Context & Real-World Domain Knowledge
+### [2026-08-10 00:32] — Antigravity IDE (Gemini Flash)
+**Module:** Simulation Architecture — Final Workload Strategy Selection
 **Prompt:**
-> Hãy liên hệ với thực tế các server doanh nghiệp nhiều hơn
+> Vậy chốt giả lập health như thế nào?
 
 **Output dùng:**
-- Phân tích chi tiết mô hình hạ tầng Doanh nghiệp 3 lớp (3-Tier Enterprise Architecture: Web/DMZ, Application Microservices, Database Core Data-tier).
-- Phân tích mẫu hình tải doanh nghiệp thực tế: Mẫu hình theo giờ hành chính (Diurnal patterns 8h-17h), Batch job chạy ngầm ban đêm (2h-4h AM), Backup định kỳ.
-- Phân tích các loại sự cố nguy hiểm thực tế trong doanh nghiệp mà Cảnh báo ngưỡng tĩnh (Rule-based Static Thresholds) BỊ THẤT BẠI nhưng ML (Isolation Forest) BẮT ĐƯỢC:
-  1. *Rò rỉ dữ liệu ban đêm (Data Exfiltration at Night)*: CPU/Network thấp < 20% nhưng phát sinh băng thông bất thường lúc 3h sáng.
-  2. *Rò rỉ bộ nhớ từ từ (Memory Leak)*: RAM nhích từ 40% -> 85% trong 3 ngày, static threshold 90% không báo kịp trước khi crash.
-  3. *Tắc nghẽn hàng đợi / Thread Starvation*: CPU thấp 20% nhưng `load1_per_cpu` > 5.0.
-  4. *Tấn công Micro-burst DDoS / Port Scan*: Băng thông nhỏ nhưng `net_packets_in_pps` vọt 10x.
-- Đóng góp vào Chương 1 (Đặt vấn đề) và Chương 2 (Cơ sở lý thuyết) của Báo cáo Khóa luận.
+- Chốt chiến lược giả lập 2 chế độ rõ ràng:
+  1. **Chế độ Tải nền Bình thường (Normal Baseline):** Chạy script sinh tải nền phân hóa theo đúng vai trò doanh nghiệp 24/7 (Web 15-25% CPU, DB 25-40% CPU + IOPS, App 10-20% CPU).
+  2. **Chế độ Kịch bản Bất thường (Anomaly Testing):** Kích hoạt các script injection (`scenario_01_cpu_spike.sh`, `scenario_02_ram_leak.sh`...) khi thực nghiệm test mô hình ML và quay video demo.
