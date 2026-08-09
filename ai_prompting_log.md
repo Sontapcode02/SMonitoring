@@ -273,12 +273,11 @@
 ---
 
 ### [2026-08-09 23:56] — Antigravity IDE (Gemini Flash)
-**Module:** Infrastructure Deployment — Node Exporter Installation on 3 Ubuntu VMs
+**Module:** Infrastructure Deployment — Node Exporter Installation Fix
 **Prompt:**
-> Đã cài xong 3 máy ubuntu và ssh thành công
+> ubuntu3@ubuntu3:~$ s://github.com/... -bash: syntax error near unexpected token `)'
 
 **Output dùng:**
-- Chúc mừng hoàn thành mốc cài đặt VM & SSH.
-- Cung cấp câu lệnh 1-liner cài đặt tự động Node Exporter v1.8.1 làm systemd service cho từng VM qua SSH.
-- Hướng dẫn kiểm tra IP (`ip a`) và cập nhật vào `infra/prometheus/prometheus.yml`.
-- Hướng dẫn kích hoạt script sinh tải nhẹ nền (`generate_normal_traffic.sh`) trên 3 VM.
+- Sửa lỗi copy-paste bị thiếu chữ `wget` và bị lỗi cú pháp ngoặc đơn trong Bash Terminal.
+- Cung cấp lại câu lệnh cài đặt Node Exporter ngắn gọn, an toàn, dạng script đơn giản 4 dòng.
+- Cung cấp câu lệnh kiểm tra endpoint `curl http://localhost:9100/metrics`.
