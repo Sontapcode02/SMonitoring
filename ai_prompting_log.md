@@ -265,7 +265,7 @@
 > Cấu hình đề xuất cài cho 3 máy ubuntu
 
 **Output dùng:**
-- Đưa ra cấu hình khuyến nghị tối ưu tài nguyên cho VirtualBox/VMware: OS Ubuntu 22.04 LTS Server, 1-2 vCPU, 1-2GB RAM, 20GB Dynamic Disk.
+- Đưa ra cấu hình khuyến nghị tối ưu tài tài nguyên cho VirtualBox/VMware: OS Ubuntu 22.04 LTS Server, 1-2 vCPU, 1-2GB RAM, 20GB Dynamic Disk.
 - Cấu hình Card mạng: Host-only Adapter (để định tuyến IP cố định 192.168.56.x giữa máy Host và 3 VM).
 - Danh sách phần mềm cơ bản cần cài đặt trước (`curl`, `wget`, `git`, `stress`, `net-tools`, `node-exporter`).
 - Phân chia vai trò 3 VM (Web Server, Database Server, App Worker Server).
@@ -318,13 +318,15 @@
 
 ---
 
-### [2026-08-10 00:38] — Antigravity IDE (Gemini Flash)
-**Module:** System Architecture — Prometheus TSDB vs Python Dataset Collector
+### [2026-08-10 00:39] — Antigravity IDE (Gemini Flash)
+**Module:** Data Collection Verification — Real Metrics Stream Check
 **Prompt:**
-> ủa data đã chảy về prometheus r phải chạy file python này nữa hả?
+> Kiểm tra file csv đã có data về chưa?
 
 **Output dùng:**
-- Giải thích rõ vai trò khác nhau giữa Prometheus TSDB và Python Dataset Collector:
-  1. **Prometheus:** Cào và lưu trữ dữ liệu Time-Series thô (Raw counters: CPU jiffies, network bytes) trong bộ nhớ đệm TSDB của Docker để phục vụ truy vấn đồ thị real-time PromQL.
-  2. **Python Collector (`collect_data.py`):** Thực hiện Feature Engineering (tính toán chuyển đổi các counter thô thành 10 Features chuẩn: % CPU, MB/s, PPS, IOPS) và xuất ra file CSV dataset lưu trữ lâu dài cho Machine Learning scikit-learn.
-- Làm rõ sang Tuần 2 & Tuần 3 (FastAPI Backend), script collector này sẽ được tích hợp thành Background Task (APScheduler) chạy ngầm tự động trong Backend, người dùng không cần gõ lệnh thủ công.
+- Kiểm tra mã nguồn `collect_data.py`: Tối ưu PromQL query `by(server_name, instance)` để tự động map `server_name` từ Prometheus sang file CSV tương ứng.
+- Khắc phục lỗi hiển thị Emoji `📥` trong console Windows làm gián đoạn lệnh print.
+- Chạy thực nghiệm `collect_step('http://localhost:9090')` và **xác nhận 100% dữ liệu thực tế từ 3 máy ảo Ubuntu đã cào thành công về 3 file CSV**:
+  - `ubuntu-server-01_metrics.csv` (CPU=52.08%, RAM=22.95%, Load1/CPU=0.42, IOPS=1.22)
+  - `ubuntu-server-02_metrics.csv` (CPU=99.88%, RAM=22.79%, Load1/CPU=2.98, IOPS=351.08)
+  - `ubuntu-server-03_metrics.csv` (CPU=20.80%, RAM=22.75%, Load1/CPU=0.27, IOPS=1.08)

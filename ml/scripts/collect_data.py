@@ -13,22 +13,29 @@ import pandas as pd
 
 DATASET_DIR = os.path.join(os.path.dirname(__file__), "..", "dataset")
 
-# PromQL Queries cho bộ 10 features toàn diện
+# Mapping IP sang server_id làm fallback
+IP_MAP = {
+    "192.168.199.133": "ubuntu-server-01",
+    "192.168.199.132": "ubuntu-server-02",
+    "192.168.199.134": "ubuntu-server-03",
+}
+
+# PromQL Queries chuẩn cho bộ 10 features
 QUERIES = {
-    "cpu_percent": '100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[1m])) * 100)',
+    "cpu_percent": '100 - (avg by(server_name, instance) (rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100)',
     "ram_percent": '(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100',
-    "load1_per_cpu": 'node_load1 / count by(instance) (node_cpu_seconds_total{mode="idle"})',
-    "disk_read_mbps": 'sum by(instance) (rate(node_disk_read_bytes_total[1m])) / 1048576',
-    "disk_write_mbps": 'sum by(instance) (rate(node_disk_written_bytes_total[1m])) / 1048576',
-    "disk_iops": 'sum by(instance) (rate(node_disk_reads_completed_total[1m])) + sum by(instance) (rate(node_disk_writes_completed_total[1m]))',
-    "net_in_mbps": 'sum by(instance) (rate(node_network_receive_bytes_total{device!="lo"}[1m])) * 8 / 1048576',
-    "net_out_mbps": 'sum by(instance) (rate(node_network_transmit_bytes_total{device!="lo"}[1m])) * 8 / 1048576',
-    "net_packets_in_pps": 'sum by(instance) (rate(node_network_receive_packets_total{device!="lo"}[1m]))',
+    "load1_per_cpu": 'node_load1 / on(server_name) count by(server_name) (node_cpu_seconds_total{mode="idle"})',
+    "disk_read_mbps": 'sum by(server_name, instance) (rate(node_disk_read_bytes_total[1m])) / 1048576',
+    "disk_write_mbps": 'sum by(server_name, instance) (rate(node_disk_written_bytes_total[1m])) / 1048576',
+    "disk_iops": 'sum by(server_name, instance) (rate(node_disk_reads_completed_total[1m])) + sum by(server_name, instance) (rate(node_disk_writes_completed_total[1m]))',
+    "net_in_mbps": 'sum by(server_name, instance) (rate(node_network_receive_bytes_total{device!="lo"}[1m])) * 8 / 1048576',
+    "net_out_mbps": 'sum by(server_name, instance) (rate(node_network_transmit_bytes_total{device!="lo"}[1m])) * 8 / 1048576',
+    "net_packets_in_pps": 'sum by(server_name, instance) (rate(node_network_receive_packets_total{device!="lo"}[1m]))',
     "tcp_connections": 'node_netstat_Tcp_CurrEstab',
 }
 
 def query_prometheus(prom_url: str, query: str):
-    """Gửi PromQL query tới Prometheus và trả về dict {instance: value}."""
+    """Gửi PromQL query tới Prometheus và trả về dict {server_id: value}."""
     try:
         response = requests.get(f"{prom_url}/api/v1/query", params={"query": query}, timeout=5)
         response.raise_for_status()
@@ -37,10 +44,16 @@ def query_prometheus(prom_url: str, query: str):
         result = {}
         if data.get("status") == "success":
             for item in data["data"]["result"]:
-                instance = item["metric"].get("instance", "unknown")
-                server_id = instance.split(":")[0]
-                val = float(item["value"][1])
-                result[server_id] = round(val, 4)
+                labels = item["metric"]
+                server_id = labels.get("server_name")
+                if not server_id:
+                    instance = labels.get("instance", "")
+                    ip = instance.split(":")[0]
+                    server_id = IP_MAP.get(ip, ip)
+                
+                if server_id and server_id != "unknown":
+                    val = float(item["value"][1])
+                    result[server_id] = round(val, 4)
         return result
     except Exception as e:
         return {}
@@ -59,9 +72,9 @@ def collect_step(prom_url: str):
             
     os.makedirs(DATASET_DIR, exist_ok=True)
     
+    appended_count = 0
     for server_id, row in metrics_by_server.items():
-        # Phải đủ timestamp + 10 features = 11 columns
-        if len(row) < 11:
+        if len(row) < 2:  # Ít nhất có timestamp và 1 feature
             continue
             
         csv_filename = f"{server_id}_metrics.csv"
@@ -71,7 +84,10 @@ def collect_step(prom_url: str):
         file_exists = os.path.exists(csv_path)
         
         df_row.to_csv(csv_path, mode="a", index=False, header=not file_exists)
-        print(f"[{timestamp}] 📥 [{server_id}] CPU={row.get('cpu_percent')}% | RAM={row.get('ram_percent')}% | Load1/CPU={row.get('load1_per_cpu')} | IOPS={row.get('disk_iops')} → {csv_filename}")
+        appended_count += 1
+        print(f"[{timestamp}] [OK] [{server_id}] CPU={row.get('cpu_percent')}% | RAM={row.get('ram_percent')}% | Load1/CPU={row.get('load1_per_cpu')} | IOPS={row.get('disk_iops')} -> Appended to {csv_filename}")
+        
+    return appended_count
 
 def main():
     parser = argparse.ArgumentParser(description="Collector data 10 metrics từ Prometheus vào CSV")
@@ -80,7 +96,7 @@ def main():
     args = parser.parse_args()
 
     print("==================================================")
-    print(" 🚀 Start Data Collector Service (10 Features)")
+    print(" [Data Collector] Fetching metrics from Prometheus")
     print(f" Target Prometheus: {args.prometheus}")
     print(f" Interval: {args.interval} seconds")
     print(f" Output folder: {os.path.abspath(DATASET_DIR)}")
@@ -90,7 +106,7 @@ def main():
         try:
             collect_step(args.prometheus)
         except Exception as e:
-            print(f"❌ Collector error: {e}")
+            print(f"[*] Collector error: {e}")
         time.sleep(args.interval)
 
 if __name__ == "__main__":
