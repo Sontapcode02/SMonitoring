@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-train.py — Train Isolation Forest model cho từng server
+train.py — Train Isolation Forest model cho từng server với 10 features
 Usage: python train.py --server ubuntu-server-01 --days 7
 """
 
@@ -11,16 +11,20 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import classification_report
 import joblib
 
+# Bộ 10 Features toàn diện cho hệ thống giám sát Ubuntu
 FEATURES = [
     "cpu_percent",
     "ram_percent",
+    "load1_per_cpu",
     "disk_read_mbps",
     "disk_write_mbps",
+    "disk_iops",
     "net_in_mbps",
-    "net_out_mbps"
+    "net_out_mbps",
+    "net_packets_in_pps",
+    "tcp_connections"
 ]
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "models")
@@ -37,14 +41,17 @@ def load_data(server_id: str, days: int = 7):
     df = pd.read_csv(csv_path, parse_dates=["timestamp"])
     df = df.sort_values("timestamp")
 
-    # Lấy n ngày gần nhất
     cutoff = df["timestamp"].max() - pd.Timedelta(days=days)
     df = df[df["timestamp"] >= cutoff]
 
-    # Xử lý NaN
-    df[FEATURES] = df[FEATURES].fillna(method="ffill").fillna(0)
+    # Kiểm tra xem file CSV có đủ 10 features không
+    missing_cols = [col for col in FEATURES if col not in df.columns]
+    if missing_cols:
+        raise ValueError(f"CSV missing features: {missing_cols}")
 
-    print(f"[Data] Loaded {len(df)} samples from {csv_path}")
+    df[FEATURES] = df[FEATURES].ffill().bfill().fillna(0)
+
+    print(f"[Data] Loaded {len(df)} samples with 10 features from {csv_path}")
     return df[FEATURES].values
 
 
@@ -54,7 +61,7 @@ def train(server_id: str, days: int = 7, contamination: float = 0.05):
 
     X = load_data(server_id, days)
 
-    # Normalize
+    # Scale
     scaler = MinMaxScaler()
     X_scaled = scaler.fit_transform(X)
 
@@ -83,7 +90,6 @@ def train(server_id: str, days: int = 7, contamination: float = 0.05):
     print(f"[Save] Model → {model_path}")
     print(f"[Save] Scaler → {scaler_path}")
 
-    # Anomaly score distribution
     scores = model.decision_function(X_scaled)
     anomaly_count = (model.predict(X_scaled) == -1).sum()
     print(f"[Stats] Score range: [{scores.min():.3f}, {scores.max():.3f}]")
@@ -95,12 +101,13 @@ def train(server_id: str, days: int = 7, contamination: float = 0.05):
         "train_time_sec": round(elapsed, 2),
         "contamination": contamination,
         "anomaly_count": int(anomaly_count),
+        "features_count": len(FEATURES),
         "model_path": model_path
     }
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train Isolation Forest")
+    parser = argparse.ArgumentParser(description="Train Isolation Forest 10 Features")
     parser.add_argument("--server", required=True, help="Server ID (e.g. ubuntu-server-01)")
     parser.add_argument("--days", type=int, default=7, help="Days of data to use")
     parser.add_argument("--contamination", type=float, default=0.05, help="Expected anomaly ratio")

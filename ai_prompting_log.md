@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
 ```
 
 ---
@@ -193,9 +193,21 @@
 
 **Output dùng:**
 - Viết `infra/node-exporter/install_node_exporter.sh`: Bash script tự động cài đặt Node Exporter systemd service trên Ubuntu.
-- Viết `ml/scripts/collect_data.py`: Script Python tự động query 6 PromQL features từ Prometheus mỗi 15 giây và ghi append vào file CSV `ml/dataset/<server_id>_metrics.csv`.
+- Viết `ml/scripts/collect_data.py`: Script Python tự động query PromQL features từ Prometheus mỗi 15 giây và ghi append vào file CSV `ml/dataset/<server_id>_metrics.csv`.
 - Cập nhật `infra/prometheus/prometheus.yml`: Định nghĩa 3 target `ubuntu-server-01`, `02`, `03` với cấu hình scrape interval 15s.
 - Viết `infra/start_simulated_vms.bat`: Script Docker giả lập ngay 3 node Ubuntu Node Exporter trên local machine cho việc test nhanh.
 
+---
+
+### [2026-08-09 21:08] — Antigravity IDE (Gemini Flash)
+**Module:** Feature Engineering — 10 Features Selection
+**Prompt:**
+> cpu_percent (%), ram_percent (%), disk_read_mbps (MB/s), disk_write_mbps (MB/s), net_in_mbps (Mbps), net_out_mbps (Mbps) - cần bổ sung gì chỗ này kh?
+
+**Output dùng:**
+- Đánh giá bổ sung 4 chỉ số nâng cao: `load1_per_cpu`, `disk_iops`, `net_packets_in_pps`, `tcp_connections`.
+- Lý do: Bắt được các kịch bản tấn công/bất thường đặc thù mà 6 chỉ số cơ bản bị sót (SYN Flood gói nhỏ, DB Random 4K IOPS overload, Process Queue Deadlock).
+- Cập nhật `collect_data.py` và `train.py` để hỗ trợ chuẩn hóa và thu thập bộ 10 features.
+
 **Đã chỉnh sửa:**
-- Sử dụng Pandas append mode trong `collect_data.py` để tiết kiệm tài nguyên I/O và tự sinh tên dataset linh hoạt theo `server_id`.
+- Sử dụng PromQL `rate` 1m window để tính IOPS và PPS chính xác.
