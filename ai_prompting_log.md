@@ -186,12 +186,12 @@
 
 ---
 
-### [2026-08-10 01:11] — Antigravity IDE (Gemini Flash)
-**Module:** Storage Cleanup — GNS3 QEMU Files Deletion & Heavy GNS3VM Discovery
+### [2026-08-10 01:12] — Antigravity IDE (Gemini Flash)
+**Module:** System Maintenance — Heavy GNS3VM Deletion & Recycle Bin Purge
 **Prompt:**
-> Xóa file ổ dĩa gns2 qemu
+> Xóa máy ảo gns3 đó
 
 **Output dùng:**
-- Đã chạy lệnh xóa toàn bộ file template ảo đĩa trong `C:\Users\ASUS\GNS3\images\QEMU\`.
-- Phát hiện vị trí ngốn bộ nhớ khủng nhất của GNS3 nằm ở file ảo đĩa **GNS3VM** (`GNS3VM-disk2.vmdk` chiếm **37.23 GB** và `GNS3VM-disk1.vmdk` chiếm **4.81 GB** tại `C:\Users\ASUS\OneDrive\Tài liệu\2025\Virtual Machines\GNS3VM\`).
-- Đưa ra tùy chọn hỗ trợ xóa máy ảo GNS3VM này nếu sinh viên không còn dùng tới GNS3 nữa để giải phóng **42 GB** dung lượng ngay lập tức.
+- Đã chạy lệnh xóa dứt điểm toàn bộ thư mục máy ảo GNS3VM 42 GB tại `C:\Users\ASUS\OneDrive\Tài liệu\2025\Virtual Machines\GNS3VM\`.
+- Đã chạy lệnh dọn dẹp Thùng rác (`Clear-RecycleBin`).
+- Dung lượng ổ C nâng từ **7.51 GB lên 14.31 GB trống**.
