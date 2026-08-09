@@ -133,13 +133,15 @@
 
 ---
 
-### [2026-08-10 01:16] — Antigravity IDE (Gemini Flash)
-**Module:** Disk Space Verification — Free Space Benchmark Clarification
+### [2026-08-10 01:18] — Antigravity IDE (Gemini Flash)
+**Module:** Data Collection Healthcheck — Fresh Dataset Collector Verification
 **Prompt:**
-> Lúc đầu nó sẵn 14 rồi?
+> Kiểm tra file csv còn đang collect tốt data kh?
 
 **Output dùng:**
-- Làm rõ mốc thời gian kiểm tra dung lượng ổ C từ hệ thống:
-  1. Ban đầu (Task 714 lúc 00:57): Dung lượng trống thực tế đo được trên hệ thống là **7.52 GB**.
-  2. Sau khi xóa thư mục `GNS3VM` 42 GB (trên cloud, ~6.8 GB tải thực dưới máy): Dung lượng trống thực tế tăng lên **14.31 GB**.
-- Hướng dẫn sinh viên kiểm tra danh sách các ứng dụng nặng để tiếp tục dọn dẹp bộ nhớ trên C.
+- Thực thi lệnh test thu thập dữ liệu trực tiếp tại mốc thời gian `01:18:45`:
+  - `ubuntu-server-01_metrics.csv` ➡️ CPU=44.19%, RAM=21.19%, Load1/CPU=0.49, IOPS=1.00
+  - `ubuntu-server-02_metrics.csv` ➡️ CPU=100.0%, RAM=22.70%, Load1/CPU=3.10, IOPS=317.29
+  - `ubuntu-server-03_metrics.csv` ➡️ CPU=24.01%, RAM=20.60%, Load1/CPU=0.23, IOPS=0.73
+- Xác nhận: Dữ liệu thực tế 10 features từ 3 máy ảo vẫn đang chảy về file CSV liên tục và rất tốt.
+- Hướng dẫn sinh viên bấm `Ctrl + C` và chạy lại `python ml/scripts/collect_data.py` trên Terminal của mình để tiến trình cập nhật phiên bản mã nguồn mới nhất.
