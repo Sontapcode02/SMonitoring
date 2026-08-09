@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
 ```
 
 ---
@@ -255,7 +255,7 @@
 **Output dùng:**
 - Giải thích rõ ràng khái niệm "Chạy thử nghiệm luồng mã nguồn" (Mock / Code pipeline test) vs "Huấn luyện thực tế" (Real Training).
 - Tôi đã cho chạy `train.py` trên bộ dữ liệu giả lập (Synthetic Dataset) để verify 100% rằng code Python, thư viện scikit-learn, joblib và việc lưu file `.pkl` không bị lỗi cú pháp hay thiếu file.
-- Nhấn mạnh: Đây là bước kiểm thử code. Khi em bắt đầu chạy 3 máy chủ thật trong Tuần 3, chúng ta mới bấm nút Train lại trên dữ liệu thật chính thức cho Báo cáo.
+- Nhấn mạnh: Đây là bước kiểm thử code. Khi em bắt đầu chạy 3 máy chủ thật trong Tuần 3, chúng me mới bấm nút Train lại trên dữ liệu thật chính thức cho Báo cáo.
 
 ---
 
@@ -319,11 +319,11 @@
 ---
 
 ### [2026-08-10 00:20] — Antigravity IDE (Gemini Flash)
-**Module:** Troubleshooting — Docker Desktop Service Daemon Not Running
+**Module:** Troubleshooting — Prometheus ScrapeConfig YAML Syntax Indentation Fix
 **Prompt:**
-> failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.
+> err="parsing YAML file /etc/prometheus/prometheus.yml: yaml: unmarshal errors: line 15: field labels not found in type config.ScrapeConfig"
 
 **Output dùng:**
-- Chẩn đoán nguyên nhân: Phần mềm **Docker Desktop** trên Windows chưa được khởi chạy (Docker Service Daemon chưa bật).
-- Loại bỏ cảnh báo `version` trong `docker-compose.yml` để tránh gây rốilog.
-- Hướng dẫn khởi động lại Docker Desktop từ Start Menu Windows và chạy lại `docker-compose up -d prometheus`.
+- Chẩn đoán nguyên nhân: Trường `labels` trong `prometheus.yml` bị thụt lề sai vị trí (nằm ở `scrape_config` thay vì bên trong `static_configs.labels`).
+- Sửa lại thụt lề YAML chuẩn cho [infra/prometheus/prometheus.yml](file:///D:/KLTN/infra/prometheus/prometheus.yml).
+- Khởi động lại container `kltn-prometheus-1` thành công (`STATUS: Up`).
