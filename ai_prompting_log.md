@@ -281,3 +281,16 @@
 - Sửa lỗi copy-paste bị thiếu chữ `wget` và bị lỗi cú pháp ngoặc đơn trong Bash Terminal.
 - Cung cấp lại câu lệnh cài đặt Node Exporter ngắn gọn, an toàn, dạng script đơn giản 4 dòng.
 - Cung cấp câu lệnh kiểm tra endpoint `curl http://localhost:9100/metrics`.
+
+---
+
+### [2026-08-10 00:02] — Antigravity IDE (Gemini Flash)
+**Module:** Network Troubleshooting — DNS / Internet Resolution on Ubuntu VM
+**Prompt:**
+> wget: unable to resolve host address 'github.com'
+
+**Output dùng:**
+- Chẩn đoán nguyên nhân: Máy ảo Ubuntu hiện chưa có Internet / chưa cấu hình DNS do chỉ sử dụng Host-only Network Adapter.
+- Đưa ra 2 cách khắc phục nhanh:
+  1. Thêm DNS Google `8.8.8.8` vào `/etc/resolv.conf`.
+  2. Thêm Card mạng thứ 2 dạng **NAT** trong VirtualBox Settings để máy ảo kết nối Internet tải phần mềm.
