@@ -318,13 +318,12 @@
 
 ---
 
-### [2026-08-10 00:15] — Antigravity IDE (Gemini Flash)
-**Module:** Target Configuration — Swap Real VM IP Addresses
+### [2026-08-10 00:20] — Antigravity IDE (Gemini Flash)
+**Module:** Troubleshooting — Docker Desktop Service Daemon Not Running
 **Prompt:**
-> chỉnh lại máy ubuntu 2 chạy ip 132 còn máy ubuntu1 chạy ip 133
+> failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.
 
 **Output dùng:**
-- Cập nhật hoán đổi IP chuẩn xác trong [infra/prometheus/prometheus.yml](file:///D:/KLTN/infra/prometheus/prometheus.yml):
-  - `ubuntu-server-01` (Web Server): `192.168.199.133:9100`
-  - `ubuntu-server-02` (DB Server): `192.168.199.132:9100`
-  - `ubuntu-server-03` (App Server): `192.168.199.134:9100`
+- Chẩn đoán nguyên nhân: Phần mềm **Docker Desktop** trên Windows chưa được khởi chạy (Docker Service Daemon chưa bật).
+- Loại bỏ cảnh báo `version` trong `docker-compose.yml` để tránh gây rốilog.
+- Hướng dẫn khởi động lại Docker Desktop từ Start Menu Windows và chạy lại `docker-compose up -d prometheus`.
