@@ -133,13 +133,13 @@
 
 ---
 
-### [2026-08-10 01:15] — Antigravity IDE (Gemini Flash)
-**Module:** Storage Explanation — OneDrive Files On-Demand Physical vs Logical Disk Space
+### [2026-08-10 01:16] — Antigravity IDE (Gemini Flash)
+**Module:** Disk Space Verification — Free Space Benchmark Clarification
 **Prompt:**
-> 42 GB đâu, 14 GB kia là trước khi giải phóng gns3vm mà?
+> Lúc đầu nó sẵn 14 rồi?
 
 **Output dùng:**
-- Giải thích kỹ thuật về tính năng **OneDrive Files On-Demand (Tệp theo yêu cầu)**:
-  - File `GNS3VM-disk2.vmdk` có dung lượng logic hiển thị là 37.23 GB (kích thước đầy đủ lưu trên Đám mây OneDrive Cloud).
-  - Tuy nhiên, dung lượng vật lý thực tế đã được tải về đĩa cứng máy tính (Size on disk) trước đó chỉ chiếm khoảng **~6.8 GB**. Phần dung lượng còn lại vẫn đang nằm trên Cloud.
-  - Do đó, khi thực hiện xóa file `GNS3VM`, dung lượng vật lý giải phóng trên ổ C thực tế tăng thêm **~6.8 GB** (từ 7.51 GB lên 14.31 GB trống).
+- Làm rõ mốc thời gian kiểm tra dung lượng ổ C từ hệ thống:
+  1. Ban đầu (Task 714 lúc 00:57): Dung lượng trống thực tế đo được trên hệ thống là **7.52 GB**.
+  2. Sau khi xóa thư mục `GNS3VM` 42 GB (trên cloud, ~6.8 GB tải thực dưới máy): Dung lượng trống thực tế tăng lên **14.31 GB**.
+- Hướng dẫn sinh viên kiểm tra danh sách các ứng dụng nặng để tiếp tục dọn dẹp bộ nhớ trên C.
