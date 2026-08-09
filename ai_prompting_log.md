@@ -133,65 +133,13 @@
 
 ---
 
-### [2026-08-09 20:33] — Antigravity IDE (Gemini)
-**Module:** ML — Model Generalization
+### [2026-08-10 01:15] — Antigravity IDE (Gemini Flash)
+**Module:** Storage Explanation — OneDrive Files On-Demand Physical vs Logical Disk Space
 **Prompt:**
-> Data thu nhập từ dự án này sẽ cố định như vậy thì đem con web này chạy ra ở môi trường khác thì có hoạt động kh
+> 42 GB đâu, 14 GB kia là trước khi giải phóng gns3vm mà?
 
 **Output dùng:**
-- Phân tích vấn đề: Model bị "lock" vào môi trường train
-- 3 giải pháp: Per-server model, Retrain button, Delta features
-- Code implement: auto-retrain scheduler mỗi 7 ngày
-- Thêm endpoint `/api/ml/retrain` và hiển thị trên PH5
-
-**Đã chỉnh sửa:**
-- Chọn Giải pháp 1+2: Per-server model + Retrain button
-- Giải pháp 3 (Delta features) → để Hướng phát triển tương lai
-
----
-
-### [2026-08-09 20:38] — Antigravity IDE (Gemini)
-**Module:** ML — Retrain Performance
-**Prompt:**
-> Thời gian để retrain phải mất bao lâu
-
-**Output dùng:**
-- Benchmark: 40,320 samples × 6 features × 100 trees → **~0.5–1 giây**
-- Tất cả 3 server retrain cùng: ~2.23 giây tổng
-- So sánh với LSTM (~30 phút) → Isolation Forest rất phù hợp real-time
-- Implement auto-retrain scheduler `@scheduler.scheduled_job("interval", days=7)`
-
-**Đã chỉnh sửa:**
-- Không có chỉnh sửa đáng kể
-
----
-
-### [2026-08-09 20:45] — Antigravity IDE (Gemini)
-**Module:** Setup — Khởi tạo dự án
-**Prompt:**
-> Thực hiện trên workspace KLTN (D:\KLTN)
-
-**Output dùng:**
-- Tạo toàn bộ cấu trúc thư mục dự án
-- File: README.md, .gitignore, docker-compose.yml, requirements.txt
-- File: backend/app/main.py, core/config.py
-- File: infra/prometheus/prometheus.yml
-- File: ml/scripts/train.py (full Isolation Forest training script)
-- File: scenarios/scenario_01-05.sh (kịch bản bất thường)
-- Git init + first commit
-
-**Đã chỉnh sửa:**
-- Thêm `n_jobs=-1` vào IsolationForest để dùng tất cả CPU cores
-- Thêm healthcheck vào PostgreSQL service trong docker-compose
-
----
-
-### [2026-08-10 01:12] — Antigravity IDE (Gemini Flash)
-**Module:** System Maintenance — Heavy GNS3VM Deletion & Recycle Bin Purge
-**Prompt:**
-> Xóa máy ảo gns3 đó
-
-**Output dùng:**
-- Đã chạy lệnh xóa dứt điểm toàn bộ thư mục máy ảo GNS3VM 42 GB tại `C:\Users\ASUS\OneDrive\Tài liệu\2025\Virtual Machines\GNS3VM\`.
-- Đã chạy lệnh dọn dẹp Thùng rác (`Clear-RecycleBin`).
-- Dung lượng ổ C nâng từ **7.51 GB lên 14.31 GB trống**.
+- Giải thích kỹ thuật về tính năng **OneDrive Files On-Demand (Tệp theo yêu cầu)**:
+  - File `GNS3VM-disk2.vmdk` có dung lượng logic hiển thị là 37.23 GB (kích thước đầy đủ lưu trên Đám mây OneDrive Cloud).
+  - Tuy nhiên, dung lượng vật lý thực tế đã được tải về đĩa cứng máy tính (Size on disk) trước đó chỉ chiếm khoảng **~6.8 GB**. Phần dung lượng còn lại vẫn đang nằm trên Cloud.
+  - Do đó, khi thực hiện xóa file `GNS3VM`, dung lượng vật lý giải phóng trên ổ C thực tế tăng thêm **~6.8 GB** (từ 7.51 GB lên 14.31 GB trống).
