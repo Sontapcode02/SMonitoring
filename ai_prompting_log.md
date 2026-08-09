@@ -232,3 +232,15 @@
 - Trả lời: Không cần cài ứng dụng phức tạp, nhưng CẦN tạo "Tải bình thường" (Normal Baseline) để model Isolation Forest học được phân phối chuẩn của dữ liệu.
 - Giải thích nguyên lý ML: Nếu server nhàn rỗi 100% (0.1% CPU), độ lệch chuẩn = 0, một tác vụ nền nhỏ của OS sẽ bị phán lầm thành Anomaly.
 - Tạo script `scenarios/generate_normal_traffic.sh` chạy ngầm sinh tải nhẹ biến thiên tự động (CPU 5-15%, I/O nhẹ, ping).
+
+---
+
+### [2026-08-09 23:17] — Antigravity IDE (Gemini Flash)
+**Module:** Dataset Availability & Synthetic Generator
+**Prompt:**
+> Có bộ data nào sẵn phục vụ cái này kh?
+
+**Output dùng:**
+- Giới thiệu 3 bộ dữ liệu nghiên cứu công khai nổi tiếng trong bài báo quốc tế: NAB (Numenta Anomaly Benchmark), SMD (Server Metrics Dataset), Kaggle System Metrics.
+- Tạo script `ml/scripts/generate_synthetic_dataset.py` tự động sinh 40,320 mẫu dữ liệu chuẩn 7 ngày cho 3 máy chủ (`ubuntu-server-01`, `02`, `03`) với đầy đủ 10 features và nhãn thực tế (`is_anomaly`).
+- Chạy sinh thành công 3 file CSV dataset trong `D:\KLTN\ml\dataset\` để có dữ liệu huấn luyện ML và test code ngay lập tức.
