@@ -229,7 +229,7 @@
 > Các máy VM cần chạy các srv các tác vụ thường có của 1 server kh?
 
 **Output dùng:**
-- Trả lời: Không cần cài ứng dụng phức tạp, nhưng CẦN tạo "Tải bình thường" (Normal Baseline) để model Isolation Forest học được phân phối chuẩn của dữ liệu.
+- Trải lời: Không cần cài ứng dụng phức tạp, nhưng CẦN tạo "Tải bình thường" (Normal Baseline) để model Isolation Forest học được phân phối chuẩn của dữ liệu.
 - Giải thích nguyên lý ML: Nếu server nhàn rỗi 100% (0.1% CPU), độ lệch chuẩn = 0, một tác vụ nền nhỏ của OS sẽ bị phán lầm thành Anomaly.
 - Tạo script `scenarios/generate_normal_traffic.sh` chạy ngầm sinh tải nhẹ biến thiên tự động (CPU 5-15%, I/O nhẹ, ping).
 
@@ -244,3 +244,15 @@
 - Giới thiệu 3 bộ dữ liệu nghiên cứu công khai nổi tiếng trong bài báo quốc tế: NAB (Numenta Anomaly Benchmark), SMD (Server Metrics Dataset), Kaggle System Metrics.
 - Tạo script `ml/scripts/generate_synthetic_dataset.py` tự động sinh 40,320 mẫu dữ liệu chuẩn 7 ngày cho 3 máy chủ (`ubuntu-server-01`, `02`, `03`) với đầy đủ 10 features và nhãn thực tế (`is_anomaly`).
 - Chạy sinh thành công 3 file CSV dataset trong `D:\KLTN\ml\dataset\` để có dữ liệu huấn luyện ML và test code ngay lập tức.
+
+---
+
+### [2026-08-09 23:21] — Antigravity IDE (Gemini Flash)
+**Module:** Verification — Mock Model Pipeline vs Real Data Training
+**Prompt:**
+> Được huấn luyện xong là sao, chưa bắt đầu mà?
+
+**Output dùng:**
+- Giải thích rõ ràng khái niệm "Chạy thử nghiệm luồng mã nguồn" (Mock / Code pipeline test) vs "Huấn luyện thực tế" (Real Training).
+- Tôi đã cho chạy `train.py` trên bộ dữ liệu giả lập (Synthetic Dataset) để verify 100% rằng code Python, thư viện scikit-learn, joblib và việc lưu file `.pkl` không bị lỗi cú pháp hay thiếu file.
+- Nhấn mạnh: Đây là bước kiểm thử code. Khi em bắt đầu chạy 3 máy chủ thật trong Tuần 3, chúng ta mới bấm nút Train lại trên dữ liệu thật chính thức cho Báo cáo.
