@@ -318,22 +318,17 @@
 
 ---
 
-### [2026-08-10 00:28] — Antigravity IDE (Gemini Flash)
-**Module:** Workload Simulation — Running Real Background Traffic on 3 VMs
+### [2026-08-10 00:31] — Antigravity IDE (Gemini Flash)
+**Module:** Enterprise Context & Real-World Domain Knowledge
 **Prompt:**
-> Chạy giả lập health thực tế của các server ubuntu
+> Hãy liên hệ với thực tế các server doanh nghiệp nhiều hơn
 
 **Output dùng:**
-- Cung cấp mã lệnh Bash 1-click tự động cài đặt `stress`, `net-tools` và khởi chạy ngầm script `generate_normal_traffic.sh` trên từng máy ảo Ubuntu via SSH.
-- Script sinh tải nền tự động dao động tự nhiên (CPU 5-15%, I/O đĩa nhẹ, ping) để tạo phân phối chuẩn (normal baseline distribution) cho mô hình Isolation Forest.
-
----
-
-### [2026-08-10 00:30] — Antigravity IDE (Gemini Flash)
-**Module:** Baseline Assessment — Workload Level Analysis for Production Servers
-**Prompt:**
-> Các con số này có nhỏ quá so với số health thực tế kh?
-
-**Output dùng:**
-- Đánh giá thực tế: Trong các hạ tầng thật, baseline bình thường của server khi không bị dội spike dao động từ 15-30% CPU (Web Server) và 25-45% CPU (DB Server).
-- Cung cấp 3 mức cấu hình nâng tải nền phân hóa theo đúng vai trò của từng máy (Web Server, DB Server, App Server) để dữ liệu có tính đa dạng và sát thực tế nhất.
+- Phân tích chi tiết mô hình hạ tầng Doanh nghiệp 3 lớp (3-Tier Enterprise Architecture: Web/DMZ, Application Microservices, Database Core Data-tier).
+- Phân tích mẫu hình tải doanh nghiệp thực tế: Mẫu hình theo giờ hành chính (Diurnal patterns 8h-17h), Batch job chạy ngầm ban đêm (2h-4h AM), Backup định kỳ.
+- Phân tích các loại sự cố nguy hiểm thực tế trong doanh nghiệp mà Cảnh báo ngưỡng tĩnh (Rule-based Static Thresholds) BỊ THẤT BẠI nhưng ML (Isolation Forest) BẮT ĐƯỢC:
+  1. *Rò rỉ dữ liệu ban đêm (Data Exfiltration at Night)*: CPU/Network thấp < 20% nhưng phát sinh băng thông bất thường lúc 3h sáng.
+  2. *Rò rỉ bộ nhớ từ từ (Memory Leak)*: RAM nhích từ 40% -> 85% trong 3 ngày, static threshold 90% không báo kịp trước khi crash.
+  3. *Tắc nghẽn hàng đợi / Thread Starvation*: CPU thấp 20% nhưng `load1_per_cpu` > 5.0.
+  4. *Tấn công Micro-burst DDoS / Port Scan*: Băng thông nhỏ nhưng `net_packets_in_pps` vọt 10x.
+- Đóng góp vào Chương 1 (Đặt vấn đề) và Chương 2 (Cơ sở lý thuyết) của Báo cáo Khóa luận.
