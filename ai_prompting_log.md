@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
 ```
 
 ---
@@ -177,7 +177,7 @@
 - File: backend/app/main.py, core/config.py
 - File: infra/prometheus/prometheus.yml
 - File: ml/scripts/train.py (full Isolation Forest training script)
-- File: scenarios/scenario_01-05.sh (kịch kịch bản bất thường)
+- File: scenarios/scenario_01-05.sh (kịch bản bất thường)
 - Git init + first commit
 
 **Đã chỉnh sửa:**
@@ -186,103 +186,13 @@
 
 ---
 
-### [2026-08-09 21:02] — Antigravity IDE (Gemini Flash)
-**Module:** Infrastructure & Data Collection — Setup 3 Ubuntu Target VMs
+### [2026-08-10 01:05] — Antigravity IDE (Gemini Flash)
+**Module:** Windows Maintenance — Locating Previous Windows Installation Cleanup
 **Prompt:**
-> Setup để chuẩn bị collect data từ 3 máy chủ ảo ubuntu
+> Previous Windows Installation(s) kh thấy cái này?
 
 **Output dùng:**
-- Viết `infra/node-exporter/install_node_exporter.sh`: Bash script tự động cài đặt Node Exporter systemd service trên Ubuntu.
-- Viết `ml/scripts/collect_data.py`: Script Python tự động query PromQL features từ Prometheus mỗi 15 giây và ghi append vào file CSV `ml/dataset/<server_id>_metrics.csv`.
-- Cập nhật `infra/prometheus/prometheus.yml`: Định nghĩa 3 target `ubuntu-server-01`, `02`, `03` với cấu hình scrape interval 15s.
-- Viết `infra/start_simulated_vms.bat`: Script Docker giả lập ngay 3 node Ubuntu Node Exporter trên local machine cho việc test nhanh.
-
----
-
-### [2026-08-09 21:08] — Antigravity IDE (Gemini Flash)
-**Module:** Feature Engineering — 10 Features Selection
-**Prompt:**
-> cpu_percent (%), ram_percent (%), disk_read_mbps (MB/s), disk_write_mbps (MB/s), net_in_mbps (Mbps), net_out_mbps (Mbps) - cần bổ sung gì chỗ này kh?
-
-**Output dùng:**
-- Đánh giá bổ sung 4 chỉ số nâng cao: `load1_per_cpu`, `disk_iops`, `net_packets_in_pps`, `tcp_connections`.
-- Lý do: Bắt được các kịch bản tấn công/bất thường đặc thù mà 6 chỉ số cơ bản bị sót (SYN Flood gói nhỏ, DB Random 4K IOPS overload, Process Queue Deadlock).
-- Cập nhật `collect_data.py` và `train.py` để hỗ trợ chuẩn hóa và thu thập bộ 10 features.
-
----
-
-### [2026-08-09 21:10] — Antigravity IDE (Gemini Flash)
-**Module:** Concept Clarification — Docker Simulation vs Ubuntu VM
-**Prompt:**
-> Việc giả lập có khác gì với chạy ubuntu trên VM?
-
-**Output dùng:**
-- Phân tích sự khác biệt về bản chất kỹ thuật: Docker share kernel máy Host Windows vs VM có Kernel Linux độc lập.
-- So sánh tác động dữ liệu ML: Docker giả lập khiến cả 3 server có thông số trùng nhau; VM tạo ra dữ liệu thực tế độc lập từng máy chủ.
-- Đưa ra định hướng sử dụng kết hợp: Dùng Docker giả lập khi code thử UI/Backend, dùng VM thật để thu Dataset & làm thực nghiệm bảo vệ LVTN.
-
----
-
-### [2026-08-09 23:05] — Antigravity IDE (Gemini Flash)
-**Module:** Workload Simulation — Normal Baseline for ML
-**Prompt:**
-> Các máy VM cần chạy các srv các tác vụ thường có của 1 server kh?
-
-**Output dùng:**
-- Trả lời: Không cần cài ứng dụng phức tạp, nhưng CẦN tạo "Tải bình thường" (Normal Baseline) để model Isolation Forest học được phân phối chuẩn của dữ liệu.
-- Giải thích nguyên lý ML: Nếu server nhàn rỗi 100% (0.1% CPU), độ lệch chuẩn = 0, một tác vụ nền nhỏ của OS sẽ bị phán lầm thành Anomaly.
-- Tạo script `scenarios/generate_normal_traffic.sh` chạy ngầm sinh tải nhẹ biến thiên tự động (CPU 5-15%, I/O nhẹ, ping).
-
----
-
-### [2026-08-09 23:17] — Antigravity IDE (Gemini Flash)
-**Module:** Dataset Availability & Synthetic Generator
-**Prompt:**
-> Có bộ data nào sẵn phục vụ cái này kh?
-
-**Output dùng:**
-- Giới thiệu 3 bộ dữ liệu nghiên cứu công khai nổi tiếng trong bài báo quốc tế: NAB (Numenta Anomaly Benchmark), SMD (Server Metrics Dataset), Kaggle System Metrics.
-- Tạo script `ml/scripts/generate_synthetic_dataset.py` tự động sinh 40,320 mẫu dữ liệu chuẩn 7 ngày cho 3 máy chủ (`ubuntu-server-01`, `02`, `03`) với đầy đủ 10 features và nhãn thực tế (`is_anomaly`).
-- Chạy sinh thành công 3 file CSV dataset trong `D:\KLTN\ml\dataset\` để có dữ liệu huấn luyện ML và test code ngay lập tức.
-
----
-
-### [2026-08-09 23:21] — Antigravity IDE (Gemini Flash)
-**Module:** Verification — Mock Model Pipeline vs Real Data Training
-**Prompt:**
-> Được huấn luyện xong là sao, chưa bắt đầu mà?
-
-**Output dùng:**
-- Giải thích rõ ràng khái niệm "Chạy thử nghiệm luồng mã nguồn" (Mock / Code pipeline test) vs "Huấn luyện thực tế" (Real Training).
-- Tôi đã cho chạy `train.py` trên bộ dữ liệu giả lập (Synthetic Dataset) để verify 100% rằng code Python, thư viện scikit-learn, joblib và việc lưu file `.pkl` không bị lỗi cú pháp hay thiếu file.
-- Nhấn mạnh: Đây là bước kiểm thử code. Khi em bắt đầu chạy 3 máy chủ thật trong Tuần 3, chúng nó mới bấm nút Train lại trên dữ liệu thật chính thức cho Báo cáo.
-
----
-
-### [2026-08-09 23:23] — Antigravity IDE (Gemini Flash)
-**Module:** Infrastructure Setup — Recommended Specs for 3 Ubuntu VMs
-**Prompt:**
-> Cấu hình đề xuất cài cho 3 máy ubuntu
-
-**Output dùng:**
-- Đưa ra cấu hình khuyến nghị tối ưu tài nguyên cho VirtualBox/VMware: OS Ubuntu 22.04 LTS Server, 1-2 vCPU, 1-2GB RAM, 20GB Dynamic Disk.
-- Cấu hình Card mạng: Host-only Adapter (để định tuyến IP cố định 192.168.56.x giữa máy Host và 3 VM).
-- Danh sách phần mềm cơ bản cần cài đặt trước (`curl`, `wget`, `git`, `stress`, `net-tools`, `node-exporter`).
-- Phân chia vai trò 3 VM (Web Server, Database Server, App Worker Server).
-
----
-
-### [2026-08-10 00:57] — Antigravity IDE (Gemini Flash)
-**Module:** System Optimization — Drive C Disk Space Analysis & Cleanup
-**Prompt:**
-> Phân tích dung lượng ổ cứng C
-
-**Output dùng:**
-- Phân tích hiện trạng ổ C: Tổng **475.27 GB**, chỉ còn trống **7.52 GB** (⚠️ Cảnh báo ổ C sắp đầy!).
-- Chỉ ra 5 "hung thần" đang ngốn bộ nhớ lớn nhất trên C:
-  1. `$WINDOWS.~BT` & `$Windows.~WS`: Thư mục dự phòng nâng cấp Windows Update cũ (~30 – 50 GB).
-  2. `C:\ProgramData\NVIDIA`: Cache installer driver card màn hình cũ (~10 – 15 GB).
-  3. `C:\Users\ASUS\AppData\Roaming`: Dữ liệu ứng dụng rác (Discord 24GB, Unity 23GB, ZaloData 22GB, Solar-PuTTY 17GB, Docker Desktop 14GB, UltraViewer 10GB).
-  4. `%temp%` & `C:\Windows\Temp`: File tạm thời ứng dụng (~5 – 10 GB).
-  5. `$Recycle.Bin`: Thùng rác chưa dọn.
-- Cung cấp hướng dẫn dọn dẹp an toàn để giải phóng từ **50 – 100 GB** dung lượng ngay lập tức.
+- Giải thích nguyên nhân: Cần nhấn nút **"Clean up system files"** (Dọn dẹp tệp hệ thống) ở góc dưới cửa sổ Disk Cleanup thì Windows mới bắt đầu quét các mục cài đặt hệ thống cũ.
+- Đưa ra 2 cách đơn giản hơn:
+  1. Dùng **Windows Settings UI**: Mở `Settings` (Windows + I) -> `System` -> `Storage` -> `Temporary files` -> chọn `Previous Windows installation(s)` -> `Remove files`.
+  2. Dùng lệnh **Storage Sense / DISM** dọn dẹp dứt điểm.
