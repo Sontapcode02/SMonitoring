@@ -87,8 +87,8 @@ def train(server_id: str, days: int = 7, contamination: float = 0.05):
     joblib.dump(model, model_path)
     joblib.dump(scaler, scaler_path)
 
-    print(f"[Save] Model → {model_path}")
-    print(f"[Save] Scaler → {scaler_path}")
+    print(f"[Save] Model -> {model_path}")
+    print(f"[Save] Scaler -> {scaler_path}")
 
     scores = model.decision_function(X_scaled)
     anomaly_count = (model.predict(X_scaled) == -1).sum()
