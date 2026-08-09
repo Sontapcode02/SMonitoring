@@ -269,3 +269,16 @@
 - Cấu hình Card mạng: Host-only Adapter (để định tuyến IP cố định 192.168.56.x giữa máy Host và 3 VM).
 - Danh sách phần mềm cơ bản cần cài đặt trước (`curl`, `wget`, `git`, `stress`, `net-tools`, `node-exporter`).
 - Phân chia vai trò 3 VM (Web Server, Database Server, App Worker Server).
+
+---
+
+### [2026-08-09 23:56] — Antigravity IDE (Gemini Flash)
+**Module:** Infrastructure Deployment — Node Exporter Installation on 3 Ubuntu VMs
+**Prompt:**
+> Đã cài xong 3 máy ubuntu và ssh thành công
+
+**Output dùng:**
+- Chúc mừng hoàn thành mốc cài đặt VM & SSH.
+- Cung cấp câu lệnh 1-liner cài đặt tự động Node Exporter v1.8.1 làm systemd service cho từng VM qua SSH.
+- Hướng dẫn kiểm tra IP (`ip a`) và cập nhật vào `infra/prometheus/prometheus.yml`.
+- Hướng dẫn kích hoạt script sinh tải nhẹ nền (`generate_normal_traffic.sh`) trên 3 VM.
