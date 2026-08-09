@@ -8,26 +8,24 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9090"]
 
-  # ── 2. Cụm 3 Máy Chủ Ubuntu Giám Sát ───────────────────────
-  # Lưu ý: Thay đổi IP thành IP thực tế của 3 Máy chủ ảo (VMware / VirtualBox / Cloud VPS)
-  
+  # ── 2. Cụm 3 Máy Chủ Ubuntu Giám Sát Real ───────────────────
   - job_name: "ubuntu-server-01"
     static_configs:
-      - targets: ["192.168.56.101:9100"]  # Thay IP của Ubuntu VM 1
+      - targets: ["192.168.199.132:9100"]
     labels:
       server_name: "ubuntu-server-01"
       role: "web-server"
 
   - job_name: "ubuntu-server-02"
     static_configs:
-      - targets: ["192.168.56.102:9100"]  # Thay IP của Ubuntu VM 2
+      - targets: ["192.168.199.133:9100"]
     labels:
       server_name: "ubuntu-server-02"
       role: "db-server"
 
   - job_name: "ubuntu-server-03"
     static_configs:
-      - targets: ["192.168.56.103:9100"]  # Thay IP của Ubuntu VM 3
+      - targets: ["192.168.199.134:9100"]
     labels:
       server_name: "ubuntu-server-03"
       role: "app-server"

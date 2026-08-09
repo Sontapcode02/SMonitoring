@@ -326,3 +326,14 @@
 **Output dùng:**
 - Xác nhận Node Exporter đã hoạt động 100% trên port 9100 của máy ảo Ubuntu.
 - Hướng dẫn thực hiện tương tự trên các VM còn lại và kiểm tra IP để liên kết với Prometheus.
+
+---
+
+### [2026-08-10 00:15] — Antigravity IDE (Gemini Flash)
+**Module:** Target Configuration — Update Real Ubuntu IP Addresses
+**Prompt:**
+> 192.168.199.132, 192.168.199.133, 192.168.199.134
+
+**Output dùng:**
+- Cập nhật địa chỉ IP thật của 3 máy ảo Ubuntu (`192.168.199.132`, `133`, `134`) vào file cấu hình Prometheus [infra/prometheus/prometheus.yml](file:///D:/KLTN/infra/prometheus/prometheus.yml).
+- Thực hiện kiểm tra kết nối mạng (Test-NetConnection) từ Windows tới Port 9100 của 3 máy ảo Ubuntu.
