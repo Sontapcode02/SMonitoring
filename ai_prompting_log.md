@@ -220,3 +220,15 @@
 - Phân tích sự khác biệt về bản chất kỹ thuật: Docker share kernel máy Host Windows vs VM có Kernel Linux độc lập.
 - So sánh tác động dữ liệu ML: Docker giả lập khiến cả 3 server có thông số trùng nhau; VM tạo ra dữ liệu thực tế độc lập từng máy chủ.
 - Đưa ra định hướng sử dụng kết hợp: Dùng Docker giả lập khi code thử UI/Backend, dùng VM thật để thu Dataset & làm thực nghiệm bảo vệ LVTN.
+
+---
+
+### [2026-08-09 23:05] — Antigravity IDE (Gemini Flash)
+**Module:** Workload Simulation — Normal Baseline for ML
+**Prompt:**
+> Các máy VM cần chạy các srv các tác vụ thường có của 1 server kh?
+
+**Output dùng:**
+- Trả lời: Không cần cài ứng dụng phức tạp, nhưng CẦN tạo "Tải bình thường" (Normal Baseline) để model Isolation Forest học được phân phối chuẩn của dữ liệu.
+- Giải thích nguyên lý ML: Nếu server nhàn rỗi 100% (0.1% CPU), độ lệch chuẩn = 0, một tác vụ nền nhỏ của OS sẽ bị phán lầm thành Anomaly.
+- Tạo script `scenarios/generate_normal_traffic.sh` chạy ngầm sinh tải nhẹ biến thiên tự động (CPU 5-15%, I/O nhẹ, ping).
