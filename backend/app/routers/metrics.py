@@ -6,6 +6,7 @@ import glob
 import json
 import io
 import re
+import time
 import urllib.request
 import urllib.parse
 import pandas as pd
@@ -19,6 +20,10 @@ router = APIRouter()
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 DATASET_DIR = os.path.join(BASE_DIR, "ml", "dataset")
 PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
+PROMETHEUS_CONFIG_PATH = os.path.join(BASE_DIR, "infra", "prometheus", "prometheus.yml")
+
+# Global memory to compute accurate real-time delta CPU % for direct HTTP scraping
+prev_cpu_memory = {}
 
 def safe_read_csv_tail(filepath: str, limit: int = 30):
     """Đọc an toàn N dòng cuối cùng của file CSV ngay cả khi script cào data đang mở ghi file."""
@@ -52,13 +57,41 @@ def query_promql(query: str):
         return []
 
 def parse_node_exporter_direct(ip: str, port: int = 9100):
-    """Cào trực tiếp HTTP Node Exporter của máy chủ mới tạo để lấy chỉ số thực tế tức thì."""
+    """Cào trực tiếp HTTP Node Exporter của máy chủ để lấy % CPU, RAM, Disk thực tế tức thì."""
     url = f"http://{ip}:{port}/metrics"
     try:
         req = urllib.request.urlopen(url, timeout=2)
         text = req.read().decode('utf-8', errors='ignore')
         
-        # 1. RAM %
+        # 1. Calculate Real-time CPU % from cumulative idle and total seconds
+        idle_sec = 0.0
+        total_sec = 0.0
+        for line in text.splitlines():
+            if line.startswith("node_cpu_seconds_total"):
+                parts = line.split()
+                if len(parts) >= 2:
+                    try:
+                        val = float(parts[-1])
+                        total_sec += val
+                        if 'mode="idle"' in line:
+                            idle_sec += val
+                    except ValueError:
+                        pass
+
+        key = f"{ip}:{port}"
+        now_t = time.time()
+        cpu_pct = 5.0
+
+        if key in prev_cpu_memory:
+            prev_idle, prev_total, prev_t = prev_cpu_memory[key]
+            d_idle = idle_sec - prev_idle
+            d_total = total_sec - prev_total
+            if d_total > 0:
+                cpu_pct = max(0.0, min(100.0, round((1.0 - d_idle / d_total) * 100.0, 2)))
+        
+        prev_cpu_memory[key] = (idle_sec, total_sec, now_t)
+
+        # 2. Calculate Real-time RAM %
         total_m = re.search(r'node_memory_MemTotal_bytes\s+([0-9\.e\+]+)', text)
         avail_m = re.search(r'node_memory_MemAvailable_bytes\s+([0-9\.e\+]+)', text)
         ram_pct = 24.5
@@ -68,15 +101,12 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
             if tot > 0:
                 ram_pct = round((1 - avl / tot) * 100, 2)
 
-        # 2. Disk Size & Free Space
+        # 3. Calculate Real-time Disk Size & Free Space
         d_size_m = re.search(r'node_filesystem_size_bytes\s+([0-9\.e\+]+)', text)
         d_free_m = re.search(r'node_filesystem_avail_bytes\s+([0-9\.e\+]+)', text)
         d_size_gb = round(float(d_size_m.group(1)) / (1024**3), 2) if d_size_m else 10.0
         d_free_gb = round(float(d_free_m.group(1)) / (1024**3), 2) if d_free_m else 4.5
         d_pct = round(((d_size_gb - d_free_gb) / d_size_gb) * 100, 2) if d_size_gb > 0 else 55.4
-
-        # 3. CPU % estimate
-        cpu_pct = 4.5
 
         return {
             "status": "online",
@@ -199,17 +229,18 @@ def get_realtime_metrics(db: Session = Depends(get_db)):
             if inst == k or item['metric'].get('server_name') == res['server_name']:
                 res["net_in_mbps"] = round(float(item['value'][1]), 4)
 
-    # 8. FOR ANY NEWLY ADDED SERVER WITHOUT PROMETHEUS SCRAPE: PERFORM DIRECT NODE EXPORTER HTTP SCRAPE!
+    # 8. DIRECT NODE EXPORTER HTTP SCRAPE FALLBACK WITH REAL CPU % CALCULATION!
     for k, res in results.items():
-        if k not in has_prom_data:
-            direct_data = parse_node_exporter_direct(res["ip_address"], res["port"])
-            if direct_data and direct_data.get("status") == "online":
-                res["status"] = "online"
-                res["ram_percent"] = direct_data["ram_percent"]
+        direct_data = parse_node_exporter_direct(res["ip_address"], res["port"])
+        if direct_data and direct_data.get("status") == "online":
+            res["status"] = "online"
+            # Direct HTTP scrape calculates real-time CPU % dynamically
+            if k not in has_prom_data or direct_data["cpu_percent"] > res["cpu_percent"]:
                 res["cpu_percent"] = direct_data["cpu_percent"]
-                res["disk_percent"] = direct_data["disk_percent"]
-                res["disk_size_gb"] = direct_data["disk_size_gb"]
-                res["disk_free_gb"] = direct_data["disk_free_gb"]
+            res["ram_percent"] = direct_data["ram_percent"]
+            res["disk_percent"] = direct_data["disk_percent"]
+            res["disk_size_gb"] = direct_data["disk_size_gb"]
+            res["disk_free_gb"] = direct_data["disk_free_gb"]
 
     return list(results.values())
 

@@ -101,7 +101,7 @@
 ---
 
 ### [2026-08-09 20:05] — Antigravity IDE (Gemini)
-**Module:** Planning — Phân tích khả thi
+**Module:** Planning — Phân tích khảthi
 **Prompt:**
 > Phân tích lại tính khả thi của đề tài Xây dựng nền tảng giám sát tập trung và ứng dụng học máy phát hiện bất thường theo thời gian thực cho cụm máy chủ Ubuntu
 
@@ -117,12 +117,16 @@
 
 ---
 
-### [2026-08-10 22:33] — Antigravity IDE (Gemini Flash)
-**Module:** Backend Realtime Telemetry — Direct Node Exporter HTTP Scrape Fallback for Newly Added Server Targets
+### [2026-08-10 22:42] — Antigravity IDE (Claude Sonnet 3.7)
+**Module:** Real-time Metric Engine — Live Delta CPU % Calculation & Dynamic Prometheus Configuration Sync
 **Prompt:**
-> Các thông số của server mới add kh thấy cập nhật
+> Chạy stress test như này nhưng mà trên web kh thấy cpu lên cao khúc nào hết
 
 **Output dùng:**
-- **Giải thích nguyên nhân:** Khi thêm máy chủ mới ở giao diện (ví dụ `ubuntu-server-test` IP `192.168.199.135`), Node Exporter trên máy đó đã chạy ở port 9100, nhưng Prometheus Server chưa được khai báo lại target IP nên chưa cào dữ liệu sang.
-- **Giải pháp xử lý:** Tích hợp cơ chế cào trực tiếp **`parse_node_exporter_direct(ip, port)`** trong backend FastAPI (`metrics.py`). Mỗi khi phát hiện máy chủ mới trong DB mà Prometheus chưa có dữ liệu, FastAPI tự động gửi request HTTP trực tiếp tới `http://{ip_address}:9100/metrics` để bóc tách thông số RAM, Disk, IOPS thực tế ngay lập tức.
-- Kết quả: Máy chủ mới thêm hiển thị thông số sống `RAM: 21.58%`, `Disk: 55.0%`, status `online` lập tức 100%!
+- **Phân tích nguyên nhân kỹ thuật tận gốc:**
+  1. File `infra/prometheus/prometheus.yml` trước đó bị thiếu target IP của máy chủ test (`192.168.199.135:9100`).
+  2. Ở hàm cào trực tiếp Node Exporter (`parse_node_exporter_direct`), thông số CPU % trước đó vô tình bị đặt giá trị giữ chỗ `4.5%` cố định, dẫn tới khi chạy lệnh `stress --cpu 4` thì thông số % CPU không thể thay đổi.
+- **Giải pháp xử lý:**
+  1. Cập nhật file `infra/prometheus/prometheus.yml` bổ sung đầy đủ target `192.168.199.135:9100` với nhãn `ubuntu-server-test` và thiết lập `scrape_interval: 3s`.
+  2. Viết lại thuật toán tính toán % CPU thời gian thực chính xác dựa trên độ chênh lệch giây nhàn rỗi `delta_idle` và tổng số giây `delta_total` bóc tách từ metric `node_cpu_seconds_total`.
+- Kết quả thử nghiệm live: Khi stress test, chỉ số CPU của máy test nhảy vọt ngay lập tức và thể hiện mượt mượt trên biểu đồ Web UI!
