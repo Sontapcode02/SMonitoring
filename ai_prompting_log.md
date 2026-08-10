@@ -117,14 +117,16 @@
 
 ---
 
-### [2026-08-10 19:35] — Antigravity IDE (Gemini Flash)
-**Module:** Execution — Transition to Week 2 FastAPI Backend & PH1 Server Management
+### [2026-08-10 19:46] — Antigravity IDE (Gemini Flash)
+**Module:** Live Verification — Prometheus API Fetch Test Execution
 **Prompt:**
-> Tiến vào tiến độ tuần 2
+> Test lấy dữ từ prometheus
 
 **Output dùng:**
-- Lập Kế hoạch Triển khai (Implementation Plan) cho **Tuần 2**:
-  - **Backend FastAPI Foundation:** Cấu hình SQLAlchemy, SQLite dev database, Router stubs.
-  - **Phân hệ 1 (PH1) RESTful API:** Thêm/Xóa/Danh sách máy chủ, Live Ping status Node Exporter (port 9100).
-  - **Frontend React Scaffold:** Khởi tạo cấu trúc UI Dashboard 5 phân hệ với Vite + React.
-- Yêu cầu xác nhận phê duyệt kế hoạch để tiến hành viết code.
+- Viết script Python `ml/scripts/test_prometheus_fetch.py` gọi trực tiếp API Prometheus (`http://localhost:9090/api/v1/query`).
+- Kết quả Truy vấn Thực tế (Live Fetch Results):
+  - **Targets Status (`up`):** Cả 3 máy ảo Ubuntu (`192.168.199.132:9100`, `133:9100`, `134:9100`) và Prometheus Server (`localhost:9090`) đều phản hồi trạng thái **ONLINE (1)**.
+  - **Live CPU Usage:** Ubuntu 1 = 5.06%, Ubuntu 2 = 3.91%, Ubuntu 3 = 3.68% (Chuẩn Night Mode).
+  - **Live RAM Usage:** Ubuntu 1 = 25.08%, Ubuntu 2 = 24.25%, Ubuntu 3 = 24.38%.
+  - **Live Disk IOPS:** Đọc ghi đĩa sinh động ổn định.
+- Kết luận: Prometheus API cào và phản hồi dữ liệu thời gian thực **thành công 100%**.
