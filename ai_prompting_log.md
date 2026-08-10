@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
 ```
 
 ---
@@ -100,31 +100,14 @@
 
 ---
 
-### [2026-08-09 20:05] — Antigravity IDE (Gemini)
-**Module:** Planning — Phân tích khả thi
+### [2026-08-10 19:13] — Antigravity IDE (Gemini Flash)
+**Module:** System Investigation — Overnight Drive C Space Consumption Root Cause
 **Prompt:**
-> Phân tích lại tính khả thi của đề tài Xây dựng nền tảng giám sát tập trung và ứng dụng học máy phát hiện bất thường theo thời gian thực cho cụm máy chủ Ubuntu
+> Tìm ra nguyên nhân từ tối qua dung lượng còn lại của ổ C là 14gb mà giờ còn có 6gb?
 
 **Output dùng:**
-- Tổng điểm khả thi: 67/100 — Khả thi với điều kiện cắt scope
-- Ma trận rủi ro 8 rủi ro chính
-- Ước lượng thực tế: ~10–12 tuần → cần cắt scope về 8 tuần
-- Khuyến nghị: Thay NestJS bằng FastAPI, bỏ Loki optional
-
-**Đã chỉnh sửa:**
-- Chốt dùng FastAPI thay NestJS (quyết định quan trọng nhất)
-- Loki → optional
-
----
-
-### [2026-08-10 19:12] — Antigravity IDE (Gemini Flash)
-**Module:** Dataset Projections — 5-Day Real-World Dataset Capacity Calculation
-**Prompt:**
-> Thực tế trong 5 ngày?
-
-**Output dùng:**
-- Tính toán dung lượng thực tế sau **5 ngày** thu thập:
-  - **Mỗi máy chủ:** `5,760 dòng/ngày × 5 ngày` = **`28,800 dòng dữ liệu`**.
-  - **Dung lượng 1 file CSV:** **`2.21 MB / máy chủ`**.
-  - **Tổng cả 3 máy chủ sau 5 ngày:** **`6.62 MB`** (với tổng cộng `86,400 dòng`).
-- Thời gian huấn luyện Isolation Forest cho 28,800 dòng: **~0.25 giây**.
+- Điều tra hệ thống & Chỉ ra 3 nguyên nhân chính ngốn ~8 GB dung lượng ổ C qua đêm:
+  1. **Đĩa đệm động 3 máy ảo Ubuntu phình to (~4 – 5 GB):** 3 máy ảo Ubuntu chạy liên tục 17h qua (với script stress, ghi log đĩa `dd`, Prometheus scrape) khiến các file đĩa `.vmdk` động phình kích thước vật lý dưới đĩa cứng.
+  2. **OneDrive Sync Cache (~2 GB):** Thư mục Virtual Machines nằm trong `OneDrive\Tài liệu\`, khi file đĩa vmdk biến động, OneDrive liên tục tải đệm cache để chuẩn bị đồng bộ.
+  3. **AppCache & System Temp qua đêm (~1.5 GB):** Cache tự sinh của Windows, Browser, Discord, VS Code sau 17h hoạt động liên tục.
+- Giải pháp: Chuyển thư mục chứa máy ảo ra khỏi OneDrive hoặc chạy Disk Cleanup dọn dẹp bộ nhớ tạm.
