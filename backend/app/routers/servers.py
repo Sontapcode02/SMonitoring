@@ -46,15 +46,36 @@ def get_server_detail(server_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Không tìm thấy máy chủ!")
     return server
 
-@router.delete("/{server_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.put("/{server_id}", response_model=ServerResponse)
+def update_server(server_id: int, server_in: ServerCreate, db: Session = Depends(get_db)):
+    """Cập nhật thông tin máy chủ (PH1)."""
+    server = db.query(ServerModel).filter(ServerModel.id == server_id).first()
+    if not server:
+        raise HTTPException(status_code=404, detail="Không tìm thấy máy chủ!")
+    
+    is_online = ping_node_exporter(server_in.ip_address, server_in.port)
+    
+    server.name = server_in.name
+    server.ip_address = server_in.ip_address
+    server.port = server_in.port
+    server.role = server_in.role
+    server.status = "online" if is_online else "offline"
+    server.last_ping = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(server)
+    return server
+
+@router.delete("/{server_id}")
 def delete_server(server_id: int, db: Session = Depends(get_db)):
     """Xóa máy chủ khỏi hệ thống giám sát (PH1)."""
     server = db.query(ServerModel).filter(ServerModel.id == server_id).first()
     if not server:
         raise HTTPException(status_code=404, detail="Không tìm thấy máy chủ!")
+    name = server.name
     db.delete(server)
     db.commit()
-    return None
+    return {"message": f"Đã xóa máy chủ {name} khỏi hệ thống thành công!"}
 
 @router.post("/{server_id}/ping")
 def ping_server(server_id: int, db: Session = Depends(get_db)):

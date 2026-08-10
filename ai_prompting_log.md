@@ -101,7 +101,7 @@
 ---
 
 ### [2026-08-09 20:05] — Antigravity IDE (Gemini)
-**Module:** Planning — Phân tích khả thi
+**Module:** Planning — Phân tích khảthi
 **Prompt:**
 > Phân tích lại tính khả thi của đề tài Xây dựng nền tảng giám sát tập trung và ứng dụng học máy phát hiện bất thường theo thời gian thực cho cụm máy chủ Ubuntu
 
@@ -117,15 +117,16 @@
 
 ---
 
-### [2026-08-10 20:13] — Antigravity IDE (Gemini Flash)
-**Module:** Integration — Live Real-Time Prometheus Integration for Dashboard (PH2)
+### [2026-08-10 20:24] — Antigravity IDE (Gemini Flash)
+**Module:** Backend API — Server Fleet CRUD API Verification (PH1)
 **Prompt:**
-> Kết nối với máy chủ để lấy dữ liệu thực tế từ máy chủ
+> Các API get post delete server hoạt động như nào rồi
 
 **Output dùng:**
-- Nâng cấp API `GET /api/metrics/realtime` trong `backend/app/routers/metrics.py` gọi PromQL trực tiếp tới **Prometheus Server** (`http://localhost:9090`).
-- Kết nối `RealtimeDashboard.tsx` (PH2) tự động gọi API `/api/metrics/realtime` mỗi 3 giây để cập nhật trực tiếp dữ liệu nhảy số thực tế của 3 máy ảo Ubuntu:
-  - `ubuntu-server-01` (`192.168.199.133:9100`) ➡️ RAM=25.08%, IOPS=0.16.
-  - `ubuntu-server-02` (`192.168.199.132:9100`) ➡️ RAM=25.10%, IOPS=0.00.
-  - `ubuntu-server-03` (`192.168.199.134:9100`) ➡️ RAM=24.15%, IOPS=0.00.
-- Đạt 100% luồng dữ liệu thực tế từ Máy chủ Ubuntu ➡️ Node Exporter ➡️ Prometheus ➡️ FastAPI ➡️ React Dashboard!
+- Thực thi quy trình kiểm thử trực tiếp cả 5 API CRUD Máy chủ trên FastAPI backend (`http://127.0.0.1:8000/api/servers/`):
+  1. `GET /api/servers/`: Lấy danh sách toàn bộ máy chủ trong SQLite DB.
+  2. `POST /api/servers/`: Thêm máy chủ mới và tự động thực hiện Socket Healthcheck port 9100.
+  3. `PUT /api/servers/{id}`: Cập nhật thông tin máy chủ.
+  4. `POST /api/servers/{id}/ping`: Ping tức thời kiểm tra xem Node Exporter còn sống không.
+  5. `DELETE /api/servers/{id}`: Xóa máy chủ khỏi SQLite DB.
+- Tất cả API hoạt động mượt mà, phản hồi JSON chuẩn RESTful.
