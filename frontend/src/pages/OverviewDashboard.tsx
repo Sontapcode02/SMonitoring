@@ -299,13 +299,12 @@ export const OverviewDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Middle Row: CPU Gauge, RAM Gauge & Server Fleet Health (3 Columns with Node Selector) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '270px 270px 1fr', gap: '16px', flex: 1, minHeight: 0 }}>
-        {/* CPU Gauge Card with Dynamic Server Selector */}
+      {/* Middle Row: CPU Gauge, RAM Gauge & Server Fleet Health (3 Columns with Scrollable Server List) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '270px 270px 1fr', gap: '16px', height: '220px' }}>
+        {/* CPU Gauge Card */}
         <div className="glass-card" style={{ padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-cyan)' }}>CPU GAUGE</span>
-            {/* Node Switcher Dropdown */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.4)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
               <Filter size={12} color="var(--accent-cyan)" />
               <select
@@ -319,17 +318,16 @@ export const OverviewDashboard: React.FC = () => {
               </select>
             </div>
           </div>
-          <ReactECharts option={cpuGaugeOption} style={{ height: '150px', width: '100%' }} />
+          <ReactECharts option={cpuGaugeOption} style={{ height: '145px', width: '100%' }} />
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
             Selected Node: <b style={{ color: 'var(--accent-cyan)' }}>{gaugeServer}</b>
           </div>
         </div>
 
-        {/* RAM Gauge Card with Dynamic Server Selector */}
+        {/* RAM Gauge Card */}
         <div className="glass-card" style={{ padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ fontSize: '11px', fontWeight: 700, color: '#c084fc' }}>RAM GAUGE</span>
-            {/* Node Switcher Dropdown */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.4)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
               <Filter size={12} color="#c084fc" />
               <select
@@ -343,18 +341,18 @@ export const OverviewDashboard: React.FC = () => {
               </select>
             </div>
           </div>
-          <ReactECharts option={ramGaugeOption} style={{ height: '150px', width: '100%' }} />
+          <ReactECharts option={ramGaugeOption} style={{ height: '145px', width: '100%' }} />
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
             Selected Node: <b style={{ color: '#c084fc' }}>{gaugeServer}</b>
           </div>
         </div>
 
-        {/* Server Fleet Health List */}
-        <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column' }}>
+        {/* Server Fleet Health List (Strict Fixed Container with Scrollbar) */}
+        <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
           <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Server size={16} color="var(--accent-cyan)" /> Server Fleet Node Health Overview
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flex: 1 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
             {servers.map((srv) => {
               const m = realtimeMetrics[srv.name] || { cpu_percent: 0, ram_percent: 0 };
               const hasAlert = activeAlerts.some(a => a.server_id === srv.id);
@@ -365,17 +363,18 @@ export const OverviewDashboard: React.FC = () => {
                   key={srv.id}
                   onClick={() => setGaugeServer(srv.name)}
                   style={{
-                    padding: '10px 14px',
+                    padding: '8px 12px',
                     borderRadius: '8px',
                     background: isGaugeSelected ? 'rgba(6, 182, 212, 0.15)' : 'rgba(0,0,0,0.3)',
                     border: `1px solid ${isGaugeSelected ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
                     cursor: 'pointer',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    flexShrink: 0
                   }}
                   title="Click to view Gauges for this server"
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '13px' }}>{srv.name} <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({srv.ip_address})</span></span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontWeight: 700, fontSize: '12px' }}>{srv.name} <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>({srv.ip_address})</span></span>
                     {srv.status === 'offline' ? (
                       <span style={{ padding: '2px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 700, background: 'rgba(244,63,94,0.2)', color: '#fb7185' }}>OFFLINE</span>
                     ) : hasAlert ? (
@@ -401,35 +400,35 @@ export const OverviewDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom Row: Active Incident Stream & Comparative Line Chart (2 Columns) */}
+      {/* Bottom Row: Active Incident Stream & Comparative Line Chart (2 Columns with Scrollable Alerts) */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '16px', height: '220px' }}>
-        {/* Active Incident Stream */}
-        <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column' }}>
+        {/* Active Incident Stream (Strict Fixed Container with Scrollbar) */}
+        <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
           <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px', color: '#fb7185' }}>
             <Bell size={16} /> Active Incident Stream ({activeAlerts.length})
           </h2>
 
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
             {activeAlerts.length === 0 ? (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#34d399', fontSize: '13px', background: 'rgba(16,185,129,0.08)', borderRadius: '8px', border: '1px solid rgba(16,185,129,0.2)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ padding: '16px', textAlign: 'center', color: '#34d399', fontSize: '13px', background: 'rgba(16,185,129,0.08)', borderRadius: '8px', border: '1px solid rgba(16,185,129,0.2)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <CheckCircle2 size={18} style={{ marginRight: '6px' }} />
                 All systems normal. No active incidents!
               </div>
             ) : (
               activeAlerts.map(alert => (
-                <div key={alert.id} style={{ padding: '10px 12px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(244,63,94,0.3)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, color: '#fb7185', marginBottom: '4px' }}>
+                <div key={alert.id} style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(244,63,94,0.3)', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, color: '#fb7185', marginBottom: '2px' }}>
                     <span>{alert.alert_type}</span>
                     <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{new Date(alert.timestamp).toLocaleTimeString()}</span>
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px', lineHeight: '1.3' }}>{alert.message}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', lineHeight: '1.3' }}>{alert.message}</div>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     {alert.status === 'new' && (
-                      <button onClick={() => handleAcknowledge(alert.id)} style={{ flex: 1, padding: '4px', borderRadius: '4px', background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.4)', color: '#60a5fa', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
+                      <button onClick={() => handleAcknowledge(alert.id)} style={{ flex: 1, padding: '3px', borderRadius: '4px', background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.4)', color: '#60a5fa', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
                         Ack
                       </button>
                     )}
-                    <button onClick={() => handleResolve(alert.id)} style={{ flex: 1, padding: '4px', borderRadius: '4px', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', color: '#34d399', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
+                    <button onClick={() => handleResolve(alert.id)} style={{ flex: 1, padding: '3px', borderRadius: '4px', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', color: '#34d399', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
                       Resolve
                     </button>
                   </div>
@@ -440,7 +439,7 @@ export const OverviewDashboard: React.FC = () => {
         </div>
 
         {/* Multi-Server CPU Comparative Chart */}
-        <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column' }}>
+        <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
           <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Activity size={16} color="var(--accent-cyan)" /> Multi-Server CPU Comparison Stream
           </h2>

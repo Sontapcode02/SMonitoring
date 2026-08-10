@@ -117,13 +117,13 @@
 
 ---
 
-### [2026-08-10 21:22] — Antigravity IDE (Gemini Flash)
-**Module:** Frontend Overview — Dynamic Server Node Switcher for CPU & RAM ECharts Gauges
+### [2026-08-10 21:25] — Antigravity IDE (Gemini Flash)
+**Module:** Frontend Layout — Strict Scrollable Inner Containers for Overflow Prevention
 **Prompt:**
-> Gauge Chart ECharts chỉ mới thể hiện được 2 thông cpu ram của 1 máy chủ ubuntu, nên thêm nút thay đổi máy chủ ngay chỗ 2 trạng thái này
+> Server Fleet Node Health Overview, Active Incident Stream (0) cần làm dạng scroll để tránh tràn khi có nhiều object
 
 **Output dùng:**
-- Cập nhật trang **`OverviewDashboard.tsx`**:
-  1. **Menu Chọn Node Nhanh (Node Switcher Dropdown):** Tích hợp nút Dropdown chọn Server Node ngay trên góc phải của mỗi thẻ đồng hồ ECharts Gauge (`server-01 (Web)`, `server-02 (DB)`, `server-03 (App)`).
-  2. **1-Click Interactive Row Selection:** Cho phép Admin nhấp chuột trực tiếp vào bất kỳ dòng máy chủ nào trong danh sách *Server Fleet Node Health* bên cạnh để chuyển nhanh góc nhìn đồng hồ Gauge sang máy chủ đó.
-  3. **Real-time Gauge Update:** Đồng hồ CPU & RAM tự động xoay kim chi tiết theo đúng các thông số thời gian thực của máy chủ được chọn.
+- Cập nhật khung chứa của 2 phần danh sách trong **`OverviewDashboard.tsx`**:
+  1. **`Server Fleet Node Health Overview`:** Cố định khung chiều cao `height: 220px`, thiết lập `overflowY: 'auto'` cùng lớp thanh cuộn tự động. Khi số lượng máy chủ vượt quá 3 node, khung tự sinh thanh cuộn nội bộ mà không làm đẩy tràn màn hình.
+  2. **`Active Incident Stream`:** Cố định khung chiều cao `height: 220px`, thiết lập `overflowY: 'auto'` cùng lớp thanh cuộn tự động. Khi danh sách cảnh báo nhiều sự cố, các thẻ cảnh báo sẽ cuộn mượt mà bên trong khung.
+- Giữ vững quy tắc thiết kế Single Viewport Dashboard gói gọn trong 1 màn hình chuẩn mà không phát sinh thanh cuộn trang bên ngoài.
