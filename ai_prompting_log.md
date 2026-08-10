@@ -117,16 +117,12 @@
 
 ---
 
-### [2026-08-10 19:46] — Antigravity IDE (Gemini Flash)
-**Module:** Live Verification — Prometheus API Fetch Test Execution
+### [2026-08-10 19:59] — Antigravity IDE (Gemini Flash)
+**Module:** UI Architecture — Master Frontend Dashboard Specification (PH1 - PH5)
 **Prompt:**
-> Test lấy dữ từ prometheus
+> Bố cục chung (Layout Master): Sidebar (Trái), Header (Trên), PH1: Quản lý Máy chủ, PH2: Giám sát Thời gian thực (ECharts + WebSocket), PH3: Trung tâm Phát hiện Bất thường (Heatmap Timeline + SHAP Values), PH4: Quản lý Cảnh báo (Kanban Board + Rule Engine), PH5: MLOps & Đánh giá Mô hình (Hyperparameter Sliders + Dual Comparison Chart).
 
 **Output dùng:**
-- Viết script Python `ml/scripts/test_prometheus_fetch.py` gọi trực tiếp API Prometheus (`http://localhost:9090/api/v1/query`).
-- Kết quả Truy vấn Thực tế (Live Fetch Results):
-  - **Targets Status (`up`):** Cả 3 máy ảo Ubuntu (`192.168.199.132:9100`, `133:9100`, `134:9100`) và Prometheus Server (`localhost:9090`) đều phản hồi trạng thái **ONLINE (1)**.
-  - **Live CPU Usage:** Ubuntu 1 = 5.06%, Ubuntu 2 = 3.91%, Ubuntu 3 = 3.68% (Chuẩn Night Mode).
-  - **Live RAM Usage:** Ubuntu 1 = 25.08%, Ubuntu 2 = 24.25%, Ubuntu 3 = 24.38%.
-  - **Live Disk IOPS:** Đọc ghi đĩa sinh động ổn định.
-- Kết luận: Prometheus API cào và phản hồi dữ liệu thời gian thực **thành công 100%**.
+- Lập Kế hoạch Triển khai (Implementation Plan) toàn diện cho bộ giao diện 5 phân hệ chuẩn thiết kế Master Layout.
+- Xác nhận các công nghệ sử dụng: React + TypeScript + ECharts + Glassmorphism UI + Lucide Icons.
+- Chuẩn bị viết mã nguồn triển khai đồng bộ tất cả 5 phân hệ.
