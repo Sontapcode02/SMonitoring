@@ -117,14 +117,14 @@
 
 ---
 
-### [2026-08-10 19:32] — Antigravity IDE (Gemini Flash)
-**Module:** ML Methodology — Optimal Dataset Size & Time Horizon Recommendation
+### [2026-08-10 19:35] — Antigravity IDE (Gemini Flash)
+**Module:** Execution — Transition to Week 2 FastAPI Backend & PH1 Server Management
 **Prompt:**
-> Tập dữ liệu cho ML hoạt động tốt là bao nhiêu ngày?
+> Tiến vào tiến độ tuần 2
 
 **Output dùng:**
-- Phân tích tiêu chuẩn Machine Learning học máy chuỗi thời gian cho Khóa luận:
-  1. **Tối thiểu (Min):** 1 – 2 ngày (`5,760 – 11,520` mẫu/server) — Đủ test code, nhưng tính thuyết phục khoa học chưa cao.
-  2. **Tối ưu (Golden Standard):** **3 – 7 ngày (Lý tưởng nhất là 5 ngày)** (`28,800 – 40,320` mẫu/server). Đủ 5-7 chu kỳ Ngày/Đêm (Diurnal Cycles), cho điểm Precision/Recall > 92%.
-  3. **Tối đa (Max):** > 14 ngày (Dữ liệu bị lặp lại chu kỳ tuần, không tăng thêm giá trị ML đáng kể).
-- Chốt lộ trình: Cho cào liên tục **5 ngày** (10/08 - 15/08) trong khi tiếp tục xây dựng Backend FastAPI & Frontend Dashboard ở Tuần 2.
+- Lập Kế hoạch Triển khai (Implementation Plan) cho **Tuần 2**:
+  - **Backend FastAPI Foundation:** Cấu hình SQLAlchemy, SQLite dev database, Router stubs.
+  - **Phân hệ 1 (PH1) RESTful API:** Thêm/Xóa/Danh sách máy chủ, Live Ping status Node Exporter (port 9100).
+  - **Frontend React Scaffold:** Khởi tạo cấu trúc UI Dashboard 5 phân hệ với Vite + React.
+- Yêu cầu xác nhận phê duyệt kế hoạch để tiến hành viết code.
