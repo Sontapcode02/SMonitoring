@@ -117,13 +117,14 @@
 
 ---
 
-### [2026-08-10 20:47] — Antigravity IDE (Gemini Flash)
-**Module:** Frontend Integration — Global Cross-Tab Alert Synchronization
+### [2026-08-10 20:50] — Antigravity IDE (Gemini Flash)
+**Module:** Frontend Dashboard — Per-Server Individual Live Metric Cards (PH2)
 **Prompt:**
-> Trong cảnh báo đã bấm RESOLVED tất cả các cảnh báo nhưng các tab còn lại chưa thấy cập nhật
+> Ở tab giám sát live các module thông số chưa hiện riêng cho từng máy chủ
 
 **Output dùng:**
-- Đã đồng bộ dữ liệu cảnh báo thời gian thực trên toàn bộ các thành phần giao diện:
-  1. **Header Component (`Header.tsx`):** Tự động polling API `/api/alerts/?status_filter=new` mỗi 5s. Khi tất cả cảnh báo đã `RESOLVED` ➡️ Chuông thông báo tắt nhấp nháy đỏ và badge counter tự động về 0!
-  2. **PH1 Server Fleet View (`ServerManagement.tsx`):** Kiểm tra máy chủ có sự cố `new` hoặc `ack` hay không. Khi tất cả cảnh báo của máy chủ đó được `RESOLVED` ➡️ Thẻ trạng thái máy chủ tự động trả về nhãn **`🟢 Online & Bình thường`** và gỡ bỏ cảnh báo màu cam!
-- Đạt đồng bộ dữ liệu 100% giữa tất cả các Tab/Component khi Admin bấm Resolve.
+- Cập nhật trang **📊 Giám sát Live (PH2)** trong `frontend/src/pages/RealtimeDashboard.tsx`:
+  - Thiết kế **Bảng Thông Số Song Song (Per-Server Live Cards Grid)** hiển thị đồng thời cả 3 máy chủ (`ubuntu-server-01`, `ubuntu-server-02`, `ubuntu-server-03`).
+  - Mỗi thẻ máy chủ độc lập hiển thị riêng biệt 4 chỉ số thực tế: **% CPU Usage**, **% RAM Usage**, **Disk IOPS**, **Network RX**.
+  - Nhấp vào bất kỳ thẻ máy chủ nào ➡️ Biểu đồ ECharts phía dưới lập tức chuyển luồng stream thời gian thực cho riêng máy chủ đó!
+- Giúp quản trị viên quan sát tổng thể 3 máy chủ cùng lúc & soi chi tiết từng máy chủ mượt mà.
