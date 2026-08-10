@@ -1,37 +1,89 @@
-import React, { useState } from 'react';
-import { BellRing, ShieldAlert, CheckCircle2, Clock, Play, Plus, Sliders, ToggleLeft, ToggleRight, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { BellRing, ShieldAlert, CheckCircle2, Clock, Plus, Sliders, ToggleLeft, ToggleRight, ArrowRight, RefreshCw, Zap } from 'lucide-react';
 
 interface AlertItem {
   id: number;
-  server: string;
-  type: string;
+  server_id: number;
+  alert_type: string;
   message: string;
-  severity: 'Critical' | 'Warning' | 'Info';
+  severity: 'critical' | 'warning' | 'info';
   status: 'new' | 'ack' | 'resolved';
   timestamp: string;
+  server_name?: string;
 }
-
-const initialAlerts: AlertItem[] = [
-  { id: 1, server: 'ubuntu-server-02', type: 'ML_ANOMALY', message: 'Tải IOPS vượt dải 300 ops/s liên tục', severity: 'Critical', status: 'new', timestamp: '10:05:15' },
-  { id: 2, server: 'ubuntu-server-01', type: 'CPU_HIGH', message: 'CPU Usage > 90% trong vòng 5 phút', severity: 'Warning', status: 'new', timestamp: '14:22:00' },
-  { id: 3, server: 'ubuntu-server-03', type: 'ML_ANOMALY', message: 'Ghi đĩa ban đêm bất thường (Exfiltration Risk)', severity: 'Critical', status: 'ack', timestamp: '03:15:45' },
-  { id: 4, server: 'ubuntu-server-01', type: 'RAM_HIGH', message: 'RAM Available < 10%', severity: 'Warning', status: 'resolved', timestamp: 'Yesterday' }
-];
 
 export const AlertHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'kanban' | 'rules'>('kanban');
-  const [alerts, setAlerts] = useState<AlertItem[]>(initialAlerts);
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [autoMlToggle, setAutoMlToggle] = useState<boolean>(true);
+  const [recovering, setRecovering] = useState<boolean>(false);
 
   // Rule Builder Form State
   const [ruleMetric, setRuleMetric] = useState('cpu_percent');
   const [ruleOperator, setRuleOperator] = useState('>');
   const [ruleThreshold, setRuleThreshold] = useState(90);
   const [ruleDuration, setRuleDuration] = useState('5m');
-  const [ruleSeverity, setRuleSeverity] = useState('Critical');
+  const [ruleSeverity, setRuleSeverity] = useState('critical');
 
-  const moveStatus = (id: number, nextStatus: 'new' | 'ack' | 'resolved') => {
-    setAlerts(prev => prev.map(a => a.id === id ? { ...a, status: nextStatus } : a));
+  const fetchAlerts = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/alerts/');
+      if (res.ok) {
+        const data = await res.json();
+        setAlerts(data);
+      }
+    } catch (err) {
+      console.error("Fetch alerts error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 1. Move Incident Status (Acknowledge)
+  const handleAcknowledge = async (id: number) => {
+    try {
+      const res = await fetch(`/api/alerts/${id}/ack`, { method: 'POST' });
+      if (res.ok) {
+        fetchAlerts();
+      }
+    } catch (err) {
+      console.error("Acknowledge alert error:", err);
+    }
+  };
+
+  // 2. Resolve Incident Status (Resolve)
+  const handleResolve = async (id: number) => {
+    try {
+      const res = await fetch(`/api/alerts/${id}/resolve`, { method: 'POST' });
+      if (res.ok) {
+        fetchAlerts();
+      }
+    } catch (err) {
+      console.error("Resolve alert error:", err);
+    }
+  };
+
+  // 3. Trigger Auto Recovery Engine
+  const handleAutoRecover = async () => {
+    setRecovering(true);
+    try {
+      const res = await fetch('/api/alerts/auto-recover', { method: 'POST' });
+      if (res.ok) {
+        fetchAlerts();
+      }
+    } catch (err) {
+      console.error("Auto recover error:", err);
+    } finally {
+      setRecovering(false);
+    }
   };
 
   return (
@@ -40,37 +92,49 @@ export const AlertHub: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
-            🔔 PH4: Quản Lý Cảnh Báo (Alert Hub & Incident Response)
+            🔔 PH4: Quản Lý Cảnh Báo & Xử Lý Sự Cố (Incident Response Hub)
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-            Quy trình xử lý sự cố Kanban & Bộ máy định nghĩa Luật cảnh báo (Rule Engine).
+            Quy trình xử lý sự cố Kanban 3 bước & Động cơ tự động phục hồi cảnh báo (Auto-Recovery Engine).
           </p>
         </div>
 
-        {/* Tab Switcher Buttons */}
-        <div style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+        {/* Action Controls & Tab Switcher */}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <button
-            onClick={() => setActiveTab('kanban')}
-            style={{
-              padding: '8px 18px', borderRadius: '8px', border: 'none',
-              background: activeTab === 'kanban' ? 'var(--accent-cyan)' : 'transparent',
-              color: activeTab === 'kanban' ? 'white' : 'var(--text-secondary)',
-              fontWeight: 600, fontSize: '13px', cursor: 'pointer'
-            }}
+            className="btn-primary"
+            style={{ background: 'linear-gradient(135deg, var(--accent-emerald), #059669)', fontSize: '13px' }}
+            onClick={handleAutoRecover}
+            disabled={recovering}
           >
-            📋 Kanban Board Sự Cố
+            <Zap size={15} className={recovering ? 'spin' : ''} />
+            {recovering ? 'Đang Khôi Phục...' : '⚡ Khởi Chạy Auto-Recovery Engine'}
           </button>
-          <button
-            onClick={() => setActiveTab('rules')}
-            style={{
-              padding: '8px 18px', borderRadius: '8px', border: 'none',
-              background: activeTab === 'rules' ? 'var(--accent-purple)' : 'transparent',
-              color: activeTab === 'rules' ? 'white' : 'var(--text-secondary)',
-              fontWeight: 600, fontSize: '13px', cursor: 'pointer'
-            }}
-          >
-            ⚙️ Cấu Hình Rule Engine
-          </button>
+
+          <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+            <button
+              onClick={() => setActiveTab('kanban')}
+              style={{
+                padding: '8px 18px', borderRadius: '8px', border: 'none',
+                background: activeTab === 'kanban' ? 'var(--accent-cyan)' : 'transparent',
+                color: activeTab === 'kanban' ? 'white' : 'var(--text-secondary)',
+                fontWeight: 600, fontSize: '13px', cursor: 'pointer'
+              }}
+            >
+              📋 Kanban Board Sự Cố
+            </button>
+            <button
+              onClick={() => setActiveTab('rules')}
+              style={{
+                padding: '8px 18px', borderRadius: '8px', border: 'none',
+                background: activeTab === 'rules' ? 'var(--accent-purple)' : 'transparent',
+                color: activeTab === 'rules' ? 'white' : 'var(--text-secondary)',
+                fontWeight: 600, fontSize: '13px', cursor: 'pointer'
+              }}
+            >
+              ⚙️ Cấu Hình Rule Engine
+            </button>
+          </div>
         </div>
       </div>
 
@@ -81,7 +145,7 @@ export const AlertHub: React.FC = () => {
           <div className="glass-card" style={{ padding: '20px', minHeight: '500px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <span style={{ fontWeight: 700, fontSize: '15px', color: '#fb7185', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <ShieldAlert size={18} /> MỚI (NEW ALERTS)
+                <ShieldAlert size={18} /> 1. MỚI (NEW ALERTS)
               </span>
               <span style={{ padding: '2px 8px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.2)', fontSize: '12px', fontWeight: 700, color: '#fb7185' }}>
                 {alerts.filter(a => a.status === 'new').length}
@@ -89,21 +153,25 @@ export const AlertHub: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {alerts.filter(a => a.status === 'new').map(item => (
-                <div key={item.id} className="glass-card" style={{ padding: '16px', background: 'rgba(0,0,0,0.3)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '14px' }}>{item.server}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.timestamp}</span>
+              {alerts.filter(a => a.status === 'new').length === 0 ? (
+                <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>Chưa có sự cố mới nào.</div>
+              ) : (
+                alerts.filter(a => a.status === 'new').map(item => (
+                  <div key={item.id} className="glass-card" style={{ padding: '16px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(244, 63, 94, 0.3)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-primary)' }}>{item.alert_type}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{new Date(item.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: '1.4' }}>{item.message}</div>
+                    <button
+                      onClick={() => handleAcknowledge(item.id)}
+                      style={{ width: '100%', padding: '8px', borderRadius: '6px', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)', color: '#60a5fa', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    >
+                      Tiếp Nhận Xử Lý (Acknowledge) <ArrowRight size={14} />
+                    </button>
                   </div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>{item.message}</div>
-                  <button
-                    onClick={() => moveStatus(item.id, 'ack')}
-                    style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)', color: '#60a5fa', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                  >
-                    Tiếp Nhận Xử Lý (Acknowledge) <ArrowRight size={14} />
-                  </button>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
@@ -111,7 +179,7 @@ export const AlertHub: React.FC = () => {
           <div className="glass-card" style={{ padding: '20px', minHeight: '500px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <span style={{ fontWeight: 700, fontSize: '15px', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Clock size={18} /> ĐANG XỬ LÝ (ACKNOWLEDGED)
+                <Clock size={18} /> 2. ĐANG XỬ LÝ (ACKNOWLEDGED)
               </span>
               <span style={{ padding: '2px 8px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.2)', fontSize: '12px', fontWeight: 700, color: '#fbbf24' }}>
                 {alerts.filter(a => a.status === 'ack').length}
@@ -119,21 +187,25 @@ export const AlertHub: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {alerts.filter(a => a.status === 'ack').map(item => (
-                <div key={item.id} className="glass-card" style={{ padding: '16px', background: 'rgba(0,0,0,0.3)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '14px' }}>{item.server}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.timestamp}</span>
+              {alerts.filter(a => a.status === 'ack').length === 0 ? (
+                <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>Không có sự cố đang xử lý.</div>
+              ) : (
+                alerts.filter(a => a.status === 'ack').map(item => (
+                  <div key={item.id} className="glass-card" style={{ padding: '16px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-primary)' }}>{item.alert_type}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{new Date(item.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: '1.4' }}>{item.message}</div>
+                    <button
+                      onClick={() => handleResolve(item.id)}
+                      style={{ width: '100%', padding: '8px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#34d399', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    >
+                      Đánh Dấu Đã Giải Quyết (Resolve) <CheckCircle2 size={14} />
+                    </button>
                   </div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>{item.message}</div>
-                  <button
-                    onClick={() => moveStatus(item.id, 'resolved')}
-                    style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#34d399', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-                  >
-                    Đánh Dấu Đã Giải Quyết (Resolve) <CheckCircle2 size={14} />
-                  </button>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
@@ -141,7 +213,7 @@ export const AlertHub: React.FC = () => {
           <div className="glass-card" style={{ padding: '20px', minHeight: '500px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <span style={{ fontWeight: 700, fontSize: '15px', color: '#34d399', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CheckCircle2 size={18} /> ĐÃ GIẢI QUYẾT (RESOLVED)
+                <CheckCircle2 size={18} /> 3. ĐÃ GIẢI QUYẾT (RESOLVED)
               </span>
               <span style={{ padding: '2px 8px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.2)', fontSize: '12px', fontWeight: 700, color: '#34d399' }}>
                 {alerts.filter(a => a.status === 'resolved').length}
@@ -149,15 +221,19 @@ export const AlertHub: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {alerts.filter(a => a.status === 'resolved').map(item => (
-                <div key={item.id} className="glass-card" style={{ padding: '16px', background: 'rgba(0,0,0,0.3)', opacity: 0.7 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '14px', textDecoration: 'line-through' }}>{item.server}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.timestamp}</span>
+              {alerts.filter(a => a.status === 'resolved').length === 0 ? (
+                <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>Chưa có lịch sử khôi phục.</div>
+              ) : (
+                alerts.filter(a => a.status === 'resolved').map(item => (
+                  <div key={item.id} className="glass-card" style={{ padding: '16px', background: 'rgba(0,0,0,0.3)', opacity: 0.85, border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontWeight: 700, fontSize: '14px', textDecoration: 'line-through', color: 'var(--text-secondary)' }}>{item.alert_type}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{new Date(item.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{item.message}</div>
                   </div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{item.message}</div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
