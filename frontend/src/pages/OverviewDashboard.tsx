@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Server, ShieldAlert, Bell, Cpu, Activity, CheckCircle2, AlertTriangle, XCircle, ArrowRight, Zap, RefreshCw } from 'lucide-react';
+import { Server, ShieldAlert, Bell, Cpu, Activity, CheckCircle2, AlertTriangle, XCircle, RefreshCw } from 'lucide-react';
 
 interface ServerItem {
   id: number;
@@ -97,171 +97,248 @@ export const OverviewDashboard: React.FC = () => {
 
   const activeAlerts = alerts.filter(a => a.status === 'new' || a.status === 'ack');
   const onlineServers = servers.filter(s => s.status === 'online').length;
-  const avgCpu = Object.values(realtimeMetrics).length > 0
-    ? (Object.values(realtimeMetrics).reduce((acc, curr) => acc + (curr.cpu_percent || 0), 0) / Object.values(realtimeMetrics).length).toFixed(1)
-    : '5.0';
+  
+  const avgCpuNum = Object.values(realtimeMetrics).length > 0
+    ? Number((Object.values(realtimeMetrics).reduce((acc, curr) => acc + (curr.cpu_percent || 0), 0) / Object.values(realtimeMetrics).length).toFixed(1))
+    : 5.0;
 
-  // Multi-server comparative line chart option
+  const avgRamNum = Object.values(realtimeMetrics).length > 0
+    ? Number((Object.values(realtimeMetrics).reduce((acc, curr) => acc + (curr.ram_percent || 0), 0) / Object.values(realtimeMetrics).length).toFixed(1))
+    : 24.8;
+
+  // CPU ECharts Gauge Option
+  const cpuGaugeOption = {
+    backgroundColor: 'transparent',
+    series: [
+      {
+        type: 'gauge',
+        startAngle: 180,
+        endAngle: 0,
+        min: 0,
+        max: 100,
+        splitNumber: 5,
+        radius: '95%',
+        center: ['50%', '70%'],
+        axisLine: {
+          lineStyle: {
+            width: 12,
+            color: [
+              [0.6, '#06b6d4'],
+              [0.8, '#fbbf24'],
+              [1, '#f43f5e']
+            ]
+          }
+        },
+        pointer: { icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z', length: '60%', width: 6, offsetCenter: [0, '-10%'], itemStyle: { color: '#06b6d4' } },
+        axisTick: { length: 6, lineStyle: { color: 'auto', width: 1 } },
+        splitLine: { length: 10, lineStyle: { color: 'auto', width: 2 } },
+        axisLabel: { color: '#9ca3af', fontSize: 10, distance: -20 },
+        title: { offsetCenter: [0, '-20%'], fontSize: 12, color: '#9ca3af' },
+        detail: {
+          fontSize: 22,
+          offsetCenter: [0, '25%'],
+          valueAnimation: true,
+          formatter: '{value}%',
+          color: avgCpuNum > 80 ? '#f43f5e' : '#06b6d4',
+          fontWeight: 700
+        },
+        data: [{ value: avgCpuNum, name: 'AVG CPU' }]
+      }
+    ]
+  };
+
+  // RAM ECharts Gauge Option
+  const ramGaugeOption = {
+    backgroundColor: 'transparent',
+    series: [
+      {
+        type: 'gauge',
+        startAngle: 180,
+        endAngle: 0,
+        min: 0,
+        max: 100,
+        splitNumber: 5,
+        radius: '95%',
+        center: ['50%', '70%'],
+        axisLine: {
+          lineStyle: {
+            width: 12,
+            color: [
+              [0.7, '#8b5cf6'],
+              [0.9, '#fbbf24'],
+              [1, '#f43f5e']
+            ]
+          }
+        },
+        pointer: { icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z', length: '60%', width: 6, offsetCenter: [0, '-10%'], itemStyle: { color: '#8b5cf6' } },
+        axisTick: { length: 6, lineStyle: { color: 'auto', width: 1 } },
+        splitLine: { length: 10, lineStyle: { color: 'auto', width: 2 } },
+        axisLabel: { color: '#9ca3af', fontSize: 10, distance: -20 },
+        title: { offsetCenter: [0, '-20%'], fontSize: 12, color: '#9ca3af' },
+        detail: {
+          fontSize: 22,
+          offsetCenter: [0, '25%'],
+          valueAnimation: true,
+          formatter: '{value}%',
+          color: '#c084fc',
+          fontWeight: 700
+        },
+        data: [{ value: avgRamNum, name: 'AVG RAM' }]
+      }
+    ]
+  };
+
+  // Multi-server comparative line chart option (Compact)
   const compareChartOption = {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis' },
     legend: {
-      data: ['ubuntu-server-01 (Web)', 'ubuntu-server-02 (DB)', 'ubuntu-server-03 (App)'],
-      textStyle: { color: '#9ca3af' }
+      data: ['ubuntu-server-01', 'ubuntu-server-02', 'ubuntu-server-03'],
+      textStyle: { color: '#9ca3af', fontSize: 11 }
     },
-    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    grid: { left: '3%', right: '4%', bottom: '8%', top: '15%', containLabel: true },
     xAxis: {
       type: 'category',
       data: ['20:45', '20:47', '20:49', '20:51', '20:53', '20:55', 'Live'],
       axisLine: { lineStyle: { color: '#374151' } },
-      axisLabel: { color: '#9ca3af' }
+      axisLabel: { color: '#9ca3af', fontSize: 10 }
     },
     yAxis: {
       type: 'value',
       max: 100,
-      axisLabel: { formatter: '{value}%', color: '#9ca3af' },
+      axisLabel: { formatter: '{value}%', color: '#9ca3af', fontSize: 10 },
       splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)' } }
     },
     series: [
       {
-        name: 'ubuntu-server-01 (Web)',
+        name: 'ubuntu-server-01',
         type: 'line',
         smooth: true,
         data: [12, 15, 14, 18, 12, 10, realtimeMetrics['ubuntu-server-01']?.cpu_percent || 5],
         itemStyle: { color: '#06b6d4' },
-        lineStyle: { width: 3 }
+        lineStyle: { width: 2 }
       },
       {
-        name: 'ubuntu-server-02 (DB)',
+        name: 'ubuntu-server-02',
         type: 'line',
         smooth: true,
         data: [42, 55, 62, 58, 48, 52, realtimeMetrics['ubuntu-server-02']?.cpu_percent || 45],
         itemStyle: { color: '#8b5cf6' },
-        lineStyle: { width: 3 }
+        lineStyle: { width: 2 }
       },
       {
-        name: 'ubuntu-server-03 (App)',
+        name: 'ubuntu-server-03',
         type: 'line',
         smooth: true,
         data: [25, 28, 30, 26, 22, 24, realtimeMetrics['ubuntu-server-03']?.cpu_percent || 15],
         itemStyle: { color: '#10b981' },
-        lineStyle: { width: 3 }
+        lineStyle: { width: 2 }
       }
     ]
   };
 
   return (
-    <div style={{ padding: '30px', maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Top Banner */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+    <div style={{ padding: '20px 30px', maxWidth: '1400px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+      {/* Top Banner (Compact Row) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
-            Executive System Overview & Status Summary
+          <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.5px' }}>
+            Executive Overview & Single-Screen Dashboard
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-            Unified real-time dashboard aggregating cluster health, server status, and active incidents.
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+            Single viewport cluster health summary, ECharts gauges, and active incidents.
           </p>
         </div>
-        <button className="btn-primary" onClick={fetchOverviewData}>
-          <RefreshCw size={15} className={loading ? 'spin' : ''} /> Refresh All
+        <button className="btn-primary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={fetchOverviewData}>
+          <RefreshCw size={14} className={loading ? 'spin' : ''} /> Refresh
         </button>
       </div>
 
-      {/* 4 Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
-        <div className="glass-card" style={{ padding: '20px' }}>
+      {/* Top Row: 4 Summary Metric Cards (Compact) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+        <div className="glass-card" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>MONITORED SERVERS</span>
-            <Server size={20} color="var(--accent-cyan)" />
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>MONITORED SERVERS</span>
+            <Server size={16} color="var(--accent-cyan)" />
           </div>
-          <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-cyan)' }}>
-            {servers.length}
-          </div>
-          <div style={{ fontSize: '12px', color: '#34d399', marginTop: '4px' }}>{onlineServers} / {servers.length} Nodes Online</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px', color: 'var(--accent-cyan)' }}>{servers.length}</div>
+          <div style={{ fontSize: '11px', color: '#34d399' }}>{onlineServers} / {servers.length} Nodes Online</div>
         </div>
 
-        <div className="glass-card" style={{ padding: '20px' }}>
+        <div className="glass-card" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>ACTIVE ALERTS</span>
-            <Bell size={20} color={activeAlerts.length > 0 ? '#fb7185' : 'var(--accent-emerald)'} />
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>ACTIVE ALERTS</span>
+            <Bell size={16} color={activeAlerts.length > 0 ? '#fb7185' : 'var(--accent-emerald)'} />
           </div>
-          <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: activeAlerts.length > 0 ? '#fb7185' : '#34d399' }}>
+          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px', color: activeAlerts.length > 0 ? '#fb7185' : '#34d399' }}>
             {activeAlerts.length}
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>{alerts.filter(a => a.status === 'resolved').length} Incidents Resolved</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{alerts.filter(a => a.status === 'resolved').length} Incidents Resolved</div>
         </div>
 
-        <div className="glass-card" style={{ padding: '20px' }}>
+        <div className="glass-card" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>CLUSTER AVG CPU</span>
-            <Cpu size={20} color="var(--accent-purple)" />
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>CLUSTER AVG CPU</span>
+            <Cpu size={16} color="var(--accent-cyan)" />
           </div>
-          <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-purple)' }}>
-            {avgCpu}%
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Average Workload across Cluster</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px', color: 'var(--accent-cyan)' }}>{avgCpuNum}%</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Overall Processing Workload</div>
         </div>
 
-        <div className="glass-card" style={{ padding: '20px' }}>
+        <div className="glass-card" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>ML ANOMALY STATUS</span>
-            <ShieldAlert size={20} color="var(--accent-emerald)" />
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>ML ANOMALY STATUS</span>
+            <ShieldAlert size={16} color="var(--accent-emerald)" />
           </div>
-          <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: '#34d399' }}>
-            NORMAL
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Isolation Forest Inference Active</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px', color: '#34d399' }}>NORMAL</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Isolation Forest Model Active</div>
         </div>
       </div>
 
-      {/* Main Split Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
-        {/* Left Column: Server Status Cards */}
-        <div className="glass-card" style={{ padding: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Server size={18} color="var(--accent-cyan)" /> Server Fleet Real-time Health
-          </h2>
+      {/* Middle Row: CPU Gauge, RAM Gauge & Server Fleet Health (3 Columns) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '260px 260px 1fr', gap: '16px', flex: 1, minHeight: 0 }}>
+        {/* CPU Gauge Card */}
+        <div className="glass-card" style={{ padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent-cyan)', marginBottom: '-10px' }}>CPU WORKLOAD GAUGE</div>
+          <ReactECharts option={cpuGaugeOption} style={{ height: '170px', width: '100%' }} />
+        </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {/* RAM Gauge Card */}
+        <div className="glass-card" style={{ padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: '#c084fc', marginBottom: '-10px' }}>RAM MEMORY GAUGE</div>
+          <ReactECharts option={ramGaugeOption} style={{ height: '170px', width: '100%' }} />
+        </div>
+
+        {/* Server Fleet Health List */}
+        <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Server size={16} color="var(--accent-cyan)" /> Server Fleet Node Health
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flex: 1 }}>
             {servers.map((srv) => {
               const m = realtimeMetrics[srv.name] || { cpu_percent: 0, ram_percent: 0 };
               const hasAlert = activeAlerts.some(a => a.server_id === srv.id);
 
               return (
-                <div key={srv.id} style={{ padding: '16px', borderRadius: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <div>
-                      <span style={{ fontWeight: 700, fontSize: '15px' }}>{srv.name}</span>
-                      <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '8px' }}>({srv.ip_address})</span>
-                    </div>
+                <div key={srv.id} style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontWeight: 700, fontSize: '13px' }}>{srv.name} <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({srv.ip_address})</span></span>
                     {srv.status === 'offline' ? (
-                      <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, background: 'rgba(244,63,94,0.2)', color: '#fb7185' }}>OFFLINE</span>
+                      <span style={{ padding: '2px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 700, background: 'rgba(244,63,94,0.2)', color: '#fb7185' }}>OFFLINE</span>
                     ) : hasAlert ? (
-                      <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, background: 'rgba(245,158,11,0.2)', color: '#fbbf24' }}>ANOMALY DETECTED</span>
+                      <span style={{ padding: '2px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 700, background: 'rgba(245,158,11,0.2)', color: '#fbbf24' }}>ANOMALY</span>
                     ) : (
-                      <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, background: 'rgba(16,185,129,0.2)', color: '#34d399' }}>ONLINE</span>
+                      <span style={{ padding: '2px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 700, background: 'rgba(16,185,129,0.2)', color: '#34d399' }}>ONLINE</span>
                     )}
                   </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px' }}>
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
-                        <span>CPU</span>
-                        <b style={{ color: m.cpu_percent > 80 ? '#fb7185' : 'var(--accent-cyan)' }}>{m.cpu_percent.toFixed(1)}%</b>
-                      </div>
-                      <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', marginTop: '4px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${Math.min(100, m.cpu_percent)}%`, background: m.cpu_percent > 80 ? '#fb7185' : 'var(--accent-cyan)' }}></div>
-                      </div>
+                      <span style={{ color: 'var(--text-muted)' }}>CPU: </span>
+                      <b style={{ color: m.cpu_percent > 80 ? '#fb7185' : 'var(--accent-cyan)' }}>{m.cpu_percent.toFixed(1)}%</b>
                     </div>
-
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
-                        <span>RAM</span>
-                        <b style={{ color: '#c084fc' }}>{m.ram_percent.toFixed(1)}%</b>
-                      </div>
-                      <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', marginTop: '4px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${Math.min(100, m.ram_percent)}%`, background: '#c084fc' }}></div>
-                      </div>
+                      <span style={{ color: 'var(--text-muted)' }}>RAM: </span>
+                      <b style={{ color: '#c084fc' }}>{m.ram_percent.toFixed(1)}%</b>
                     </div>
                   </div>
                 </div>
@@ -269,34 +346,37 @@ export const OverviewDashboard: React.FC = () => {
             })}
           </div>
         </div>
+      </div>
 
-        {/* Right Column: Live Active Incidents */}
-        <div className="glass-card" style={{ padding: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Bell size={18} color="#fb7185" /> Live Active Incident Stream
+      {/* Bottom Row: Active Incident Stream & Comparative Line Chart (2 Columns) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '16px', height: '220px' }}>
+        {/* Active Incident Stream */}
+        <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px', color: '#fb7185' }}>
+            <Bell size={16} /> Active Incident Stream ({activeAlerts.length})
           </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {activeAlerts.length === 0 ? (
-              <div style={{ padding: '40px', textAlign: 'center', color: '#34d399', fontSize: '14px', background: 'rgba(16,185,129,0.08)', borderRadius: '12px', border: '1px solid rgba(16,185,129,0.2)' }}>
-                <CheckCircle2 size={32} style={{ margin: '0 auto 10px auto' }} />
-                All systems operating normally. No active unhandled incidents!
+              <div style={{ padding: '20px', textAlign: 'center', color: '#34d399', fontSize: '13px', background: 'rgba(16,185,129,0.08)', borderRadius: '8px', border: '1px solid rgba(16,185,129,0.2)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CheckCircle2 size={18} style={{ marginRight: '6px' }} />
+                All systems normal. No active incidents!
               </div>
             ) : (
               activeAlerts.map(alert => (
-                <div key={alert.id} style={{ padding: '16px', borderRadius: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(244,63,94,0.3)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '14px', color: '#fb7185' }}>{alert.alert_type}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{new Date(alert.timestamp).toLocaleTimeString()}</span>
+                <div key={alert.id} style={{ padding: '10px 12px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(244,63,94,0.3)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, color: '#fb7185', marginBottom: '4px' }}>
+                    <span>{alert.alert_type}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{new Date(alert.timestamp).toLocaleTimeString()}</span>
                   </div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '10px' }}>{alert.message}</div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px', lineHeight: '1.3' }}>{alert.message}</div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
                     {alert.status === 'new' && (
-                      <button onClick={() => handleAcknowledge(alert.id)} style={{ flex: 1, padding: '6px', borderRadius: '6px', background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.4)', color: '#60a5fa', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
-                        Acknowledge
+                      <button onClick={() => handleAcknowledge(alert.id)} style={{ flex: 1, padding: '4px', borderRadius: '4px', background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.4)', color: '#60a5fa', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
+                        Ack
                       </button>
                     )}
-                    <button onClick={() => handleResolve(alert.id)} style={{ flex: 1, padding: '6px', borderRadius: '6px', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', color: '#34d399', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                    <button onClick={() => handleResolve(alert.id)} style={{ flex: 1, padding: '4px', borderRadius: '4px', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', color: '#34d399', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
                       Resolve
                     </button>
                   </div>
@@ -305,14 +385,14 @@ export const OverviewDashboard: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Bottom Section: Multi-Server Workload Comparative Chart */}
-      <div className="glass-card" style={{ padding: '24px' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Activity size={18} color="var(--accent-cyan)" /> Multi-Server CPU Workload Comparison
-        </h2>
-        <ReactECharts option={compareChartOption} style={{ height: '320px' }} />
+        {/* Multi-Server CPU Comparative Chart */}
+        <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Activity size={16} color="var(--accent-cyan)" /> Multi-Server CPU Comparison Stream
+          </h2>
+          <ReactECharts option={compareChartOption} style={{ flex: 1, height: '100%', width: '100%' }} />
+        </div>
       </div>
     </div>
   );

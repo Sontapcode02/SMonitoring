@@ -117,15 +117,16 @@
 
 ---
 
-### [2026-08-10 21:05] — Antigravity IDE (Gemini Flash)
-**Module:** Frontend Architecture — Executive Overview Dashboard Tab
+### [2026-08-10 21:09] — Antigravity IDE (Gemini Flash)
+**Module:** Frontend Dashboard — ECharts Gauge Chart & Single Viewport Fit-to-Screen Layout
 **Prompt:**
-> Tạo 1 tab Dashboard thể hiện đầy đủ các trạng thái, cảnh báo của server
+> Các trạng thái CPU RAM thể hiện bằng Gauge Chart, sắp xếp để dashboard thể hiện toàn bộ trên 1 màn hình mà kh cần lướt xuống nhiều
 
 **Output dùng:**
-- Xây dựng trang **`OverviewDashboard.tsx`** làm tab mặc định chính đầu tiên trên Sidebar (`Executive Overview`):
-  1. **4 Thẻ Tổng Quan Thượng Cấp (Top Metrics):** Total Monitored Servers, Active Alerts Count, Cluster Average CPU Workload %, ML Anomaly Status.
-  2. **Bảng Sức Khỏe Máy Chủ (Left Panel):** Hiển thị danh sách tất cả máy chủ Ubuntu kèm nhãn trạng thái `Online`, `Offline`, `Anomaly Detected` và Mini Gauge CPU/RAM bar.
-  3. **Luồng Cảnh Báo Trực Tiếp (Right Panel):** Hiển thị danh sách sự cố đang mở với nút bấm 1-touch `Acknowledge` và `Resolve`.
-  4. **Biểu Đồ Tải CPU So Sánh Cụm Máy Chủ (Bottom Panel):** Đồ thị ECharts so sánh trực quan dòng tải CPU giữa 3 máy chủ thời gian thực.
-- Giúp người quản trị nắm bắt toàn bộ hạ tầng và các sự cố nổi bật chỉ trong một cái nhìn (Single Pane of Glass).
+- Tái cấu trúc lại toàn bộ trang **`OverviewDashboard.tsx`** thành chuẩn giao diện **Single Viewport Dashboard (Fit-to-Screen / Không cuộn trang)**:
+  1. **Đồng hồ Gauge Chart ECharts:** Tích hợp 2 biểu đồ Gauge vòng tròn sắc nét hiển thị tỷ lệ % CPU (`CPU WORKLOAD GAUGE`) và % RAM (`RAM MEMORY GAUGE`) của toàn cụm hạ tầng với vạch phân vùng màu cảnh báo đỏ/vàng/xanh.
+  2. **Bố cục 3 Hàng Tối Ưu Chiều Cao (Zero Vertical Scroll):**
+     - Hàng Top: 4 Thẻ Summary thông số vừa vặn.
+     - Hàng Giữa: 2 Thẻ Đồng hồ Gauge + Danh sách Sức khỏe Server Fleet.
+     - Hàng Dưới: Luồng Cảnh báo Sự cố trực tiếp + Biểu đồ So sánh Tải CPU các Node.
+- Đạt hiệu quả hiển thị 100% toàn bộ trạng thái và sự cố hạ tầng vừa khít trong duy nhất 1 màn hình full-HD mà không cần cuộn trang xuống!
