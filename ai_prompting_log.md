@@ -100,13 +100,31 @@
 
 ---
 
-### [2026-08-10 19:17] — Antigravity IDE (Gemini Flash)
-**Module:** System Optimization — VMware VM Footprint & Disk Compact Strategies
+### [2026-08-09 20:05] — Antigravity IDE (Gemini)
+**Module:** Planning — Phân tích khả thi
 **Prompt:**
-> Có thể tối ưu chỗ này kh?
+> Phân tích lại tính khả thi của đề tài Xây dựng nền tảng giám sát tập trung và ứng dụng học máy phát hiện bất thường theo thời gian thực cho cụm máy chủ Ubuntu
 
 **Output dùng:**
-- Đưa ra 3 giải pháp tối ưu dứt điểm dung lượng 3 máy ảo VMware/VirtualBox (Lấy lại **10 – 15 GB** ngay):
-  1. **Tắt file RAM đệm `.vmem` của VMware:** Thêm cấu hình `mainMem.useNamedFile = "FALSE"` trong VMware Preferences ➡️ Giải phóng ngay **6 GB file `.vmem`**.
-  2. **Co gọn đĩa đệm động (Compact VM Disk):** Dọn dẹp cache `sudo apt clean` trên Ubuntu và bấm nút **Compact** trong VMware Settings ➡️ Thu nhỏ file `.vmdk` lại **3 - 5 GB**.
-  3. **Chuyển thư mục máy ảo ra khỏi OneDrive:** Chuyển sang `C:\VMs` hoặc `D:\VMs` để dừng hoàn toàn việc OneDrive tự cào cache đệm.
+- Tổng điểm khả thi: 67/100 — Khả thi với điều kiện cắt scope
+- Ma trận rủi ro 8 rủi ro chính
+- Ước lượng thực tế: ~10–12 tuần → cần cắt scope về 8 tuần
+- Khuyến nghị: Thay NestJS bằng FastAPI, bỏ Loki optional
+
+**Đã chỉnh sửa:**
+- Chốt dùng FastAPI thay NestJS (quyết định quan trọng nhất)
+- Loki → optional
+
+---
+
+### [2026-08-10 19:32] — Antigravity IDE (Gemini Flash)
+**Module:** ML Methodology — Optimal Dataset Size & Time Horizon Recommendation
+**Prompt:**
+> Tập dữ liệu cho ML hoạt động tốt là bao nhiêu ngày?
+
+**Output dùng:**
+- Phân tích tiêu chuẩn Machine Learning học máy chuỗi thời gian cho Khóa luận:
+  1. **Tối thiểu (Min):** 1 – 2 ngày (`5,760 – 11,520` mẫu/server) — Đủ test code, nhưng tính thuyết phục khoa học chưa cao.
+  2. **Tối ưu (Golden Standard):** **3 – 7 ngày (Lý tưởng nhất là 5 ngày)** (`28,800 – 40,320` mẫu/server). Đủ 5-7 chu kỳ Ngày/Đêm (Diurnal Cycles), cho điểm Precision/Recall > 92%.
+  3. **Tối đa (Max):** > 14 ngày (Dữ liệu bị lặp lại chu kỳ tuần, không tăng thêm giá trị ML đáng kể).
+- Chốt lộ trình: Cho cào liên tục **5 ngày** (10/08 - 15/08) trong khi tiếp tục xây dựng Backend FastAPI & Frontend Dashboard ở Tuần 2.
