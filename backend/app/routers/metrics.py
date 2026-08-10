@@ -4,6 +4,7 @@ from typing import List, Optional
 import os
 import glob
 import json
+import io
 import urllib.request
 import urllib.parse
 import pandas as pd
@@ -12,8 +13,30 @@ from datetime import datetime
 from app.core.database import get_db
 
 router = APIRouter()
-DATASET_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "ml", "dataset")
+# Fix dataset path to point to root /ml/dataset
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+DATASET_DIR = os.path.join(BASE_DIR, "ml", "dataset")
 PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
+
+def safe_read_csv_tail(filepath: str, limit: int = 30):
+    """Đọc an toàn N dòng cuối cùng của file CSV ngay cả khi script cào data đang mở ghi file."""
+    if not os.path.exists(filepath):
+        print(f"[CSV Warning] File not found: {filepath}")
+        return []
+    try:
+        with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+            lines = f.readlines()
+            if len(lines) <= 1:
+                return []
+            header = lines[0]
+            tail_lines = lines[-limit:] if len(lines) > limit else lines[1:]
+            csv_str = header + "".join(tail_lines)
+            df = pd.read_csv(io.StringIO(csv_str))
+            df = df.fillna(0)
+            return df.to_dict(orient="records")
+    except Exception as e:
+        print(f"[CSV Read Error] {filepath}: {e}")
+        return []
 
 def query_promql(query: str):
     try:
@@ -83,23 +106,20 @@ def get_realtime_metrics():
     
     for filepath in sorted(csv_files):
         server_name = os.path.basename(filepath).replace("_metrics.csv", "")
-        try:
-            df = pd.read_csv(filepath)
-            if not df.empty:
-                last_row = df.iloc[-1].to_dict()
-                csv_results.append({
-                    "server_name": server_name,
-                    "timestamp": str(last_row.get("timestamp")),
-                    "cpu_percent": float(last_row.get("cpu_percent", 0)),
-                    "ram_percent": float(last_row.get("ram_percent", 0)),
-                    "load1_per_cpu": float(last_row.get("load1_per_cpu", 0)),
-                    "disk_iops": float(last_row.get("disk_iops", 0)),
-                    "net_in_mbps": float(last_row.get("net_in_mbps", 0)),
-                    "net_out_mbps": float(last_row.get("net_out_mbps", 0)),
-                    "is_anomaly": bool(last_row.get("is_anomaly", False)) if pd.notnull(last_row.get("is_anomaly")) else False
-                })
-        except Exception as e:
-            print(f"Error reading {filepath}: {e}")
+        records = safe_read_csv_tail(filepath, limit=1)
+        if records:
+            last_row = records[-1]
+            csv_results.append({
+                "server_name": server_name,
+                "timestamp": str(last_row.get("timestamp")),
+                "cpu_percent": float(last_row.get("cpu_percent", 0)),
+                "ram_percent": float(last_row.get("ram_percent", 0)),
+                "load1_per_cpu": float(last_row.get("load1_per_cpu", 0)),
+                "disk_iops": float(last_row.get("disk_iops", 0)),
+                "net_in_mbps": float(last_row.get("net_in_mbps", 0)),
+                "net_out_mbps": float(last_row.get("net_out_mbps", 0)),
+                "is_anomaly": bool(last_row.get("is_anomaly", False))
+            })
             
     return csv_results
 
@@ -107,12 +127,4 @@ def get_realtime_metrics():
 def get_metrics_history(server_name: str = "ubuntu-server-01", limit: int = 30):
     """Lấy lịch sử N mẫu metrics gần nhất của 1 máy chủ từ CSV."""
     filepath = os.path.join(DATASET_DIR, f"{server_name}_metrics.csv")
-    if not os.path.exists(filepath):
-        return []
-    
-    try:
-        df = pd.read_csv(filepath)
-        recent_df = df.tail(limit)
-        return recent_df.to_dict(orient="records")
-    except Exception as e:
-        return []
+    return safe_read_csv_tail(filepath, limit=limit)
