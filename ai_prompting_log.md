@@ -117,12 +117,11 @@
 
 ---
 
-### [2026-08-10 18:31] — Antigravity IDE (Gemini Flash)
-**Module:** Workload Deployment — Enterprise Diurnal Workload Execution on Ubuntu 1
+### [2026-08-10 18:32] — Antigravity IDE (Gemini Flash)
+**Module:** Workload Verification — Ubuntu 1 Diurnal Background Workload Execution (PID 95636)
 **Prompt:**
-> ubuntu1@ubuntu1:/tmp$ cat <<'EOF' > /tmp/normal_traffic.sh ... chmod +x /tmp/normal_traffic.sh
+> ubuntu1@ubuntu1:/tmp$ pkill -f normal_traffic ... [2] 95636 Terminated [1]- Exit 143
 
 **Output dùng:**
-- Phản hồi xác nhận sinh viên đã tạo và phân quyền thành công script `normal_traffic.sh` trên `ubuntu1`.
-- Cung cấp câu lệnh khởi chạy ngầm script vai trò Web Server (`normal_traffic.sh web`) trên `ubuntu1`.
-- Nhắc nhở dán tương tự sang `ubuntu2` (`db`) và `ubuntu3` (`app`).
+- Giải thích kết quả Terminal: Tiến trình cũ `[1]` nhận lệnh `Exit 143` (Terminated) do `pkill` tắt sạch sẽ. Tiến trình mới `[2]` với **PID `95636`** đã bắt đầu chạy ngầm tải Diurnal thành công 100% trên `ubuntu1`.
+- Hướng dẫn dán 2 khối lệnh tương tự sang `ubuntu2` (`db`) và `ubuntu3` (`app`).
