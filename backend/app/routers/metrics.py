@@ -51,7 +51,7 @@ def query_promql(query: str):
 
 @router.get("/realtime")
 def get_realtime_metrics():
-    """Lấy chỉ số metric mới nhất thời gian thực từ Prometheus cho tất cả máy chủ Ubuntu."""
+    """Lấy chỉ số metric mới nhất thời gian thực từ Prometheus cho tất cả máy chủ Ubuntu (CPU, RAM, Disk Capacity, IOPS, Read/Write, Net)."""
     targets = query_promql('up')
     results = {}
 
@@ -75,8 +75,13 @@ def get_realtime_metrics():
                 "timestamp": now_str,
                 "cpu_percent": 0.0,
                 "ram_percent": 0.0,
-                "load1_per_cpu": 0.1,
+                "disk_percent": 0.0,
+                "disk_size_gb": 0.0,
+                "disk_free_gb": 0.0,
                 "disk_iops": 0.0,
+                "disk_read_mbps": 0.0,
+                "disk_write_mbps": 0.0,
+                "load1_per_cpu": 0.1,
                 "net_in_mbps": 0.0,
                 "net_out_mbps": 0.0,
                 "is_anomaly": False
@@ -96,14 +101,47 @@ def get_realtime_metrics():
             if inst in results:
                 results[inst]["ram_percent"] = round(float(item['value'][1]), 2)
 
-        # 3. Query Realtime Disk IOPS
+        # 3. Query Realtime Disk Size & Free Space
+        size_res = query_promql('node_filesystem_size_bytes{mountpoint="/"}' or 'node_filesystem_size_bytes{fstype=~"ext4|xfs"}')
+        for item in size_res:
+            inst = item['metric'].get('instance', '')
+            if inst in results:
+                val_bytes = float(item['value'][1])
+                results[inst]["disk_size_gb"] = round(val_bytes / (1024 ** 3), 2)
+
+        free_res = query_promql('node_filesystem_avail_bytes{mountpoint="/"}' or 'node_filesystem_avail_bytes{fstype=~"ext4|xfs"}')
+        for item in free_res:
+            inst = item['metric'].get('instance', '')
+            if inst in results:
+                val_free_bytes = float(item['value'][1])
+                results[inst]["disk_free_gb"] = round(val_free_bytes / (1024 ** 3), 2)
+                size_gb = results[inst]["disk_size_gb"]
+                if size_gb > 0:
+                    used_gb = size_gb - results[inst]["disk_free_gb"]
+                    results[inst]["disk_percent"] = round((used_gb / size_gb) * 100, 2)
+
+        # 4. Query Realtime Disk IOPS
         iops_res = query_promql('sum by (instance) (rate(node_disk_reads_completed_total[1m]) + rate(node_disk_writes_completed_total[1m]))')
         for item in iops_res:
             inst = item['metric'].get('instance', '')
             if inst in results:
                 results[inst]["disk_iops"] = round(float(item['value'][1]), 2)
 
-        # 4. Query Realtime Network RX Mbps
+        # 5. Query Realtime Disk Read Speed (MB/s)
+        read_res = query_promql('sum by (instance) (rate(node_disk_read_bytes_total[1m])) / 1024 / 1024')
+        for item in read_res:
+            inst = item['metric'].get('instance', '')
+            if inst in results:
+                results[inst]["disk_read_mbps"] = round(float(item['value'][1]), 4)
+
+        # 6. Query Realtime Disk Write Speed (MB/s)
+        write_res = query_promql('sum by (instance) (rate(node_disk_written_bytes_total[1m])) / 1024 / 1024')
+        for item in write_res:
+            inst = item['metric'].get('instance', '')
+            if inst in results:
+                results[inst]["disk_write_mbps"] = round(float(item['value'][1]), 4)
+
+        # 7. Query Realtime Network RX Mbps
         net_res = query_promql('sum by (instance) (rate(node_network_receive_bytes_total[1m])) * 8 / 1024 / 1024')
         for item in net_res:
             inst = item['metric'].get('instance', '')
@@ -127,8 +165,13 @@ def get_realtime_metrics():
                 "timestamp": str(last_row.get("timestamp")),
                 "cpu_percent": float(last_row.get("cpu_percent", 0)),
                 "ram_percent": float(last_row.get("ram_percent", 0)),
+                "disk_percent": float(last_row.get("disk_percent", 0)),
+                "disk_size_gb": float(last_row.get("disk_size_gb", 10)),
+                "disk_free_gb": float(last_row.get("disk_free_gb", 5)),
                 "load1_per_cpu": float(last_row.get("load1_per_cpu", 0)),
                 "disk_iops": float(last_row.get("disk_iops", 0)),
+                "disk_read_mbps": float(last_row.get("disk_read_mbps", 0)),
+                "disk_write_mbps": float(last_row.get("disk_write_mbps", 0)),
                 "net_in_mbps": float(last_row.get("net_in_mbps", 0)),
                 "net_out_mbps": float(last_row.get("net_out_mbps", 0)),
                 "is_anomaly": bool(last_row.get("is_anomaly", False))

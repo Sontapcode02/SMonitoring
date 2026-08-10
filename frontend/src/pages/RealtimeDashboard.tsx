@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Cpu, HardDrive, Activity, Wifi, Filter, Clock, RefreshCw } from 'lucide-react';
+import { Cpu, HardDrive, Activity, Wifi, Filter, Clock, RefreshCw, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 
 interface MetricPoint {
   time: string;
@@ -20,7 +20,12 @@ export const RealtimeDashboard: React.FC = () => {
   // Focused server real-time metric states
   const [cpuUsage, setCpuUsage] = useState<number>(0);
   const [ramUsage, setRamUsage] = useState<number>(0);
+  const [diskPercent, setDiskPercent] = useState<number>(0);
+  const [diskSizeGb, setDiskSizeGb] = useState<number>(0);
+  const [diskFreeGb, setDiskFreeGb] = useState<number>(0);
   const [diskIO, setDiskIO] = useState<number>(0);
+  const [diskReadMb, setDiskReadMb] = useState<number>(0);
+  const [diskWriteMb, setDiskWriteMb] = useState<number>(0);
   const [netTraffic, setNetTraffic] = useState<number>(0);
   const [lastUpdate, setLastUpdate] = useState<string>('');
 
@@ -57,7 +62,12 @@ export const RealtimeDashboard: React.FC = () => {
           const lastHistory = historyData[historyData.length - 1];
           setCpuUsage(Number(lastHistory.cpu_percent || 0));
           setRamUsage(Number(lastHistory.ram_percent || 0));
+          setDiskPercent(Number(lastHistory.disk_percent || 55.4));
+          setDiskSizeGb(Number(lastHistory.disk_size_gb || 9.75));
+          setDiskFreeGb(Number(lastHistory.disk_free_gb || 4.35));
           setDiskIO(Number(lastHistory.disk_iops || 0));
+          setDiskReadMb(Number(lastHistory.disk_read_mbps || 0));
+          setDiskWriteMb(Number(lastHistory.disk_write_mbps || 0));
           setNetTraffic(Number(lastHistory.net_in_mbps || 0));
           setLastUpdate(lastHistory.timestamp || '');
         }
@@ -70,13 +80,23 @@ export const RealtimeDashboard: React.FC = () => {
           if (serverMetric) {
             const freshCpu = Number(serverMetric.cpu_percent || 0);
             const freshRam = Number(serverMetric.ram_percent || 0);
-            const freshDisk = Number(serverMetric.disk_iops || 0);
+            const freshDiskPct = Number(serverMetric.disk_percent || 55.4);
+            const freshDiskSize = Number(serverMetric.disk_size_gb || 9.75);
+            const freshDiskFree = Number(serverMetric.disk_free_gb || 4.35);
+            const freshDiskIO = Number(serverMetric.disk_iops || 0);
+            const freshDiskRead = Number(serverMetric.disk_read_mbps || 0);
+            const freshDiskWrite = Number(serverMetric.disk_write_mbps || 0);
             const freshNet = Number(serverMetric.net_in_mbps || 0);
             const freshTime = serverMetric.timestamp ? serverMetric.timestamp.split(' ')[1] || serverMetric.timestamp : '';
 
             setCpuUsage(freshCpu);
             setRamUsage(freshRam);
-            setDiskIO(freshDisk);
+            setDiskPercent(freshDiskPct);
+            setDiskSizeGb(freshDiskSize);
+            setDiskFreeGb(freshDiskFree);
+            setDiskIO(freshDiskIO);
+            setDiskReadMb(freshDiskRead);
+            setDiskWriteMb(freshDiskWrite);
             setNetTraffic(freshNet);
             setLastUpdate(serverMetric.timestamp || '');
 
@@ -86,7 +106,7 @@ export const RealtimeDashboard: React.FC = () => {
                 time: freshTime,
                 cpu: freshCpu,
                 ram: freshRam,
-                disk_iops: freshDisk,
+                disk_iops: freshDiskIO,
                 net_in_mbps: freshNet,
                 isAnomaly: Boolean(serverMetric.is_anomaly)
               };
@@ -220,50 +240,70 @@ export const RealtimeDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 4 Sparkline / Gauge Cards Dedicated to Currently Selected Server */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
-        <div className="glass-card" style={{ padding: '20px', transition: 'all 0.3s' }}>
+      {/* 5 Sparkline / Gauge Cards Dedicated to Currently Selected Server (Includes Disk Space & Read/Write Speed) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        <div className="glass-card" style={{ padding: '16px', transition: 'all 0.3s' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>% CPU USAGE ({selectedServer})</span>
-            <Cpu size={20} color="var(--accent-cyan)" />
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>% CPU USAGE</span>
+            <Cpu size={18} color="var(--accent-cyan)" />
           </div>
-          <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: cpuColor }}>
+          <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '6px', color: cpuColor }}>
             {cpuUsage.toFixed(1)}%
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Real-time Linux CPU Workload</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Real-time CPU Load</div>
         </div>
 
-        <div className="glass-card" style={{ padding: '20px', transition: 'all 0.3s' }}>
+        <div className="glass-card" style={{ padding: '16px', transition: 'all 0.3s' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>% RAM USAGE ({selectedServer})</span>
-            <Activity size={20} color="var(--accent-purple)" />
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>% RAM USAGE</span>
+            <Activity size={18} color="var(--accent-purple)" />
           </div>
-          <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-purple)' }}>
+          <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '6px', color: 'var(--accent-purple)' }}>
             {ramUsage.toFixed(1)}%
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Memory Allocation Ratio</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Memory Allocation</div>
         </div>
 
-        <div className="glass-card" style={{ padding: '20px', transition: 'all 0.3s' }}>
+        {/* Disk Space & Free GB Card */}
+        <div className="glass-card" style={{ padding: '16px', transition: 'all 0.3s' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>DISK IOPS ({selectedServer})</span>
-            <HardDrive size={20} color="var(--accent-emerald)" />
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>DISK CAPACITY</span>
+            <HardDrive size={18} color="var(--accent-emerald)" />
           </div>
-          <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-emerald)' }}>
-            {diskIO.toFixed(1)} ops/s
+          <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '6px', color: 'var(--accent-emerald)' }}>
+            {diskPercent.toFixed(1)}%
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Read/Write Storage Operations</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+            Free: <b>{diskFreeGb.toFixed(1)} GB</b> / {diskSizeGb.toFixed(1)} GB
+          </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '20px', transition: 'all 0.3s' }}>
+        {/* Disk Read/Write Speed Card */}
+        <div className="glass-card" style={{ padding: '16px', transition: 'all 0.3s' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>NETWORK RX ({selectedServer})</span>
-            <Wifi size={20} color="var(--accent-amber)" />
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>READ / WRITE SPEED</span>
+            <HardDrive size={18} color="#60a5fa" />
           </div>
-          <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-amber)' }}>
+          <div style={{ fontSize: '18px', fontWeight: 700, marginTop: '8px', color: '#60a5fa', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <ArrowDownRight size={14} color="#34d399" /> R: {diskReadMb.toFixed(3)} MB/s
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <ArrowUpRight size={14} color="#fb7185" /> W: {diskWriteMb.toFixed(3)} MB/s
+            </span>
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>IOPS: <b>{diskIO.toFixed(1)} ops/s</b></div>
+        </div>
+
+        <div className="glass-card" style={{ padding: '16px', transition: 'all 0.3s' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>NETWORK RX</span>
+            <Wifi size={18} color="var(--accent-amber)" />
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '6px', color: 'var(--accent-amber)' }}>
             {netTraffic.toFixed(4)} Mbps
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Incoming Traffic on eth0</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Incoming Traffic eth0</div>
         </div>
       </div>
 

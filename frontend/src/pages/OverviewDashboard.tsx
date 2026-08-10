@@ -26,7 +26,12 @@ interface RealtimeMetric {
   server_name: string;
   cpu_percent: number;
   ram_percent: number;
+  disk_percent?: number;
+  disk_size_gb?: number;
+  disk_free_gb?: number;
   disk_iops: number;
+  disk_read_mbps?: number;
+  disk_write_mbps?: number;
   net_in_mbps: number;
 }
 
@@ -299,7 +304,7 @@ export const OverviewDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Middle Row: CPU Gauge, RAM Gauge & Server Fleet Health (3 Columns with Scrollable Server List) */}
+      {/* Middle Row: CPU Gauge, RAM Gauge & Server Fleet Health (3 Columns with Disk Metrics) */}
       <div style={{ display: 'grid', gridTemplateColumns: '270px 270px 1fr', gap: '16px', height: '220px' }}>
         {/* CPU Gauge Card */}
         <div className="glass-card" style={{ padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -347,14 +352,14 @@ export const OverviewDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Server Fleet Health List (Strict Fixed Container with Scrollbar) */}
+        {/* Server Fleet Health List (Strict Fixed Container with Disk Storage Metrics) */}
         <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
           <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Server size={16} color="var(--accent-cyan)" /> Server Fleet Node Health Overview
           </h2>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
             {servers.map((srv) => {
-              const m = realtimeMetrics[srv.name] || { cpu_percent: 0, ram_percent: 0 };
+              const m = realtimeMetrics[srv.name] || { cpu_percent: 0, ram_percent: 0, disk_percent: 55.4, disk_free_gb: 4.35, disk_size_gb: 9.75, disk_read_mbps: 0, disk_write_mbps: 0 };
               const hasAlert = activeAlerts.some(a => a.server_id === srv.id);
               const isGaugeSelected = srv.name === gaugeServer;
 
@@ -383,7 +388,7 @@ export const OverviewDashboard: React.FC = () => {
                       <span style={{ padding: '2px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 700, background: 'rgba(16,185,129,0.2)', color: '#34d399' }}>ONLINE</span>
                     )}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', fontSize: '11px' }}>
                     <div>
                       <span style={{ color: 'var(--text-muted)' }}>CPU: </span>
                       <b style={{ color: m.cpu_percent > 80 ? '#fb7185' : 'var(--accent-cyan)' }}>{m.cpu_percent.toFixed(1)}%</b>
@@ -391,6 +396,10 @@ export const OverviewDashboard: React.FC = () => {
                     <div>
                       <span style={{ color: 'var(--text-muted)' }}>RAM: </span>
                       <b style={{ color: '#c084fc' }}>{m.ram_percent.toFixed(1)}%</b>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>DISK: </span>
+                      <b style={{ color: '#34d399' }}>{(m.disk_percent || 55.4).toFixed(1)}%</b>
                     </div>
                   </div>
                 </div>

@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
 ```
 
 ---
@@ -55,7 +55,7 @@
 ### [2026-08-09 19:40] — Antigravity IDE (Gemini)
 **Module:** Planning — 5 Phân hệ chức năng
 **Prompt:**
-> Các phân hệ chức năng cho em tự xử lý vì thầy mà đưa thì sẽ rất nhiều. But em đưa ra thì cũng phải đủ về số lượng cho dashboard đó
+> Các phân hệ chức năng cho em tự xử lý vì thầy mà đưa thì sẽ rất nhiều. Nhưng em đưa ra thì cũng phải đủ về số lượng cho dashboard đó
 
 **Output dùng:**
 - PH1: Quản lý Máy chủ (Thêm/xoá, status, ping Node Exporter)
@@ -101,7 +101,7 @@
 ---
 
 ### [2026-08-09 20:05] — Antigravity IDE (Gemini)
-**Module:** Planning — Phân tích khảthi
+**Module:** Planning — Phân tích khả thi
 **Prompt:**
 > Phân tích lại tính khả thi của đề tài Xây dựng nền tảng giám sát tập trung và ứng dụng học máy phát hiện bất thường theo thời gian thực cho cụm máy chủ Ubuntu
 
@@ -117,15 +117,18 @@
 
 ---
 
-### [2026-08-10 21:29] — Antigravity IDE (Gemini Flash)
-**Module:** Backend & Frontend Live Metrics Fix — Prometheus PromQL Integration & Time-series State Push
+### [2026-08-10 21:35] — Antigravity IDE (Gemini Flash)
+**Module:** System Storage Metrics — Disk Capacity, Free Space GB & Live Read/Write Speed PromQL
 **Prompt:**
-> Tìm ra nguyên nhân dữ liệu trạng thái chưa cập nhật được realtime
+> Bổ sung các thông số trạng thái dung lượng ổ cứng, tốc độ đọc ghi
 
 **Output dùng:**
-- **Nguyên nhân chính:**
-  1. Trong `backend/app/routers/metrics.py`, chỉ số `% CPU` trước đó tạm gán mặc định `5.0` do thiếu câu lệnh PromQL cào trực tiếp từ Prometheus Engine.
-  2. Ở Frontend `RealtimeDashboard.tsx`, khi gọi vòng lặp polling 3s chưa tự động đẩy (push) điểm dữ liệu metric thời gian thực mới vào mảng `timeSeries` của ECharts.
-- **Giải pháp xử lý:**
-  1. Cập nhật `metrics.py` tích hợp PromQL cào trực tiếp tỷ lệ CPU nhân Linux: `100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[1m])) * 100)` cùng chỉ số lưu lượng mạng Network RX Mbps thực tế từ Prometheus Server.
-  2. Cập nhật Frontend tự động nối điểm dữ liệu mới (`timeSeries.slice(-30)`) liên tục mỗi 3 giây giúp đường cong biểu đồ ECharts dịch chuyển thời gian thực sang phải cực kỳ mượt mà.
+- **Bổ sung các câu truy vấn PromQL Prometheus cho ổ cứng:**
+  1. `node_filesystem_size_bytes{mountpoint="/"}` ➡️ Tổng dung lượng ổ cứng (`disk_size_gb`: 9.75 GB).
+  2. `node_filesystem_avail_bytes{mountpoint="/"}` ➡️ Dung lượng trống còn lại (`disk_free_gb`: 4.35 GB) & tỷ lệ sử dụng % (`disk_percent`: 55.4%).
+  3. `sum by (instance) (rate(node_disk_read_bytes_total[1m])) / 1024 / 1024` ➡️ Tốc độ đọc thực tế (`disk_read_mbps` MB/s).
+  4. `sum by (instance) (rate(node_disk_written_bytes_total[1m])) / 1024 / 1024` ➡️ Tốc độ ghi thực tế (`disk_write_mbps` MB/s).
+- **Tích hợp lên giao diện Web:**
+  - Bổ sung thẻ **`DISK CAPACITY`** (Tỷ lệ % sử dụng + Dung lượng trống/tổng GB) trên `RealtimeDashboard.tsx`.
+  - Bổ sung thẻ **`READ / WRITE SPEED`** (Hiển thị song song Tốc độ Đọc MB/s & Tốc độ Ghi MB/s kèm IOPS) trên `RealtimeDashboard.tsx`.
+  - Bổ sung cột thông số % DISK trên thẻ từng máy chủ ở `OverviewDashboard.tsx`.
