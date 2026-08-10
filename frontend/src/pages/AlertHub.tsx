@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BellRing, ShieldAlert, CheckCircle2, Clock, Plus, Sliders, ToggleLeft, ToggleRight, ArrowRight, RefreshCw, Zap } from 'lucide-react';
+import { BellRing, ShieldAlert, CheckCircle2, Clock, Plus, Sliders, ToggleLeft, ToggleRight, ArrowRight, Zap } from 'lucide-react';
 
 interface AlertItem {
   id: number;
@@ -24,7 +24,6 @@ export const AlertHub: React.FC = () => {
   const [ruleOperator, setRuleOperator] = useState('>');
   const [ruleThreshold, setRuleThreshold] = useState(90);
   const [ruleDuration, setRuleDuration] = useState('5m');
-  const [ruleSeverity, setRuleSeverity] = useState('critical');
 
   const fetchAlerts = async () => {
     setLoading(true);
@@ -92,10 +91,10 @@ export const AlertHub: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
-            🔔 PH4: Quản Lý Cảnh Báo & Xử Lý Sự Cố (Incident Response Hub)
+            PH4: Alert Hub & Incident Response Center
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-            Quy trình xử lý sự cố Kanban 3 bước & Động cơ tự động phục hồi cảnh báo (Auto-Recovery Engine).
+            3-Stage Incident Response Kanban & Automated Alert Auto-Recovery Engine.
           </p>
         </div>
 
@@ -108,7 +107,7 @@ export const AlertHub: React.FC = () => {
             disabled={recovering}
           >
             <Zap size={15} className={recovering ? 'spin' : ''} />
-            {recovering ? 'Đang Khôi Phục...' : '⚡ Khởi Chạy Auto-Recovery Engine'}
+            {recovering ? 'Recovering...' : 'Run Auto-Recovery Engine'}
           </button>
 
           <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
@@ -121,7 +120,7 @@ export const AlertHub: React.FC = () => {
                 fontWeight: 600, fontSize: '13px', cursor: 'pointer'
               }}
             >
-              📋 Kanban Board Sự Cố
+              Incident Kanban Board
             </button>
             <button
               onClick={() => setActiveTab('rules')}
@@ -132,7 +131,7 @@ export const AlertHub: React.FC = () => {
                 fontWeight: 600, fontSize: '13px', cursor: 'pointer'
               }}
             >
-              ⚙️ Cấu Hình Rule Engine
+              Rule Engine Config
             </button>
           </div>
         </div>
@@ -145,7 +144,7 @@ export const AlertHub: React.FC = () => {
           <div className="glass-card" style={{ padding: '20px', minHeight: '500px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <span style={{ fontWeight: 700, fontSize: '15px', color: '#fb7185', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <ShieldAlert size={18} /> 1. MỚI (NEW ALERTS)
+                <ShieldAlert size={18} /> 1. NEW ALERTS
               </span>
               <span style={{ padding: '2px 8px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.2)', fontSize: '12px', fontWeight: 700, color: '#fb7185' }}>
                 {alerts.filter(a => a.status === 'new').length}
@@ -154,7 +153,7 @@ export const AlertHub: React.FC = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {alerts.filter(a => a.status === 'new').length === 0 ? (
-                <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>Chưa có sự cố mới nào.</div>
+                <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>No new incidents.</div>
               ) : (
                 alerts.filter(a => a.status === 'new').map(item => (
                   <div key={item.id} className="glass-card" style={{ padding: '16px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(244, 63, 94, 0.3)' }}>
@@ -167,7 +166,7 @@ export const AlertHub: React.FC = () => {
                       onClick={() => handleAcknowledge(item.id)}
                       style={{ width: '100%', padding: '8px', borderRadius: '6px', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)', color: '#60a5fa', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                     >
-                      Tiếp Nhận Xử Lý (Acknowledge) <ArrowRight size={14} />
+                      Acknowledge <ArrowRight size={14} />
                     </button>
                   </div>
                 ))
@@ -179,7 +178,7 @@ export const AlertHub: React.FC = () => {
           <div className="glass-card" style={{ padding: '20px', minHeight: '500px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <span style={{ fontWeight: 700, fontSize: '15px', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Clock size={18} /> 2. ĐANG XỬ LÝ (ACKNOWLEDGED)
+                <Clock size={18} /> 2. ACKNOWLEDGED
               </span>
               <span style={{ padding: '2px 8px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.2)', fontSize: '12px', fontWeight: 700, color: '#fbbf24' }}>
                 {alerts.filter(a => a.status === 'ack').length}
@@ -188,7 +187,7 @@ export const AlertHub: React.FC = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {alerts.filter(a => a.status === 'ack').length === 0 ? (
-                <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>Không có sự cố đang xử lý.</div>
+                <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>No acknowledged incidents.</div>
               ) : (
                 alerts.filter(a => a.status === 'ack').map(item => (
                   <div key={item.id} className="glass-card" style={{ padding: '16px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
@@ -201,7 +200,7 @@ export const AlertHub: React.FC = () => {
                       onClick={() => handleResolve(item.id)}
                       style={{ width: '100%', padding: '8px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#34d399', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                     >
-                      Đánh Dấu Đã Giải Quyết (Resolve) <CheckCircle2 size={14} />
+                      Resolve Incident <CheckCircle2 size={14} />
                     </button>
                   </div>
                 ))
@@ -213,7 +212,7 @@ export const AlertHub: React.FC = () => {
           <div className="glass-card" style={{ padding: '20px', minHeight: '500px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <span style={{ fontWeight: 700, fontSize: '15px', color: '#34d399', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CheckCircle2 size={18} /> 3. ĐÃ GIẢI QUYẾT (RESOLVED)
+                <CheckCircle2 size={18} /> 3. RESOLVED
               </span>
               <span style={{ padding: '2px 8px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.2)', fontSize: '12px', fontWeight: 700, color: '#34d399' }}>
                 {alerts.filter(a => a.status === 'resolved').length}
@@ -222,7 +221,7 @@ export const AlertHub: React.FC = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {alerts.filter(a => a.status === 'resolved').length === 0 ? (
-                <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>Chưa có lịch sử khôi phục.</div>
+                <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>No resolved history yet.</div>
               ) : (
                 alerts.filter(a => a.status === 'resolved').map(item => (
                   <div key={item.id} className="glass-card" style={{ padding: '16px', background: 'rgba(0,0,0,0.3)', opacity: 0.85, border: '1px solid rgba(16, 185, 129, 0.2)' }}>
@@ -245,13 +244,13 @@ export const AlertHub: React.FC = () => {
           {/* Rule Creator */}
           <div className="glass-card" style={{ padding: '24px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sliders size={20} color="var(--accent-purple)" /> Bộ Tạo Rule Cảnh Báo Thủ Công (Rule Engine)
+              <Sliders size={20} color="var(--accent-purple)" /> Static Threshold Rule Engine Builder
             </h2>
 
             <div style={{ background: 'rgba(0,0,0,0.3)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '20px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent-cyan)', marginBottom: '14px' }}>CẤU TRÚC ĐỊNH NGHĨA LUẬT (LOGIC BUILDER):</div>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent-cyan)', marginBottom: '14px' }}>RULE DEFINITION LOGIC:</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
-                <span style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.08)', borderRadius: '6px', fontWeight: 700 }}>[NẾU]</span>
+                <span style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.08)', borderRadius: '6px', fontWeight: 700 }}>[IF]</span>
                 <select value={ruleMetric} onChange={e => setRuleMetric(e.target.value)} style={{ padding: '8px', borderRadius: '6px', background: '#111827', color: 'white', border: '1px solid var(--border-color)' }}>
                   <option value="cpu_percent">CPU Usage (%)</option>
                   <option value="ram_percent">RAM Usage (%)</option>
@@ -259,33 +258,33 @@ export const AlertHub: React.FC = () => {
                   <option value="net_in_mbps">Network In (Mbps)</option>
                 </select>
                 <select value={ruleOperator} onChange={e => setRuleOperator(e.target.value)} style={{ padding: '8px', borderRadius: '6px', background: '#111827', color: 'white', border: '1px solid var(--border-color)' }}>
-                  <option value=">">Lớn Hơn (&gt;)</option>
-                  <option value="<">Nhỏ Hơn (&lt;)</option>
+                  <option value=">">Greater Than (&gt;)</option>
+                  <option value="<">Less Than (&lt;)</option>
                 </select>
                 <input type="number" value={ruleThreshold} onChange={e => setRuleThreshold(Number(e.target.value))} style={{ width: '80px', padding: '8px', borderRadius: '6px', background: '#111827', color: 'white', border: '1px solid var(--border-color)' }} />
-                <span style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.08)', borderRadius: '6px', fontWeight: 700 }}>[TRONG VÒNG]</span>
+                <span style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.08)', borderRadius: '6px', fontWeight: 700 }}>[FOR DURATION]</span>
                 <select value={ruleDuration} onChange={e => setRuleDuration(e.target.value)} style={{ padding: '8px', borderRadius: '6px', background: '#111827', color: 'white', border: '1px solid var(--border-color)' }}>
-                  <option value="1m">1 Phút</option>
-                  <option value="5m">5 Phút</option>
-                  <option value="15m">15 Phút</option>
+                  <option value="1m">1 Minute</option>
+                  <option value="5m">5 Minutes</option>
+                  <option value="15m">15 Minutes</option>
                 </select>
-                <span style={{ padding: '8px 12px', background: 'rgba(244,63,94,0.2)', color: '#fb7185', borderRadius: '6px', fontWeight: 700 }}>[BÁO CẢNH BÁO CRITICAL]</span>
+                <span style={{ padding: '8px 12px', background: 'rgba(244,63,94,0.2)', color: '#fb7185', borderRadius: '6px', fontWeight: 700 }}>[TRIGGER CRITICAL ALERT]</span>
               </div>
             </div>
 
             <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-              <Plus size={16} /> Lưu Rule Mới Vào Hệ Thống
+              <Plus size={16} /> Save New Rule
             </button>
           </div>
 
           {/* ML Auto-Alert Toggle Settings */}
           <div className="glass-card" style={{ padding: '24px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Tự Động Tạo Alert Từ ML Anomaly</h2>
+            <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Automated ML Anomaly Alert Triggering</h2>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
               <div>
-                <div style={{ fontWeight: 600, fontSize: '15px' }}>Tự động bắn Alert khi Isolation Forest phát hiện Anomaly</div>
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>Không cần cài rule cứng, mô hình tự phát hiện bất thường và gửi sang Kanban board</div>
+                <div style={{ fontWeight: 600, fontSize: '15px' }}>Auto-dispatch alerts when Isolation Forest detects anomaly</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>No manual threshold tuning required; model automatically pushes anomalies to Kanban board</div>
               </div>
               <div style={{ cursor: 'pointer' }} onClick={() => setAutoMlToggle(!autoMlToggle)}>
                 {autoMlToggle ? <ToggleRight size={36} color="var(--accent-emerald)" /> : <ToggleLeft size={36} color="var(--text-muted)" />}

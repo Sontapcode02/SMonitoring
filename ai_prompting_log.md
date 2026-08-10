@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
 ```
 
 ---
@@ -117,15 +117,11 @@
 
 ---
 
-### [2026-08-10 20:53] — Antigravity IDE (Gemini Flash)
-**Module:** Frontend Dashboard — Instant Node Switch Live Metrics & ECharts Stream (PH2)
+### [2026-08-10 21:00] — Antigravity IDE (Gemini Flash)
+**Module:** Frontend Globalization — Professional English UI & Icon/Emoji Cleanup
 **Prompt:**
-> Không phải hiển thị cùng lúc tất cả server cùng lúc, mà là cập nhật lập tức khi thực hiện đổi node server khác
+> Chuyển toàn bộ mã nguồn web sang t.anh, loại bỏ các icon trên giao diện console
 
 **Output dùng:**
-- Cập nhật cơ chế tải dữ liệu tức thời khi chuyển đổi Node Máy chủ trong `frontend/src/pages/RealtimeDashboard.tsx`:
-  - Quy về 4 thẻ Sparkline/Gauge gọn gàng (% CPU, % RAM, Disk IOPS, Network RX).
-  - Khi Admin chọn đổi máy chủ trên thanh Filter (`CHỌN NODE:` ➡️ `ubuntu-server-01` / `ubuntu-server-02` / `ubuntu-server-03`):
-    - Động cơ gọi song song `Promise.all` lập tức tới API `/api/metrics/history` và `/api/metrics/realtime`.
-    - **Cập nhật tức thời (Instant Refresh)** toàn bộ 4 thẻ thông số, nhãn mác máy chủ và đường cong ECharts của riêng máy chủ đó không có độ trễ.
-- Đạt trải nghiệm UI phản hồi siêu tốc khi xem thông số riêng từng node.
+- Chuyển toàn bộ 100% nhãn mác, tiêu đề, nút bấm, placeholder, thông báo và status tags trên giao diện Web Frontend sang Tiếng Anh chuyên ngành chuẩn mực (`PH1: Server Fleet Management`, `PH2: Real-time Live Monitoring`, `PH3: Anomaly Detection Center`, `PH4: Alert Hub & Incident Response`, `PH5: MLOps & Model Analytics`).
+- Loại bỏ toàn bộ các Emoji icons (như 🌐, 📊, 🚨, 🔔, 🧠, 🟢, 🔴, ⚠️, 📋, ⚙️, 💡, ⚡) khỏi giao diện và console log, giữ lại thiết kế giao diện tối giản chuẩn doanh nghiệp với biểu tượng SVG Lucide sắc nét.

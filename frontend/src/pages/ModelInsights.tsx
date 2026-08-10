@@ -22,7 +22,7 @@ export const ModelInsights: React.FC = () => {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis' },
     legend: {
-      data: ['Cảnh Báo Sinh Bởi Rule Cứng (Static Rule)', 'Cảnh Báo Sinh Bởi ML (Isolation Forest)'],
+      data: ['Static Rule Alerts', 'Isolation Forest ML Alerts'],
       textStyle: { color: '#9ca3af' }
     },
     grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
@@ -40,14 +40,14 @@ export const ModelInsights: React.FC = () => {
     },
     series: [
       {
-        name: 'Cảnh Báo Sinh Bởi Rule Cứng (Static Rule)',
+        name: 'Static Rule Alerts',
         type: 'line',
         data: [12, 14, 10, 15, 11, 8, 9],
         itemStyle: { color: '#6b7280' },
         lineStyle: { type: 'dashed', width: 2 }
       },
       {
-        name: 'Cảnh Báo Sinh Bởi ML (Isolation Forest)',
+        name: 'Isolation Forest ML Alerts',
         type: 'line',
         smooth: true,
         data: [18, 22, 19, 28, 24, 14, 16],
@@ -71,10 +71,10 @@ export const ModelInsights: React.FC = () => {
       {/* Top Banner */}
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
-          🧠 PH5: MLOps & Đánh Giá Mô Hình (Model Insights)
+          PH5: MLOps & Model Analytics (Model Insights)
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-          Tinh chỉnh tham số mô hình Isolation Forest trực tiếp trên Web & Đánh giá hiệu năng thực nghiệm.
+          Fine-tune Isolation Forest hyperparameters directly on Web & Evaluate empirical model performance.
         </p>
       </div>
 
@@ -82,19 +82,19 @@ export const ModelInsights: React.FC = () => {
         {/* Left Panel: Hyperparameter Tuning Sliders */}
         <div className="glass-card" style={{ padding: '24px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sliders size={20} color="var(--accent-cyan)" /> Tinh Chỉnh Mô Hình (Tuning)
+            <Sliders size={20} color="var(--accent-cyan)" /> Hyperparameter Tuning
           </h2>
 
           {retrainSuccess && (
             <div style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <CheckCircle size={16} /> Mô hình đã được Train & Cập nhật thành công!
+              <CheckCircle size={16} /> Model successfully retrained & updated!
             </div>
           )}
 
           {/* Contamination Slider */}
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Contamination (Tỷ lệ ngoại lai)</label>
+              <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Contamination Ratio</label>
               <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>{contamination}</span>
             </div>
             <input
@@ -102,13 +102,13 @@ export const ModelInsights: React.FC = () => {
               value={contamination} onChange={e => setContamination(Number(e.target.value))}
               style={{ width: '100%', accentColor: 'var(--accent-cyan)' }}
             />
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Tỷ lệ dữ liệu nhiễu/bất thường dự kiến (Mặc định 0.05 = 5%)</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Expected anomaly percentage in training dataset (Default 0.05 = 5%)</div>
           </div>
 
           {/* n_estimators Slider */}
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>n_estimators (Số lượng cây)</label>
+              <label style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>n_estimators (Trees)</label>
               <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent-purple)', fontFamily: 'var(--font-mono)' }}>{nEstimators}</span>
             </div>
             <input
@@ -116,7 +116,7 @@ export const ModelInsights: React.FC = () => {
               value={nEstimators} onChange={e => setNEstimators(Number(e.target.value))}
               style={{ width: '100%', accentColor: 'var(--accent-purple)' }}
             />
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Số cây quyết định ngẫu nhiên trong Isolation Forest</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Number of random decision trees in Isolation Forest ensemble</div>
           </div>
 
           {/* Retrain Button */}
@@ -131,7 +131,7 @@ export const ModelInsights: React.FC = () => {
             disabled={isRetraining}
           >
             <RefreshCw size={16} className={isRetraining ? 'spin' : ''} />
-            {isRetraining ? 'Đang Huấn Luyện Lại...' : '[Retrain / Update Model]'}
+            {isRetraining ? 'Retraining Model...' : 'Retrain / Update Model'}
           </button>
         </div>
 
@@ -161,10 +161,10 @@ export const ModelInsights: React.FC = () => {
           <div className="glass-card" style={{ padding: '24px' }}>
             <div style={{ marginBottom: '16px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <BarChart3 size={20} color="var(--accent-emerald)" /> Biểu Đồ So Sánh Hiệu Quả: Static Rule vs. Isolation Forest ML
+                <BarChart3 size={20} color="var(--accent-emerald)" /> Detection Efficacy Comparison: Static Rule vs. Isolation Forest ML
               </h2>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                Đường màu xanh chứng minh mô hình ML phát hiện thêm được <b>+35% các ca bất thường tiềm ẩn</b> mà Rule cứng bỏ sót.
+                Green line demonstrates ML model capturing <b>+35% stealth anomalies</b> missed by static rules.
               </p>
             </div>
             <ReactECharts option={comparisonChartOption} style={{ height: '340px' }} />

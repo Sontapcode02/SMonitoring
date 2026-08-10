@@ -20,11 +20,11 @@ const mockAnomalies: AnomalyItem[] = [
     severity: 'Critical',
     score: -0.284,
     shapFactors: [
-      { metric: 'net_in_mbps (Mạng nhận)', contribution: 60 },
-      { metric: 'disk_iops (Đọc ghi đĩa)', contribution: 25 },
+      { metric: 'net_in_mbps (Network RX)', contribution: 60 },
+      { metric: 'disk_iops (Disk IOPS)', contribution: 25 },
       { metric: 'cpu_percent (CPU Usage)', contribution: 15 }
     ],
-    summary: 'Bất thường lúc 10:05 chủ yếu do lưu lượng mạng nhận vào (Net RX) tăng đột biến vượt dải phân phối bình thường.'
+    summary: 'Anomaly at 10:05 driven by unexpected Network RX spike exceeding historical baseline distribution.'
   },
   {
     id: 2,
@@ -34,10 +34,10 @@ const mockAnomalies: AnomalyItem[] = [
     score: -0.195,
     shapFactors: [
       { metric: 'cpu_percent (CPU Usage)', contribution: 65 },
-      { metric: 'load1_per_cpu (Tiến trình)', contribution: 25 },
+      { metric: 'load1_per_cpu (Process Load)', contribution: 25 },
       { metric: 'ram_percent (RAM Usage)', contribution: 10 }
     ],
-    summary: 'Bất thường lúc 14:22 do xung đột tải CPU vượt ngưỡng nhịp giờ hành chính.'
+    summary: 'Anomaly at 14:22 caused by CPU workload contention during business hours peak.'
   },
   {
     id: 3,
@@ -46,11 +46,11 @@ const mockAnomalies: AnomalyItem[] = [
     severity: 'Critical',
     score: -0.312,
     shapFactors: [
-      { metric: 'disk_write_mbps (Ghi đĩa)', contribution: 70 },
-      { metric: 'tcp_connections (Kết nối TCP)', contribution: 20 },
+      { metric: 'disk_write_mbps (Disk Write)', contribution: 70 },
+      { metric: 'tcp_connections (TCP Sockets)', contribution: 20 },
       { metric: 'cpu_percent (CPU Usage)', contribution: 10 }
     ],
-    summary: 'Bất thường lúc 03:15 sáng do đợt trích xuất dữ liệu ghi đĩa dồn dập (Data Exfiltration Risk).'
+    summary: 'Off-hours anomaly at 03:15 AM caused by suspicious high disk write throughput (Data Exfiltration Risk).'
   }
 ];
 
@@ -75,7 +75,7 @@ export const AnomalyCenter: React.FC = () => {
     },
     series: [
       {
-        name: 'Mức độ đóng góp SHAP (%)',
+        name: 'SHAP Contribution Level (%)',
         type: 'bar',
         data: selectedAnomaly.shapFactors.map(f => f.contribution),
         itemStyle: {
@@ -104,10 +104,10 @@ export const AnomalyCenter: React.FC = () => {
       {/* Top Banner */}
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
-          🚨 PH3: Trung Tâm Phát Hiện Bất Thường (Anomaly Center)
+          PH3: Anomaly Detection Center
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-          Phô diễn sức mạnh mô hình <b>Isolation Forest</b> kết hợp giải thích nguyên nhân gốc với <b>SHAP Values</b>.
+          Demonstrating <b>Isolation Forest</b> detection power coupled with <b>SHAP Values</b> root-cause explainability.
         </p>
       </div>
 
@@ -115,9 +115,9 @@ export const AnomalyCenter: React.FC = () => {
       <div className="glass-card" style={{ padding: '20px', marginBottom: '30px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
           <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Clock size={16} color="var(--accent-cyan)" /> Heatmap Timeline Bất Thường Trong Ngày (00:00 - 24:00)
+            <Clock size={16} color="var(--accent-cyan)" /> 24-Hour Incident Heatmap Timeline (00:00 - 24:00)
           </span>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>*Nhấn vào các vạch đỏ/cam để nhảy nhanh tới sự cố</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>*Click anomaly ticks to inspect incident details</span>
         </div>
 
         {/* 24-Hour Interactive Timeline Slider */}
@@ -158,7 +158,7 @@ export const AnomalyCenter: React.FC = () => {
         {/* Left Column: Anomaly Event List Table */}
         <div className="glass-card" style={{ padding: '24px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <AlertOctagon size={18} color="#f43f5e" /> Danh Sách Các Bất Thường Ghi Nhận
+            <AlertOctagon size={18} color="#f43f5e" /> Recorded Anomaly Incidents
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -190,7 +190,7 @@ export const AnomalyCenter: React.FC = () => {
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                    <span>⏰ Thời gian: <b>{item.timestamp}</b></span>
+                    <span>Timestamp: <b>{item.timestamp}</b></span>
                     <span>Isolation Score: <b style={{ color: '#f43f5e', fontFamily: 'var(--font-mono)' }}>{item.score}</b></span>
                   </div>
                 </div>
@@ -202,10 +202,10 @@ export const AnomalyCenter: React.FC = () => {
         {/* Right Column: SHAP Explainability & Natural Language Summary */}
         <div className="glass-card" style={{ padding: '24px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <HelpCircle size={18} color="var(--accent-cyan)" /> SHAP Explainability & Phân Tích Nguyên Nhân Gốc
+            <HelpCircle size={18} color="var(--accent-cyan)" /> SHAP Explainability & Root-Cause Analysis
           </h2>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-            Giải thích tại sao Isolation Forest coi điểm dữ liệu lúc <b>{selectedAnomaly.timestamp}</b> của <b>{selectedAnomaly.server}</b> là bất thường.
+            Explaining why Isolation Forest flagged sample at <b>{selectedAnomaly.timestamp}</b> on <b>{selectedAnomaly.server}</b> as anomalous.
           </p>
 
           {/* SHAP Bar Chart */}
@@ -220,7 +220,7 @@ export const AnomalyCenter: React.FC = () => {
             border: '1px solid rgba(6, 182, 212, 0.25)'
           }}>
             <div style={{ fontSize: '12px', color: 'var(--accent-cyan)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px' }}>
-              💡 Tóm Tắt Tự Động Từ AI (AI Incident Summary)
+              AI Incident Explanation Summary
             </div>
             <div style={{ fontSize: '14px', lineHeight: '1.5', color: 'var(--text-primary)' }}>
               "{selectedAnomaly.summary}"

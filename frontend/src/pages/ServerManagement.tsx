@@ -31,14 +31,12 @@ export const ServerManagement: React.FC = () => {
   const fetchServersAndAlerts = async () => {
     setLoading(true);
     try {
-      // 1. Fetch servers
       const resServers = await fetch('/api/servers');
       let serverList: ServerItem[] = [];
       if (resServers.ok) {
         serverList = await resServers.json();
       }
 
-      // 2. Fetch active alerts ('new' or 'ack')
       const resAlerts = await fetch('/api/alerts/');
       let activeIds: number[] = [];
       if (resAlerts.ok) {
@@ -51,7 +49,6 @@ export const ServerManagement: React.FC = () => {
       }
       setActiveAlertServerIds(activeIds);
 
-      // Map has_anomaly based on active alerts
       const mappedData = serverList.map(s => ({
         ...s,
         has_anomaly: activeIds.includes(s.id)
@@ -86,7 +83,7 @@ export const ServerManagement: React.FC = () => {
   };
 
   const handleDelete = async (id: number, serverName: string) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa máy chủ "${serverName}"?`)) return;
+    if (!window.confirm(`Are you sure you want to delete server "${serverName}"?`)) return;
     try {
       const res = await fetch(`/api/servers/${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -134,10 +131,10 @@ export const ServerManagement: React.FC = () => {
         fetchServersAndAlerts();
       } else {
         const errData = await res.json();
-        setErrorMsg(errData.detail || 'Lỗi khi lưu thông tin máy chủ!');
+        setErrorMsg(errData.detail || 'Error saving server information!');
       }
     } catch (err) {
-      setErrorMsg('Không thể kết nối đến API Server!');
+      setErrorMsg('Failed to connect to API Server!');
     }
   };
 
@@ -147,10 +144,10 @@ export const ServerManagement: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
-            🌐 PH1: Quản Lý Máy Chủ (Server Fleet View)
+            PH1: Server Fleet Management
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-            Tổng quan sức khỏe toàn bộ hạ tầng máy chủ Ubuntu. Cập nhật trực tiếp trạng thái theo cảnh báo hệ thống.
+            Infrastructure health overview for Ubuntu servers. Monitor Node Exporter live connection status.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
@@ -158,7 +155,7 @@ export const ServerManagement: React.FC = () => {
             <RefreshCw size={16} className={loading ? 'spin' : ''} /> Refresh
           </button>
           <button className="btn-primary" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }} onClick={openAddModal}>
-            <Plus size={16} /> [+ Thêm Server]
+            <Plus size={16} /> Add Server
           </button>
         </div>
       </div>
@@ -166,23 +163,23 @@ export const ServerManagement: React.FC = () => {
       {/* Summary Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '30px' }}>
         <div className="glass-card" style={{ padding: '20px' }}>
-          <div style={{ color: 'var(--text-muted)', fontSize: '13px', textTransform: 'uppercase', fontWeight: 600 }}>TỔNG MÁY CHỦ</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '13px', textTransform: 'uppercase', fontWeight: 600 }}>TOTAL SERVERS</div>
           <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-cyan)' }}>{servers.length}</div>
         </div>
         <div className="glass-card" style={{ padding: '20px' }}>
-          <div style={{ color: 'var(--text-muted)', fontSize: '13px', textTransform: 'uppercase', fontWeight: 600 }}>🟢 ONLINE & BÌNH THƯỜNG</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '13px', textTransform: 'uppercase', fontWeight: 600 }}>ONLINE & HEALTHY</div>
           <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-emerald)' }}>
             {servers.filter(s => s.status === 'online' && !s.has_anomaly).length}
           </div>
         </div>
         <div className="glass-card" style={{ padding: '20px' }}>
-          <div style={{ color: 'var(--text-muted)', fontSize: '13px', textTransform: 'uppercase', fontWeight: 600 }}>⚠️ CÓ BẤT THƯỜNG / ALERT</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '13px', textTransform: 'uppercase', fontWeight: 600 }}>ANOMALY / ALERTS</div>
           <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-amber)' }}>
             {servers.filter(s => s.has_anomaly).length}
           </div>
         </div>
         <div className="glass-card" style={{ padding: '20px' }}>
-          <div style={{ color: 'var(--text-muted)', fontSize: '13px', textTransform: 'uppercase', fontWeight: 600 }}>🔴 OFFLINE</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '13px', textTransform: 'uppercase', fontWeight: 600 }}>OFFLINE</div>
           <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-rose)' }}>
             {servers.filter(s => s.status === 'offline').length}
           </div>
@@ -192,21 +189,21 @@ export const ServerManagement: React.FC = () => {
       {/* Server List Table */}
       <div className="glass-card" style={{ padding: '24px', overflow: 'hidden' }}>
         <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Server size={20} color="var(--accent-cyan)" /> Danh Sách Hạ Tầng Máy Chủ Ubuntu
+          <Server size={20} color="var(--accent-cyan)" /> Ubuntu Server Infrastructure List
         </h2>
 
         {loading && servers.length === 0 ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Đang tải thông tin máy chủ...</div>
+          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading server list...</div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '13px' }}>
-                <th style={{ padding: '12px 16px' }}>TÊN MÁY CHỦ</th>
+                <th style={{ padding: '12px 16px' }}>SERVER NAME</th>
                 <th style={{ padding: '12px 16px' }}>IP / NODE EXPORTER</th>
-                <th style={{ padding: '12px 16px' }}>VAI TRÒ</th>
-                <th style={{ padding: '12px 16px' }}>TRẠNG THÁI (STATUS INDICATOR)</th>
-                <th style={{ padding: '12px 16px' }}>LẦN PING CUỐI</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>THAO TÁC (ACTIONS)</th>
+                <th style={{ padding: '12px 16px' }}>ROLE</th>
+                <th style={{ padding: '12px 16px' }}>STATUS INDICATOR</th>
+                <th style={{ padding: '12px 16px' }}>LAST PING</th>
+                <th style={{ padding: '12px 16px', textAlign: 'right' }}>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
@@ -232,15 +229,15 @@ export const ServerManagement: React.FC = () => {
                   <td style={{ padding: '16px' }}>
                     {srv.status === 'offline' ? (
                       <span style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#fb7185', border: '1px solid rgba(244, 63, 94, 0.3)', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                        <XCircle size={14} color="#fb7185" /> 🔴 Offline (Mất kết nối)
+                        <XCircle size={14} color="#fb7185" /> Offline
                       </span>
                     ) : srv.has_anomaly ? (
                       <span style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.4)', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                        <AlertTriangle size={14} color="#fbbf24" /> ⚠️ Đang có Anomaly/Alert
+                        <AlertTriangle size={14} color="#fbbf24" /> Anomaly Detected
                       </span>
                     ) : (
                       <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                        <CheckCircle2 size={14} color="#34d399" /> 🟢 Online & Bình thường
+                        <CheckCircle2 size={14} color="#34d399" /> Online & Healthy
                       </span>
                     )}
                   </td>
@@ -284,7 +281,7 @@ export const ServerManagement: React.FC = () => {
         }}>
           <div className="glass-card" style={{ width: '480px', padding: '30px' }}>
             <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '20px' }}>
-              {editingServer ? 'Chỉnh Sửa Thông Tin Máy Chủ' : 'Thêm Máy Chủ Mới vào Cụm'}
+              {editingServer ? 'Edit Server Details' : 'Add New Server to Fleet'}
             </h2>
             {errorMsg && (
               <div style={{ background: 'rgba(244, 63, 94, 0.2)', color: '#fb7185', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>
@@ -293,15 +290,15 @@ export const ServerManagement: React.FC = () => {
             )}
             <form onSubmit={handleSaveServer}>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', color: 'var(--text-secondary)' }}>Tên Gợi Nhớ (Server Name)</label>
+                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', color: 'var(--text-secondary)' }}>Server Name</label>
                 <input
-                  type="text" required placeholder="ví dụ: ubuntu-server-04"
+                  type="text" required placeholder="e.g. ubuntu-server-04"
                   value={name} onChange={e => setName(e.target.value)}
                   style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-color)', color: 'white' }}
                 />
               </div>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', color: 'var(--text-secondary)' }}>Địa Chỉ IP (IP Address)</label>
+                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', color: 'var(--text-secondary)' }}>IP Address</label>
                 <input
                   type="text" required placeholder="192.168.199.xxx"
                   value={ipAddress} onChange={e => setIpAddress(e.target.value)}
@@ -317,7 +314,7 @@ export const ServerManagement: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', color: 'var(--text-secondary)' }}>Vai Trò (Role)</label>
+                  <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', color: 'var(--text-secondary)' }}>Role</label>
                   <select
                     value={role} onChange={e => setRole(e.target.value)}
                     style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--border-color)', color: 'white' }}
@@ -329,8 +326,8 @@ export const ServerManagement: React.FC = () => {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button type="button" className="btn-danger" onClick={() => setShowAddModal(false)}>Hủy</button>
-                <button type="submit" className="btn-primary">Lưu Máy Chủ</button>
+                <button type="button" className="btn-danger" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">Save Server</button>
               </div>
             </form>
           </div>

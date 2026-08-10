@@ -33,10 +33,9 @@ export const RealtimeDashboard: React.FC = () => {
     setIsSwitching(true);
   };
 
-  // 1. Fetch historical & latest metrics instantly for the newly selected server
+  // Fetch historical & latest metrics instantly for the newly selected server
   const fetchServerData = async () => {
     try {
-      // Fetch both history & realtime in parallel for instant update
       const [resHistory, resRealtime] = await Promise.all([
         fetch(`/api/metrics/history?server_name=${selectedServer}&limit=30`),
         fetch('/api/metrics/realtime')
@@ -158,10 +157,10 @@ export const RealtimeDashboard: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
-            📊 PH2: Giám Sát Thời Gian Thực (Real-time Prometheus Stream)
+            PH2: Real-time Live Monitoring
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-            Đang hiển thị dữ liệu trực tiếp cho máy chủ: <b style={{ color: 'var(--accent-cyan)' }}>{selectedServer}</b>
+            Live metrics streaming directly from <b>Prometheus Server</b> & Ubuntu instances. Currently viewing: <b style={{ color: 'var(--accent-cyan)' }}>{selectedServer}</b>
           </p>
         </div>
 
@@ -174,7 +173,7 @@ export const RealtimeDashboard: React.FC = () => {
           {/* Node Server Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '6px 14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
             <Filter size={16} color="var(--accent-cyan)" />
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>CHỌN NODE:</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>NODE:</span>
             <select
               value={selectedServer}
               onChange={(e) => handleServerChange(e.target.value)}
@@ -193,9 +192,9 @@ export const RealtimeDashboard: React.FC = () => {
               onChange={(e) => setTimeWindow(e.target.value)}
               style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 600, fontSize: '13px', outline: 'none', cursor: 'pointer' }}
             >
-              <option value="5m" style={{ background: '#111827' }}>Live 5 phút</option>
-              <option value="15m" style={{ background: '#111827' }}>Live 15 phút</option>
-              <option value="1h" style={{ background: '#111827' }}>Live 1 giờ</option>
+              <option value="5m" style={{ background: '#111827' }}>Live 5m</option>
+              <option value="15m" style={{ background: '#111827' }}>Live 15m</option>
+              <option value="1h" style={{ background: '#111827' }}>Live 1h</option>
             </select>
           </div>
         </div>
@@ -211,7 +210,7 @@ export const RealtimeDashboard: React.FC = () => {
           <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: cpuColor }}>
             {cpuUsage.toFixed(1)}%
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Tải CPU nhân Linux thời gian thực</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Real-time Linux CPU Workload</div>
         </div>
 
         <div className="glass-card" style={{ padding: '20px', transition: 'all 0.3s' }}>
@@ -222,7 +221,7 @@ export const RealtimeDashboard: React.FC = () => {
           <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-purple)' }}>
             {ramUsage.toFixed(1)}%
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Tỷ lệ RAM sử dụng thực tế</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Memory Allocation Ratio</div>
         </div>
 
         <div className="glass-card" style={{ padding: '20px', transition: 'all 0.3s' }}>
@@ -233,7 +232,7 @@ export const RealtimeDashboard: React.FC = () => {
           <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-emerald)' }}>
             {diskIO.toFixed(1)} ops/s
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Tốc độ đọc/ghi ổ cứng thực tế</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Read/Write Storage Operations</div>
         </div>
 
         <div className="glass-card" style={{ padding: '20px', transition: 'all 0.3s' }}>
@@ -244,7 +243,7 @@ export const RealtimeDashboard: React.FC = () => {
           <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-amber)' }}>
             {netTraffic.toFixed(2)} Mbps
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Lưu lượng mạng nhận vào eth0</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Incoming Traffic on eth0</div>
         </div>
       </div>
 
@@ -252,10 +251,10 @@ export const RealtimeDashboard: React.FC = () => {
       <div className="glass-card" style={{ padding: '24px', marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Activity size={20} color="var(--accent-cyan)" /> Biểu Đồ Metric Thời Gian Thực: <span style={{ color: 'var(--accent-cyan)' }}>[{selectedServer}]</span>
+            <Activity size={20} color="var(--accent-cyan)" /> Real-time Metrics Stream: <span style={{ color: 'var(--accent-cyan)' }}>[{selectedServer}]</span>
           </h2>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            Cập nhật từ Prometheus lúc: <b>{lastUpdate || 'Live'}</b>
+            Updated from Prometheus at: <b>{lastUpdate || 'Live'}</b>
           </div>
         </div>
         <ReactECharts option={lineChartOption} style={{ height: '400px' }} />
@@ -269,7 +268,7 @@ export const RealtimeDashboard: React.FC = () => {
             Prometheus Engine: {isLiveConnected ? 'CONNECTED (REALTIME)' : 'OFFLINE'}
           </span>
           <span style={{ color: 'var(--text-muted)' }}>|</span>
-          <span style={{ color: 'var(--text-secondary)' }}>Tốc độ cào: <b>3s / sample</b></span>
+          <span style={{ color: 'var(--text-secondary)' }}>Scrape Rate: <b>3s / sample</b></span>
           <span style={{ color: 'var(--text-muted)' }}>|</span>
           <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>Node: {selectedServer}</span>
         </div>

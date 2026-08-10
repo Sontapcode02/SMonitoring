@@ -12,18 +12,18 @@ export const App: React.FC = () => {
 
   const getTabTitle = () => {
     switch (activeTab) {
-      case 'servers': return '🌐 PH1: Quản Lý Máy Chủ';
-      case 'dashboard': return '📊 PH2: Giám Sát Thời Gian Thực';
-      case 'anomalies': return '🚨 PH3: Trung Tâm Bất Thường';
-      case 'alerts': return '🔔 PH4: Quản Lý Cảnh Báo';
-      case 'ml': return '🧠 PH5: MLOps & Đánh Giá Mô Hình';
+      case 'servers': return 'PH1: Server Fleet Management';
+      case 'dashboard': return 'PH2: Real-time Live Monitoring';
+      case 'anomalies': return 'PH3: Anomaly Detection Center';
+      case 'alerts': return 'PH4: Alert Hub & Incident Response';
+      case 'ml': return 'PH5: MLOps & Model Analytics';
       default: return 'Dashboard';
     }
   };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
-      {/* Sidebar Navigation (Trái) */}
+      {/* Sidebar Navigation */}
       <aside style={{
         width: '260px',
         background: 'var(--bg-secondary)',
@@ -63,7 +63,7 @@ export const App: React.FC = () => {
               borderLeft: activeTab === 'servers' ? '3px solid var(--accent-cyan)' : '3px solid transparent'
             }}
           >
-            <Server size={18} /> 🌐 Máy chủ (PH1)
+            <Server size={18} /> Servers (PH1)
           </button>
 
           <button
@@ -76,7 +76,7 @@ export const App: React.FC = () => {
               borderLeft: activeTab === 'dashboard' ? '3px solid var(--accent-cyan)' : '3px solid transparent'
             }}
           >
-            <LayoutDashboard size={18} /> 📊 Giám sát Live (PH2)
+            <LayoutDashboard size={18} /> Live Monitoring (PH2)
           </button>
 
           <button
@@ -89,7 +89,7 @@ export const App: React.FC = () => {
               borderLeft: activeTab === 'anomalies' ? '3px solid var(--accent-cyan)' : '3px solid transparent'
             }}
           >
-            <ShieldAlert size={18} /> 🚨 Bất thường (PH3)
+            <ShieldAlert size={18} /> Anomalies (PH3)
           </button>
 
           <button
@@ -102,7 +102,7 @@ export const App: React.FC = () => {
               borderLeft: activeTab === 'alerts' ? '3px solid var(--accent-cyan)' : '3px solid transparent'
             }}
           >
-            <BellRing size={18} /> 🔔 Cảnh báo (PH4)
+            <BellRing size={18} /> Alerts (PH4)
           </button>
 
           <button
@@ -115,13 +115,13 @@ export const App: React.FC = () => {
               borderLeft: activeTab === 'ml' ? '3px solid var(--accent-cyan)' : '3px solid transparent'
             }}
           >
-            <BarChart3 size={18} /> 🧠 Phân tích ML (PH5)
+            <BarChart3 size={18} /> ML Analytics (PH5)
           </button>
         </nav>
 
         {/* System Version Footer */}
         <div style={{ padding: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '10px', fontSize: '12px', color: 'var(--text-muted)' }}>
-          <div>KLTN — 2026</div>
+          <div>KLTN Project — 2026</div>
           <div style={{ color: 'var(--text-secondary)', marginTop: '2px', fontWeight: 600 }}>FastAPI + React + ECharts</div>
         </div>
       </aside>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactECharts from 'echarts-for-react';
 import { Search, Bell, User, LogOut, Key, ChevronRight } from 'lucide-react';
 
 interface HeaderProps {
@@ -58,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
           <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
-            placeholder="Tìm kiếm máy chủ, metrics, alerts..."
+            placeholder="Search servers, metrics, alerts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
@@ -75,7 +76,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
         </div>
 
         {/* Notification Bell (Live Alert Counter) */}
-        <div style={{ position: 'relative', cursor: 'pointer' }} title={hasUnreadAlerts ? `Có ${activeAlertCount} sự cố mới chưa xử lý` : 'Không có sự cố nào mới'}>
+        <div style={{ position: 'relative', cursor: 'pointer' }} title={hasUnreadAlerts ? `${activeAlertCount} new unhandled alerts` : 'No new alerts'}>
           <div style={{
             padding: '10px',
             borderRadius: '50%',
@@ -171,7 +172,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
                 fontSize: '13px',
                 textAlign: 'left'
               }}>
-                <Key size={14} /> Đổi Mật Khẩu
+                <Key size={14} /> Change Password
               </button>
               <button style={{
                 width: '100%',
@@ -187,7 +188,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
                 fontSize: '13px',
                 textAlign: 'left'
               }}>
-                <LogOut size={14} /> Đăng Xuất
+                <LogOut size={14} /> Logout
               </button>
             </div>
           )}
