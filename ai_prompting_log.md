@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
 ```
 
 ---
@@ -100,14 +100,13 @@
 
 ---
 
-### [2026-08-10 19:13] — Antigravity IDE (Gemini Flash)
-**Module:** System Investigation — Overnight Drive C Space Consumption Root Cause
+### [2026-08-10 19:17] — Antigravity IDE (Gemini Flash)
+**Module:** System Optimization — VMware VM Footprint & Disk Compact Strategies
 **Prompt:**
-> Tìm ra nguyên nhân từ tối qua dung lượng còn lại của ổ C là 14gb mà giờ còn có 6gb?
+> Có thể tối ưu chỗ này kh?
 
 **Output dùng:**
-- Điều tra hệ thống & Chỉ ra 3 nguyên nhân chính ngốn ~8 GB dung lượng ổ C qua đêm:
-  1. **Đĩa đệm động 3 máy ảo Ubuntu phình to (~4 – 5 GB):** 3 máy ảo Ubuntu chạy liên tục 17h qua (với script stress, ghi log đĩa `dd`, Prometheus scrape) khiến các file đĩa `.vmdk` động phình kích thước vật lý dưới đĩa cứng.
-  2. **OneDrive Sync Cache (~2 GB):** Thư mục Virtual Machines nằm trong `OneDrive\Tài liệu\`, khi file đĩa vmdk biến động, OneDrive liên tục tải đệm cache để chuẩn bị đồng bộ.
-  3. **AppCache & System Temp qua đêm (~1.5 GB):** Cache tự sinh của Windows, Browser, Discord, VS Code sau 17h hoạt động liên tục.
-- Giải pháp: Chuyển thư mục chứa máy ảo ra khỏi OneDrive hoặc chạy Disk Cleanup dọn dẹp bộ nhớ tạm.
+- Đưa ra 3 giải pháp tối ưu dứt điểm dung lượng 3 máy ảo VMware/VirtualBox (Lấy lại **10 – 15 GB** ngay):
+  1. **Tắt file RAM đệm `.vmem` của VMware:** Thêm cấu hình `mainMem.useNamedFile = "FALSE"` trong VMware Preferences ➡️ Giải phóng ngay **6 GB file `.vmem`**.
+  2. **Co gọn đĩa đệm động (Compact VM Disk):** Dọn dẹp cache `sudo apt clean` trên Ubuntu và bấm nút **Compact** trong VMware Settings ➡️ Thu nhỏ file `.vmdk` lại **3 - 5 GB**.
+  3. **Chuyển thư mục máy ảo ra khỏi OneDrive:** Chuyển sang `C:\VMs` hoặc `D:\VMs` để dừng hoàn toàn việc OneDrive tự cào cache đệm.
