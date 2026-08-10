@@ -117,12 +117,13 @@
 
 ---
 
-### [2026-08-10 19:59] — Antigravity IDE (Gemini Flash)
-**Module:** UI Architecture — Master Frontend Dashboard Specification (PH1 - PH5)
+### [2026-08-10 20:11] — Antigravity IDE (Gemini Flash)
+**Module:** Database Verification — Comprehensive Multi-Layer Database Status Report
 **Prompt:**
-> Bố cục chung (Layout Master): Sidebar (Trái), Header (Trên), PH1: Quản lý Máy chủ, PH2: Giám sát Thời gian thực (ECharts + WebSocket), PH3: Trung tâm Phát hiện Bất thường (Heatmap Timeline + SHAP Values), PH4: Quản lý Cảnh báo (Kanban Board + Rule Engine), PH5: MLOps & Đánh giá Mô hình (Hyperparameter Sliders + Dual Comparison Chart).
+> Tình trạng database hiện tại của dự án?
 
 **Output dùng:**
-- Lập Kế hoạch Triển khai (Implementation Plan) toàn diện cho bộ giao diện 5 phân hệ chuẩn thiết kế Master Layout.
-- Xác nhận các công nghệ sử dụng: React + TypeScript + ECharts + Glassmorphism UI + Lucide Icons.
-- Chuẩn bị viết mã nguồn triển khai đồng bộ tất cả 5 phân hệ.
+- Thực thi lệnh Python kiểm tra trực tiếp 2 tầng Database trong dự án:
+  1. **Dataset Storage (CSV Layer - `ml/dataset/`):** Thu thập dữ liệu chuỗi thời gian 10 chỉ số từ Prometheus phục vụ ML. Đang tích lũy **44,442 dòng/server** (tổng 133,326 mẫu), độ sạch 99.995%.
+  2. **Application Relational DB (SQLite Layer - `backend/ubuntu_monitor.db`):** Quản lý metadata máy chủ (PH1), alert & incident response (PH4). Đã khởi tạo 3 bảng (`servers`, `metrics`, `alerts`) và nạp sẵn 3 máy chủ mặc định.
+- Sẵn sàng chuyển đổi SQLite ➡️ PostgreSQL khi đóng gói Docker Container ở Tuần 5.
