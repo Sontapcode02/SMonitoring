@@ -55,7 +55,7 @@
 ### [2026-08-09 19:40] — Antigravity IDE (Gemini)
 **Module:** Planning — 5 Phân hệ chức năng
 **Prompt:**
-> Các phân hệ chức năng cho em tự xử lý vì thầy mà đưa thì sẽ rất nhiều. Nhưng em đưa ra thì cũng phải đủ về số lượng cho dashboard đó
+> Các phân hệ chức năng cho em tự xử lý vì thầy mà đưa thì sẽ rất nhiều. But em đưa ra thì cũng phải đủ về số lượng cho dashboard đó
 
 **Output dùng:**
 - PH1: Quản lý Máy chủ (Thêm/xoá, status, ping Node Exporter)
@@ -101,7 +101,7 @@
 ---
 
 ### [2026-08-09 20:05] — Antigravity IDE (Gemini)
-**Module:** Planning — Phân tích khả thi
+**Module:** Planning — Phân tích khảthi
 **Prompt:**
 > Phân tích lại tính khả thi của đề tài Xây dựng nền tảng giám sát tập trung và ứng dụng học máy phát hiện bất thường theo thời gian thực cho cụm máy chủ Ubuntu
 
@@ -117,13 +117,15 @@
 
 ---
 
-### [2026-08-10 21:25] — Antigravity IDE (Gemini Flash)
-**Module:** Frontend Layout — Strict Scrollable Inner Containers for Overflow Prevention
+### [2026-08-10 21:29] — Antigravity IDE (Gemini Flash)
+**Module:** Backend & Frontend Live Metrics Fix — Prometheus PromQL Integration & Time-series State Push
 **Prompt:**
-> Server Fleet Node Health Overview, Active Incident Stream (0) cần làm dạng scroll để tránh tràn khi có nhiều object
+> Tìm ra nguyên nhân dữ liệu trạng thái chưa cập nhật được realtime
 
 **Output dùng:**
-- Cập nhật khung chứa của 2 phần danh sách trong **`OverviewDashboard.tsx`**:
-  1. **`Server Fleet Node Health Overview`:** Cố định khung chiều cao `height: 220px`, thiết lập `overflowY: 'auto'` cùng lớp thanh cuộn tự động. Khi số lượng máy chủ vượt quá 3 node, khung tự sinh thanh cuộn nội bộ mà không làm đẩy tràn màn hình.
-  2. **`Active Incident Stream`:** Cố định khung chiều cao `height: 220px`, thiết lập `overflowY: 'auto'` cùng lớp thanh cuộn tự động. Khi danh sách cảnh báo nhiều sự cố, các thẻ cảnh báo sẽ cuộn mượt mà bên trong khung.
-- Giữ vững quy tắc thiết kế Single Viewport Dashboard gói gọn trong 1 màn hình chuẩn mà không phát sinh thanh cuộn trang bên ngoài.
+- **Nguyên nhân chính:**
+  1. Trong `backend/app/routers/metrics.py`, chỉ số `% CPU` trước đó tạm gán mặc định `5.0` do thiếu câu lệnh PromQL cào trực tiếp từ Prometheus Engine.
+  2. Ở Frontend `RealtimeDashboard.tsx`, khi gọi vòng lặp polling 3s chưa tự động đẩy (push) điểm dữ liệu metric thời gian thực mới vào mảng `timeSeries` của ECharts.
+- **Giải pháp xử lý:**
+  1. Cập nhật `metrics.py` tích hợp PromQL cào trực tiếp tỷ lệ CPU nhân Linux: `100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[1m])) * 100)` cùng chỉ số lưu lượng mạng Network RX Mbps thực tế từ Prometheus Server.
+  2. Cập nhật Frontend tự động nối điểm dữ liệu mới (`timeSeries.slice(-30)`) liên tục mỗi 3 giây giúp đường cong biểu đồ ECharts dịch chuyển thời gian thực sang phải cực kỳ mượt mà.

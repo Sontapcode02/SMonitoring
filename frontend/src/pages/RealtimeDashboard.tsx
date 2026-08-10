@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Cpu, HardDrive, Activity, Wifi, Filter, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Cpu, HardDrive, Activity, Wifi, Filter, Clock, RefreshCw } from 'lucide-react';
 
 interface MetricPoint {
   time: string;
@@ -68,11 +68,31 @@ export const RealtimeDashboard: React.FC = () => {
         if (Array.isArray(realtimeData)) {
           const serverMetric = realtimeData.find((item: any) => item.server_name === selectedServer);
           if (serverMetric) {
-            setCpuUsage(Number(serverMetric.cpu_percent || 0));
-            setRamUsage(Number(serverMetric.ram_percent || 0));
-            setDiskIO(Number(serverMetric.disk_iops || 0));
-            setNetTraffic(Number(serverMetric.net_in_mbps || 0));
+            const freshCpu = Number(serverMetric.cpu_percent || 0);
+            const freshRam = Number(serverMetric.ram_percent || 0);
+            const freshDisk = Number(serverMetric.disk_iops || 0);
+            const freshNet = Number(serverMetric.net_in_mbps || 0);
+            const freshTime = serverMetric.timestamp ? serverMetric.timestamp.split(' ')[1] || serverMetric.timestamp : '';
+
+            setCpuUsage(freshCpu);
+            setRamUsage(freshRam);
+            setDiskIO(freshDisk);
+            setNetTraffic(freshNet);
             setLastUpdate(serverMetric.timestamp || '');
+
+            // Dynamically append new point to ECharts timeSeries live
+            setTimeSeries(prev => {
+              const newPoint: MetricPoint = {
+                time: freshTime,
+                cpu: freshCpu,
+                ram: freshRam,
+                disk_iops: freshDisk,
+                net_in_mbps: freshNet,
+                isAnomaly: Boolean(serverMetric.is_anomaly)
+              };
+              const updated = [...prev, newPoint];
+              return updated.slice(-30);
+            });
           }
         }
       }
@@ -241,7 +261,7 @@ export const RealtimeDashboard: React.FC = () => {
             <Wifi size={20} color="var(--accent-amber)" />
           </div>
           <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-amber)' }}>
-            {netTraffic.toFixed(2)} Mbps
+            {netTraffic.toFixed(4)} Mbps
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Incoming Traffic on eth0</div>
         </div>

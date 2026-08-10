@@ -21,7 +21,6 @@ PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
 def safe_read_csv_tail(filepath: str, limit: int = 30):
     """Đọc an toàn N dòng cuối cùng của file CSV ngay cả khi script cào data đang mở ghi file."""
     if not os.path.exists(filepath):
-        print(f"[CSV Warning] File not found: {filepath}")
         return []
     try:
         with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
@@ -52,7 +51,7 @@ def query_promql(query: str):
 
 @router.get("/realtime")
 def get_realtime_metrics():
-    """Lấy chỉ số metric mới nhất thời gian thực từ Prometheus / Live CSV của 3 máy chủ Ubuntu."""
+    """Lấy chỉ số metric mới nhất thời gian thực từ Prometheus cho tất cả máy chủ Ubuntu."""
     targets = query_promql('up')
     results = {}
 
@@ -69,13 +68,13 @@ def get_realtime_metrics():
             inst = item['metric'].get('instance', '')
             if inst == 'localhost:9090':
                 continue
-            name = item['metric'].get('server_name') or item['metric'].get('job') or ip_to_name.get(inst, inst)
+            name = item['metric'].get('server_name') or ip_to_name.get(inst, inst)
             results[inst] = {
                 "server_name": name,
                 "instance": inst,
                 "timestamp": now_str,
-                "cpu_percent": 5.0,
-                "ram_percent": 24.5,
+                "cpu_percent": 0.0,
+                "ram_percent": 0.0,
                 "load1_per_cpu": 0.1,
                 "disk_iops": 0.0,
                 "net_in_mbps": 0.0,
@@ -83,19 +82,33 @@ def get_realtime_metrics():
                 "is_anomaly": False
             }
 
-        # Query RAM %
+        # 1. Query Realtime CPU %
+        cpu_res = query_promql('100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[1m])) * 100)')
+        for item in cpu_res:
+            inst = item['metric'].get('instance', '')
+            if inst in results:
+                results[inst]["cpu_percent"] = round(float(item['value'][1]), 2)
+
+        # 2. Query Realtime RAM %
         ram_res = query_promql('(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100')
         for item in ram_res:
             inst = item['metric'].get('instance', '')
             if inst in results:
                 results[inst]["ram_percent"] = round(float(item['value'][1]), 2)
 
-        # Query IOPS
+        # 3. Query Realtime Disk IOPS
         iops_res = query_promql('sum by (instance) (rate(node_disk_reads_completed_total[1m]) + rate(node_disk_writes_completed_total[1m]))')
         for item in iops_res:
             inst = item['metric'].get('instance', '')
             if inst in results:
                 results[inst]["disk_iops"] = round(float(item['value'][1]), 2)
+
+        # 4. Query Realtime Network RX Mbps
+        net_res = query_promql('sum by (instance) (rate(node_network_receive_bytes_total[1m])) * 8 / 1024 / 1024')
+        for item in net_res:
+            inst = item['metric'].get('instance', '')
+            if inst in results:
+                results[inst]["net_in_mbps"] = round(float(item['value'][1]), 4)
 
         if results:
             return list(results.values())
