@@ -117,16 +117,14 @@
 
 ---
 
-### [2026-08-10 19:10] — Antigravity IDE (Gemini Flash)
-**Module:** Dataset Projections — 54-Day Storage & Capacity Calculation
+### [2026-08-10 19:12] — Antigravity IDE (Gemini Flash)
+**Module:** Dataset Projections — 5-Day Real-World Dataset Capacity Calculation
 **Prompt:**
-> Xem dung lượng của file csv dự đoán sau hoàn thành thu thập trong 54 ngày thì sẽ lên bao nhiêu?
+> Thực tế trong 5 ngày?
 
 **Output dùng:**
-- Phân tích toán học & Kỹ thuật dữ liệu:
-  - Tần suất: 1 sample / 15 giây ➡️ 5,760 mẫu / máy chủ / ngày.
-  - Sau 54 ngày: **311,040 dòng dữ liệu / máy chủ** (Tổng 933,120 mẫu cho cả 3 máy chủ).
-  - Dung lượng mỗi dòng: **80.35 Bytes**.
-  - Dung lượng mỗi file CSV sau 54 ngày: **~23.83 MB / máy chủ**.
-  - **Tổng dung lượng cả cụm 3 server sau 54 ngày:** chỉ khoảng **~71.5 MB**!
-- Khẳng định ưu điểm: Dữ liệu cực kỳ nhỏ gọn, không gây áp lực ổ đĩa, thời gian huấn luyện mô hình Isolation Forest cho 300k samples chỉ mất ~2.5 giây.
+- Tính toán dung lượng thực tế sau **5 ngày** thu thập:
+  - **Mỗi máy chủ:** `5,760 dòng/ngày × 5 ngày` = **`28,800 dòng dữ liệu`**.
+  - **Dung lượng 1 file CSV:** **`2.21 MB / máy chủ`**.
+  - **Tổng cả 3 máy chủ sau 5 ngày:** **`6.62 MB`** (với tổng cộng `86,400 dòng`).
+- Thời gian huấn luyện Isolation Forest cho 28,800 dòng: **~0.25 giây**.
