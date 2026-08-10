@@ -128,7 +128,7 @@ export const App: React.FC = () => {
 
       {/* Main Container */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <Header activeTabTitle={getTabTitle()} hasUnreadAlerts={true} alertCount={3} />
+        <Header activeTabTitle={getTabTitle()} />
         <main style={{ flex: 1, overflowY: 'auto' }}>
           {activeTab === 'servers' && <ServerManagement />}
           {activeTab === 'dashboard' && <RealtimeDashboard />}

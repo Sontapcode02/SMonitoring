@@ -15,6 +15,7 @@ interface ServerItem {
 
 export const ServerManagement: React.FC = () => {
   const [servers, setServers] = useState<ServerItem[]>([]);
+  const [activeAlertServerIds, setActiveAlertServerIds] = useState<number[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [editingServer, setEditingServer] = useState<ServerItem | null>(null);
@@ -27,18 +28,36 @@ export const ServerManagement: React.FC = () => {
   const [role, setRole] = useState('web');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const fetchServers = async () => {
+  const fetchServersAndAlerts = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/servers');
-      if (res.ok) {
-        const data = await res.json();
-        const mappedData = data.map((s: ServerItem, idx: number) => ({
-          ...s,
-          has_anomaly: idx === 1
-        }));
-        setServers(mappedData);
+      // 1. Fetch servers
+      const resServers = await fetch('/api/servers');
+      let serverList: ServerItem[] = [];
+      if (resServers.ok) {
+        serverList = await resServers.json();
       }
+
+      // 2. Fetch active alerts ('new' or 'ack')
+      const resAlerts = await fetch('/api/alerts/');
+      let activeIds: number[] = [];
+      if (resAlerts.ok) {
+        const alertList = await resAlerts.json();
+        if (Array.isArray(alertList)) {
+          activeIds = alertList
+            .filter((a: any) => a.status === 'new' || a.status === 'ack')
+            .map((a: any) => a.server_id);
+        }
+      }
+      setActiveAlertServerIds(activeIds);
+
+      // Map has_anomaly based on active alerts
+      const mappedData = serverList.map(s => ({
+        ...s,
+        has_anomaly: activeIds.includes(s.id)
+      }));
+      setServers(mappedData);
+
     } catch (err) {
       console.error("Fetch servers error:", err);
     } finally {
@@ -47,8 +66,8 @@ export const ServerManagement: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchServers();
-    const interval = setInterval(fetchServers, 15000);
+    fetchServersAndAlerts();
+    const interval = setInterval(fetchServersAndAlerts, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -57,7 +76,7 @@ export const ServerManagement: React.FC = () => {
     try {
       const res = await fetch(`/api/servers/${id}/ping`, { method: 'POST' });
       if (res.ok) {
-        fetchServers();
+        fetchServersAndAlerts();
       }
     } catch (err) {
       console.error("Ping error:", err);
@@ -71,7 +90,7 @@ export const ServerManagement: React.FC = () => {
     try {
       const res = await fetch(`/api/servers/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        fetchServers();
+        fetchServersAndAlerts();
       }
     } catch (err) {
       console.error("Delete server error:", err);
@@ -112,7 +131,7 @@ export const ServerManagement: React.FC = () => {
       });
       if (res.ok) {
         setShowAddModal(false);
-        fetchServers();
+        fetchServersAndAlerts();
       } else {
         const errData = await res.json();
         setErrorMsg(errData.detail || 'Lỗi khi lưu thông tin máy chủ!');
@@ -131,11 +150,11 @@ export const ServerManagement: React.FC = () => {
             🌐 PH1: Quản Lý Máy Chủ (Server Fleet View)
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-            Tổng quan sức khỏe toàn bộ hạ tầng máy chủ Ubuntu. Theo dõi trực tiếp trạng thái Node Exporter.
+            Tổng quan sức khỏe toàn bộ hạ tầng máy chủ Ubuntu. Cập nhật trực tiếp trạng thái theo cảnh báo hệ thống.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="btn-primary" onClick={fetchServers}>
+          <button className="btn-primary" onClick={fetchServersAndAlerts}>
             <RefreshCw size={16} className={loading ? 'spin' : ''} /> Refresh
           </button>
           <button className="btn-primary" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }} onClick={openAddModal}>

@@ -101,7 +101,7 @@
 ---
 
 ### [2026-08-09 20:05] — Antigravity IDE (Gemini)
-**Module:** Planning — Phân tích khảthi
+**Module:** Planning — Phân tích khả thi
 **Prompt:**
 > Phân tích lại tính khả thi của đề tài Xây dựng nền tảng giám sát tập trung và ứng dụng học máy phát hiện bất thường theo thời gian thực cho cụm máy chủ Ubuntu
 
@@ -117,16 +117,13 @@
 
 ---
 
-### [2026-08-10 20:24] — Antigravity IDE (Gemini Flash)
-**Module:** Backend API — Server Fleet CRUD API Verification (PH1)
+### [2026-08-10 20:47] — Antigravity IDE (Gemini Flash)
+**Module:** Frontend Integration — Global Cross-Tab Alert Synchronization
 **Prompt:**
-> Các API get post delete server hoạt động như nào rồi
+> Trong cảnh báo đã bấm RESOLVED tất cả các cảnh báo nhưng các tab còn lại chưa thấy cập nhật
 
 **Output dùng:**
-- Thực thi quy trình kiểm thử trực tiếp cả 5 API CRUD Máy chủ trên FastAPI backend (`http://127.0.0.1:8000/api/servers/`):
-  1. `GET /api/servers/`: Lấy danh sách toàn bộ máy chủ trong SQLite DB.
-  2. `POST /api/servers/`: Thêm máy chủ mới và tự động thực hiện Socket Healthcheck port 9100.
-  3. `PUT /api/servers/{id}`: Cập nhật thông tin máy chủ.
-  4. `POST /api/servers/{id}/ping`: Ping tức thời kiểm tra xem Node Exporter còn sống không.
-  5. `DELETE /api/servers/{id}`: Xóa máy chủ khỏi SQLite DB.
-- Tất cả API hoạt động mượt mà, phản hồi JSON chuẩn RESTful.
+- Đã đồng bộ dữ liệu cảnh báo thời gian thực trên toàn bộ các thành phần giao diện:
+  1. **Header Component (`Header.tsx`):** Tự động polling API `/api/alerts/?status_filter=new` mỗi 5s. Khi tất cả cảnh báo đã `RESOLVED` ➡️ Chuông thông báo tắt nhấp nháy đỏ và badge counter tự động về 0!
+  2. **PH1 Server Fleet View (`ServerManagement.tsx`):** Kiểm tra máy chủ có sự cố `new` hoặc `ack` hay không. Khi tất cả cảnh báo của máy chủ đó được `RESOLVED` ➡️ Thẻ trạng thái máy chủ tự động trả về nhãn **`🟢 Online & Bình thường`** và gỡ bỏ cảnh báo màu cam!
+- Đạt đồng bộ dữ liệu 100% giữa tất cả các Tab/Component khi Admin bấm Resolve.

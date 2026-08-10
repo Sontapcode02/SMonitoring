@@ -1,20 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Bell, User, LogOut, Key, ChevronRight } from 'lucide-react';
 
 interface HeaderProps {
   activeTabTitle: string;
-  hasUnreadAlerts?: boolean;
-  alertCount?: number;
 }
 
-export const Header: React.FC<HeaderProps> = ({
-  activeTabTitle,
-  hasUnreadAlerts = true,
-  alertCount = 3
-}) => {
+export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeAlertCount, setActiveAlertCount] = useState<number>(0);
 
+  const fetchActiveAlerts = async () => {
+    try {
+      const res = await fetch('/api/alerts/?status_filter=new');
+      if (res.ok) {
+        const data = await res.json();
+        setActiveAlertCount(Array.isArray(data) ? data.length : 0);
+      }
+    } catch (err) {
+      console.error("Fetch active alerts count error:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchActiveAlerts();
+    const interval = setInterval(fetchActiveAlerts, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const hasUnreadAlerts = activeAlertCount > 0;
   const bellBorder = hasUnreadAlerts ? 'rgba(244, 63, 94, 0.3)' : 'var(--border-color)';
 
   return (
@@ -60,8 +74,8 @@ export const Header: React.FC<HeaderProps> = ({
           />
         </div>
 
-        {/* Notification Bell */}
-        <div style={{ position: 'relative', cursor: 'pointer' }}>
+        {/* Notification Bell (Live Alert Counter) */}
+        <div style={{ position: 'relative', cursor: 'pointer' }} title={hasUnreadAlerts ? `Có ${activeAlertCount} sự cố mới chưa xử lý` : 'Không có sự cố nào mới'}>
           <div style={{
             padding: '10px',
             borderRadius: '50%',
@@ -69,7 +83,8 @@ export const Header: React.FC<HeaderProps> = ({
             border: `1px solid ${bellBorder}`,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            transition: 'all 0.3s'
           }}>
             <Bell size={18} color={hasUnreadAlerts ? '#f43f5e' : 'var(--text-secondary)'} />
             {hasUnreadAlerts && (
@@ -89,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
                 justifyContent: 'center',
                 boxShadow: '0 0 10px #f43f5e'
               }}>
-                {alertCount}
+                {activeAlertCount}
               </span>
             )}
           </div>
