@@ -133,13 +133,15 @@
 
 ---
 
-### [2026-08-10 01:26] — Antigravity IDE (Gemini Flash)
-**Module:** Workload Tuning — Ubuntu 2 Active DB Server Workload (40-65% CPU)
+### [2026-08-10 18:26] — Antigravity IDE (Gemini Flash)
+**Module:** Enterprise Simulation — Diurnal Time-of-Day Traffic Pattern Script
 **Prompt:**
-> Thấp quá chỉ khoảng 13 14% thôi thì quá thấp
+> Các giả lập này có đúng với server của doanh nghiệp không vì doanh nghiệp thường hoạt động cao vào giờ hành chính còn các giờ khác thì khác?
 
 **Output dùng:**
-- Điều chỉnh thời gian timeout và sleep trong script `normal_traffic.sh` của `ubuntu-server-02` (DB Server):
-  - Đặt `stress --cpu 1 --timeout 4s` (chạy ép tải 4s).
-  - Đặt `sleep 2-4s` (nghỉ ngắn hơn 2-4s).
-- Nâng mức tải CPU trung bình của DB Server từ 13% lên dải hoạt động tích cực **40% – 65% CPU** nhấp nhô cực đẹp.
+- Xác nhận nhận xét của sinh viên RẤT CHÍNH XÁC và có giá trị chuyên môn cao trong các hệ thống doanh nghiệp (Diurnal / Time-of-Day Workload Pattern).
+- Thiết kế lại script `scenarios/generate_diurnal_traffic.sh` tự động đọc giờ thực tế của OS Linux (`date +%H`):
+  - **Giờ hành chính (08h - 18h):** Tải cao tự nhiên (Web 25-40% CPU, DB 45-65% CPU + IOPS).
+  - **Giờ ban đêm (18h - 08h sáng):** Tải nhàn rỗi thấp (5-15% CPU).
+  - **Tác vụ Batch ban đêm (02h - 03h sáng):** Tự động sinh spike đọc/ghi đĩa ngầm (Nightly Database Backup Simulation).
+- Giải thích giá trị nghiên cứu: Mô hình Isolation Forest khi được học phân phối theo giờ (Time-aware) sẽ có khả năng phát hiện các hành vi bất thường ban đêm (Data Exfiltration lúc 3h sáng) mà cảnh báo ngưỡng tĩnh không bắt được.
