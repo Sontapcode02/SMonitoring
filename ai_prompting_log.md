@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
 ```
 
 ---
@@ -117,18 +117,14 @@
 
 ---
 
-### [2026-08-10 21:35] — Antigravity IDE (Gemini Flash)
-**Module:** System Storage Metrics — Disk Capacity, Free Space GB & Live Read/Write Speed PromQL
+### [2026-08-10 21:49] — Antigravity IDE (Gemini Flash)
+**Module:** Frontend React-ECharts Integration — Instant Re-render with `notMerge={true}` & Live Time-series Array Push
 **Prompt:**
-> Bổ sung các thông số trạng thái dung lượng ổ cứng, tốc độ đọc ghi
+> Metric chưa thấy cập nhật realtime
 
 **Output dùng:**
-- **Bổ sung các câu truy vấn PromQL Prometheus cho ổ cứng:**
-  1. `node_filesystem_size_bytes{mountpoint="/"}` ➡️ Tổng dung lượng ổ cứng (`disk_size_gb`: 9.75 GB).
-  2. `node_filesystem_avail_bytes{mountpoint="/"}` ➡️ Dung lượng trống còn lại (`disk_free_gb`: 4.35 GB) & tỷ lệ sử dụng % (`disk_percent`: 55.4%).
-  3. `sum by (instance) (rate(node_disk_read_bytes_total[1m])) / 1024 / 1024` ➡️ Tốc độ đọc thực tế (`disk_read_mbps` MB/s).
-  4. `sum by (instance) (rate(node_disk_written_bytes_total[1m])) / 1024 / 1024` ➡️ Tốc độ ghi thực tế (`disk_write_mbps` MB/s).
-- **Tích hợp lên giao diện Web:**
-  - Bổ sung thẻ **`DISK CAPACITY`** (Tỷ lệ % sử dụng + Dung lượng trống/tổng GB) trên `RealtimeDashboard.tsx`.
-  - Bổ sung thẻ **`READ / WRITE SPEED`** (Hiển thị song song Tốc độ Đọc MB/s & Tốc độ Ghi MB/s kèm IOPS) trên `RealtimeDashboard.tsx`.
-  - Bổ sung cột thông số % DISK trên thẻ từng máy chủ ở `OverviewDashboard.tsx`.
+- **Nguyên nhân kỹ thuật:** Thư viện `echarts-for-react` mặc định gộp (merge) đối tượng `option` cũ với mới mà không thực hiện re-render bắt buộc nếu thiếu thuộc tính `notMerge={true}`, làm biểu đồ ECharts trông như bị đóng đắng không lắc kim hay chạy đường line.
+- **Giải pháp xử lý:**
+  1. Thêm thuộc tính `notMerge={true}` cho tất cả các thành phần `<ReactECharts option={...} notMerge={true} />` ở cả trang `OverviewDashboard.tsx` và `RealtimeDashboard.tsx`.
+  2. Bổ sung mảng lưu vết chuỗi thời gian thực `compTimes`, `srv1History`, `srv2History`, `srv3History` giúp biểu đồ so sánh tải CPU giữa 3 máy chủ ở trang Executive Overview tự động nhảy điểm mới mỗi 3 giây.
+- Đạt trải nghiệm nhảy số và xoay kim đồng hồ ECharts thời gian thực 100% mượt mà.

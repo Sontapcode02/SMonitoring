@@ -240,7 +240,7 @@ export const RealtimeDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 5 Sparkline / Gauge Cards Dedicated to Currently Selected Server (Includes Disk Space & Read/Write Speed) */}
+      {/* 5 Sparkline / Gauge Cards Dedicated to Currently Selected Server */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '24px' }}>
         <div className="glass-card" style={{ padding: '16px', transition: 'all 0.3s' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -317,7 +317,7 @@ export const RealtimeDashboard: React.FC = () => {
             Updated from Prometheus at: <b>{lastUpdate || 'Live'}</b>
           </div>
         </div>
-        <ReactECharts option={lineChartOption} style={{ height: '400px' }} />
+        <ReactECharts option={lineChartOption} notMerge={true} style={{ height: '400px' }} />
       </div>
 
       {/* Footer Right: Prometheus Connection Telemetry Status */}

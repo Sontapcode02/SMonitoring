@@ -44,6 +44,12 @@ export const OverviewDashboard: React.FC = () => {
   // Dynamic server selection state for ECharts Gauge Charts
   const [gaugeServer, setGaugeServer] = useState<string>('ubuntu-server-01');
 
+  // Comparative time-series history state
+  const [compTimes, setCompTimes] = useState<string[]>([]);
+  const [srv1History, setSrv1History] = useState<number[]>([]);
+  const [srv2History, setSrv2History] = useState<number[]>([]);
+  const [srv3History, setSrv3History] = useState<number[]>([]);
+
   const fetchOverviewData = async () => {
     try {
       const [resServers, resAlerts, resRealtime] = await Promise.all([
@@ -70,6 +76,16 @@ export const OverviewDashboard: React.FC = () => {
             rMap[item.server_name] = item;
           });
           setRealtimeMetrics(rMap);
+
+          const nowTime = new Date().toLocaleTimeString();
+          const cpu1 = Number((rMap['ubuntu-server-01']?.cpu_percent || 5.0).toFixed(1));
+          const cpu2 = Number((rMap['ubuntu-server-02']?.cpu_percent || 4.2).toFixed(1));
+          const cpu3 = Number((rMap['ubuntu-server-03']?.cpu_percent || 5.1).toFixed(1));
+
+          setCompTimes(prev => [...prev.slice(-14), nowTime]);
+          setSrv1History(prev => [...prev.slice(-14), cpu1]);
+          setSrv2History(prev => [...prev.slice(-14), cpu2]);
+          setSrv3History(prev => [...prev.slice(-14), cpu3]);
         }
       }
     } catch (err) {
@@ -81,7 +97,7 @@ export const OverviewDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchOverviewData();
-    const interval = setInterval(fetchOverviewData, 5000);
+    const interval = setInterval(fetchOverviewData, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -197,7 +213,7 @@ export const OverviewDashboard: React.FC = () => {
     ]
   };
 
-  // Multi-server comparative line chart option
+  // Multi-server comparative line chart option (Live Stream)
   const compareChartOption = {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis' },
@@ -208,7 +224,7 @@ export const OverviewDashboard: React.FC = () => {
     grid: { left: '3%', right: '4%', bottom: '8%', top: '15%', containLabel: true },
     xAxis: {
       type: 'category',
-      data: ['20:45', '20:47', '20:49', '20:51', '20:53', '20:55', 'Live'],
+      data: compTimes.length > 0 ? compTimes : ['Live'],
       axisLine: { lineStyle: { color: '#374151' } },
       axisLabel: { color: '#9ca3af', fontSize: 10 }
     },
@@ -223,7 +239,7 @@ export const OverviewDashboard: React.FC = () => {
         name: 'ubuntu-server-01',
         type: 'line',
         smooth: true,
-        data: [12, 15, 14, 18, 12, 10, realtimeMetrics['ubuntu-server-01']?.cpu_percent || 5],
+        data: srv1History,
         itemStyle: { color: '#06b6d4' },
         lineStyle: { width: 2 }
       },
@@ -231,7 +247,7 @@ export const OverviewDashboard: React.FC = () => {
         name: 'ubuntu-server-02',
         type: 'line',
         smooth: true,
-        data: [42, 55, 62, 58, 48, 52, realtimeMetrics['ubuntu-server-02']?.cpu_percent || 45],
+        data: srv2History,
         itemStyle: { color: '#8b5cf6' },
         lineStyle: { width: 2 }
       },
@@ -239,7 +255,7 @@ export const OverviewDashboard: React.FC = () => {
         name: 'ubuntu-server-03',
         type: 'line',
         smooth: true,
-        data: [25, 28, 30, 26, 22, 24, realtimeMetrics['ubuntu-server-03']?.cpu_percent || 15],
+        data: srv3History,
         itemStyle: { color: '#10b981' },
         lineStyle: { width: 2 }
       }
@@ -304,7 +320,7 @@ export const OverviewDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Middle Row: CPU Gauge, RAM Gauge & Server Fleet Health (3 Columns with Disk Metrics) */}
+      {/* Middle Row: CPU Gauge, RAM Gauge & Server Fleet Health */}
       <div style={{ display: 'grid', gridTemplateColumns: '270px 270px 1fr', gap: '16px', height: '220px' }}>
         {/* CPU Gauge Card */}
         <div className="glass-card" style={{ padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -323,7 +339,7 @@ export const OverviewDashboard: React.FC = () => {
               </select>
             </div>
           </div>
-          <ReactECharts option={cpuGaugeOption} style={{ height: '145px', width: '100%' }} />
+          <ReactECharts option={cpuGaugeOption} notMerge={true} style={{ height: '145px', width: '100%' }} />
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
             Selected Node: <b style={{ color: 'var(--accent-cyan)' }}>{gaugeServer}</b>
           </div>
@@ -346,13 +362,13 @@ export const OverviewDashboard: React.FC = () => {
               </select>
             </div>
           </div>
-          <ReactECharts option={ramGaugeOption} style={{ height: '145px', width: '100%' }} />
+          <ReactECharts option={ramGaugeOption} notMerge={true} style={{ height: '145px', width: '100%' }} />
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
             Selected Node: <b style={{ color: '#c084fc' }}>{gaugeServer}</b>
           </div>
         </div>
 
-        {/* Server Fleet Health List (Strict Fixed Container with Disk Storage Metrics) */}
+        {/* Server Fleet Health List */}
         <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
           <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Server size={16} color="var(--accent-cyan)" /> Server Fleet Node Health Overview
@@ -409,9 +425,9 @@ export const OverviewDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom Row: Active Incident Stream & Comparative Line Chart (2 Columns with Scrollable Alerts) */}
+      {/* Bottom Row: Active Incident Stream & Comparative Line Chart */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '16px', height: '220px' }}>
-        {/* Active Incident Stream (Strict Fixed Container with Scrollbar) */}
+        {/* Active Incident Stream */}
         <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
           <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px', color: '#fb7185' }}>
             <Bell size={16} /> Active Incident Stream ({activeAlerts.length})
@@ -452,7 +468,7 @@ export const OverviewDashboard: React.FC = () => {
           <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Activity size={16} color="var(--accent-cyan)" /> Multi-Server CPU Comparison Stream
           </h2>
-          <ReactECharts option={compareChartOption} style={{ flex: 1, height: '100%', width: '100%' }} />
+          <ReactECharts option={compareChartOption} notMerge={true} style={{ flex: 1, height: '100%', width: '100%' }} />
         </div>
       </div>
     </div>
