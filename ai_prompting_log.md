@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
 ```
 
 ---
@@ -117,11 +117,15 @@
 
 ---
 
-### [2026-08-10 21:00] — Antigravity IDE (Gemini Flash)
-**Module:** Frontend Globalization — Professional English UI & Icon/Emoji Cleanup
+### [2026-08-10 21:05] — Antigravity IDE (Gemini Flash)
+**Module:** Frontend Architecture — Executive Overview Dashboard Tab
 **Prompt:**
-> Chuyển toàn bộ mã nguồn web sang t.anh, loại bỏ các icon trên giao diện console
+> Tạo 1 tab Dashboard thể hiện đầy đủ các trạng thái, cảnh báo của server
 
 **Output dùng:**
-- Chuyển toàn bộ 100% nhãn mác, tiêu đề, nút bấm, placeholder, thông báo và status tags trên giao diện Web Frontend sang Tiếng Anh chuyên ngành chuẩn mực (`PH1: Server Fleet Management`, `PH2: Real-time Live Monitoring`, `PH3: Anomaly Detection Center`, `PH4: Alert Hub & Incident Response`, `PH5: MLOps & Model Analytics`).
-- Loại bỏ toàn bộ các Emoji icons (như 🌐, 📊, 🚨, 🔔, 🧠, 🟢, 🔴, ⚠️, 📋, ⚙️, 💡, ⚡) khỏi giao diện và console log, giữ lại thiết kế giao diện tối giản chuẩn doanh nghiệp với biểu tượng SVG Lucide sắc nét.
+- Xây dựng trang **`OverviewDashboard.tsx`** làm tab mặc định chính đầu tiên trên Sidebar (`Executive Overview`):
+  1. **4 Thẻ Tổng Quan Thượng Cấp (Top Metrics):** Total Monitored Servers, Active Alerts Count, Cluster Average CPU Workload %, ML Anomaly Status.
+  2. **Bảng Sức Khỏe Máy Chủ (Left Panel):** Hiển thị danh sách tất cả máy chủ Ubuntu kèm nhãn trạng thái `Online`, `Offline`, `Anomaly Detected` và Mini Gauge CPU/RAM bar.
+  3. **Luồng Cảnh Báo Trực Tiếp (Right Panel):** Hiển thị danh sách sự cố đang mở với nút bấm 1-touch `Acknowledge` và `Resolve`.
+  4. **Biểu Đồ Tải CPU So Sánh Cụm Máy Chủ (Bottom Panel):** Đồ thị ECharts so sánh trực quan dòng tải CPU giữa 3 máy chủ thời gian thực.
+- Giúp người quản trị nắm bắt toàn bộ hạ tầng và các sự cố nổi bật chỉ trong một cái nhìn (Single Pane of Glass).

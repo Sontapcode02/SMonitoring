@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { Header } from './components/Header';
+import { OverviewDashboard } from './pages/OverviewDashboard';
 import { ServerManagement } from './pages/ServerManagement';
 import { RealtimeDashboard } from './pages/RealtimeDashboard';
 import { AnomalyCenter } from './pages/AnomalyCenter';
 import { AlertHub } from './pages/AlertHub';
 import { ModelInsights } from './pages/ModelInsights';
-import { LayoutDashboard, Server, ShieldAlert, BellRing, BarChart3, Activity } from 'lucide-react';
+import { LayoutDashboard, Server, ShieldAlert, BellRing, BarChart3, Activity, Gauge } from 'lucide-react';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'servers' | 'dashboard' | 'anomalies' | 'alerts' | 'ml'>('servers');
+  const [activeTab, setActiveTab] = useState<'overview' | 'servers' | 'dashboard' | 'anomalies' | 'alerts' | 'ml'>('overview');
 
   const getTabTitle = () => {
     switch (activeTab) {
+      case 'overview': return 'Executive System Overview';
       case 'servers': return 'PH1: Server Fleet Management';
       case 'dashboard': return 'PH2: Real-time Live Monitoring';
       case 'anomalies': return 'PH3: Anomaly Detection Center';
@@ -53,6 +55,19 @@ export const App: React.FC = () => {
 
         {/* Navigation Items Menu */}
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+          <button
+            onClick={() => setActiveTab('overview')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '10px',
+              border: 'none', background: activeTab === 'overview' ? 'rgba(6, 182, 212, 0.15)' : 'transparent',
+              color: activeTab === 'overview' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+              fontWeight: activeTab === 'overview' ? 700 : 500, cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
+              borderLeft: activeTab === 'overview' ? '3px solid var(--accent-cyan)' : '3px solid transparent'
+            }}
+          >
+            <Gauge size={18} /> Executive Overview
+          </button>
+
           <button
             onClick={() => setActiveTab('servers')}
             style={{
@@ -130,6 +145,7 @@ export const App: React.FC = () => {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <Header activeTabTitle={getTabTitle()} />
         <main style={{ flex: 1, overflowY: 'auto' }}>
+          {activeTab === 'overview' && <OverviewDashboard />}
           {activeTab === 'servers' && <ServerManagement />}
           {activeTab === 'dashboard' && <RealtimeDashboard />}
           {activeTab === 'anomalies' && <AnomalyCenter />}
