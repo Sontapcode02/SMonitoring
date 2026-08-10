@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
 ```
 
 ---
@@ -117,11 +117,11 @@
 
 ---
 
-### [2026-08-10 18:32] — Antigravity IDE (Gemini Flash)
-**Module:** Workload Verification — Ubuntu 1 Diurnal Background Workload Execution (PID 95636)
+### [2026-08-10 18:34] — Antigravity IDE (Gemini Flash)
+**Module:** System Configuration — Timezone Alignment for 3 Ubuntu Target VMs
 **Prompt:**
-> ubuntu1@ubuntu1:/tmp$ pkill -f normal_traffic ... [2] 95636 Terminated [1]- Exit 143
+> Thời gian của máy ubuntu có đang là thời gian đúng múi giờ chưa?
 
 **Output dùng:**
-- Giải thích kết quả Terminal: Tiến trình cũ `[1]` nhận lệnh `Exit 143` (Terminated) do `pkill` tắt sạch sẽ. Tiến trình mới `[2]` với **PID `95636`** đã bắt đầu chạy ngầm tải Diurnal thành công 100% trên `ubuntu1`.
-- Hướng dẫn dán 2 khối lệnh tương tự sang `ubuntu2` (`db`) và `ubuntu3` (`app`).
+- Giải thích: Mặc định Ubuntu Server cài mới sử dụng múi giờ chuẩn **UTC** (Coordinated Universal Time). Khi giờ Việt Nam (ICT UTC+7) là 18h30 chiều thì giờ UTC trên máy Ubuntu là 11h30 trưa.
+- Cung cấp câu lệnh 1-click `sudo timedatectl set-timezone Asia/Ho_Chi_Minh && date` để đồng bộ múi giờ 3 máy ảo Ubuntu trùng 100% với múi giờ Việt Nam (UTC+7) trên máy Windows của sinh viên.
