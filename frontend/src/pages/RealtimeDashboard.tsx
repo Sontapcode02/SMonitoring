@@ -11,7 +11,17 @@ interface MetricPoint {
   isAnomaly: boolean;
 }
 
+interface ServerItem {
+  id: number;
+  name: string;
+  ip_address: string;
+  port: number;
+  role: string;
+  status: string;
+}
+
 export const RealtimeDashboard: React.FC = () => {
+  const [servers, setServers] = useState<ServerItem[]>([]);
   const [selectedServer, setSelectedServer] = useState('ubuntu-server-01');
   const [timeWindow, setTimeWindow] = useState('5m');
   const [isLiveConnected, setIsLiveConnected] = useState<boolean>(true);
@@ -31,6 +41,29 @@ export const RealtimeDashboard: React.FC = () => {
 
   // Time-series history for ECharts
   const [timeSeries, setTimeSeries] = useState<MetricPoint[]>([]);
+
+  // 1. Fetch Server Fleet List from Database
+  const fetchServers = async () => {
+    try {
+      const res = await fetch('/api/servers/');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setServers(data);
+          // If selected server is not in the list, set to first server
+          if (!data.some((s: any) => s.name === selectedServer)) {
+            setSelectedServer(data[0].name);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Fetch server list error:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchServers();
+  }, []);
 
   // Instant server switch handler
   const handleServerChange = (newServer: string) => {
@@ -210,7 +243,7 @@ export const RealtimeDashboard: React.FC = () => {
             <RefreshCw size={14} className={isSwitching ? 'spin' : ''} /> Refresh Stream
           </button>
 
-          {/* Node Server Selector */}
+          {/* Node Server Selector (Dynamic Server Fleet Options) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '6px 14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
             <Filter size={16} color="var(--accent-cyan)" />
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>NODE:</span>
@@ -219,9 +252,15 @@ export const RealtimeDashboard: React.FC = () => {
               onChange={(e) => handleServerChange(e.target.value)}
               style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 700, fontSize: '14px', outline: 'none', cursor: 'pointer' }}
             >
-              <option value="ubuntu-server-01" style={{ background: '#111827' }}>ubuntu-server-01 (Web)</option>
-              <option value="ubuntu-server-02" style={{ background: '#111827' }}>ubuntu-server-02 (DB)</option>
-              <option value="ubuntu-server-03" style={{ background: '#111827' }}>ubuntu-server-03 (App)</option>
+              {servers.length > 0 ? (
+                servers.map(s => (
+                  <option key={s.id} value={s.name} style={{ background: '#111827' }}>
+                    {s.name} ({s.role ? s.role.toUpperCase() : 'NODE'})
+                  </option>
+                ))
+              ) : (
+                <option value="ubuntu-server-01" style={{ background: '#111827' }}>ubuntu-server-01 (WEB)</option>
+              )}
             </select>
           </div>
 

@@ -117,14 +117,13 @@
 
 ---
 
-### [2026-08-10 21:49] — Antigravity IDE (Gemini Flash)
-**Module:** Frontend React-ECharts Integration — Instant Re-render with `notMerge={true}` & Live Time-series Array Push
+### [2026-08-10 22:28] — Antigravity IDE (Gemini Flash)
+**Module:** System Architecture — Dynamic Database Server Fleet Integration for Realtime Metrics & Dropdown Menus
 **Prompt:**
-> Metric chưa thấy cập nhật realtime
+> Add thêm 1 server nhưng chưa thấy cập nhật server đó lên
 
 **Output dùng:**
-- **Nguyên nhân kỹ thuật:** Thư viện `echarts-for-react` mặc định gộp (merge) đối tượng `option` cũ với mới mà không thực hiện re-render bắt buộc nếu thiếu thuộc tính `notMerge={true}`, làm biểu đồ ECharts trông như bị đóng đắng không lắc kim hay chạy đường line.
-- **Giải pháp xử lý:**
-  1. Thêm thuộc tính `notMerge={true}` cho tất cả các thành phần `<ReactECharts option={...} notMerge={true} />` ở cả trang `OverviewDashboard.tsx` và `RealtimeDashboard.tsx`.
-  2. Bổ sung mảng lưu vết chuỗi thời gian thực `compTimes`, `srv1History`, `srv2History`, `srv3History` giúp biểu đồ so sánh tải CPU giữa 3 máy chủ ở trang Executive Overview tự động nhảy điểm mới mỗi 3 giây.
-- Đạt trải nghiệm nhảy số và xoay kim đồng hồ ECharts thời gian thực 100% mượt mà.
+- **Giải quyết tận gốc bài toán nạp động danh sách máy chủ:**
+  1. Ở **Backend (`metrics.py`)**: Sửa API `/api/metrics/realtime` tự động lấy danh sách `db.query(ServerModel).all()` từ Database SQLite. Nhờ đó bất kỳ máy chủ mới nào vừa bấm `+ Add Server` (ví dụ `ubuntu-server-test` IP `192.168.199.135`) đều được tự động tạo cấu trúc metric thời gian thực và kiểm tra kết nối lập tức.
+  2. Ở **Frontend (`RealtimeDashboard.tsx`)**: Sửa danh sách chọn máy chủ (`NODE:` dropdown) tự động tải động từ API `/api/servers/` thay vì hardcode 3 máy chủ ban đầu. Khi Admin bấm thêm máy chủ mới ở PH1, trang PH2 lập tức hiển thị tên máy chủ mới trong danh sách chọn.
+- Đạt hiệu quả tự động hóa 100% khi mở rộng cụm máy chủ (Scalability).
