@@ -117,16 +117,13 @@
 
 ---
 
-### [2026-08-10 21:09] — Antigravity IDE (Gemini Flash)
-**Module:** Frontend Dashboard — ECharts Gauge Chart & Single Viewport Fit-to-Screen Layout
+### [2026-08-10 21:22] — Antigravity IDE (Gemini Flash)
+**Module:** Frontend Overview — Dynamic Server Node Switcher for CPU & RAM ECharts Gauges
 **Prompt:**
-> Các trạng thái CPU RAM thể hiện bằng Gauge Chart, sắp xếp để dashboard thể hiện toàn bộ trên 1 màn hình mà kh cần lướt xuống nhiều
+> Gauge Chart ECharts chỉ mới thể hiện được 2 thông cpu ram của 1 máy chủ ubuntu, nên thêm nút thay đổi máy chủ ngay chỗ 2 trạng thái này
 
 **Output dùng:**
-- Tái cấu trúc lại toàn bộ trang **`OverviewDashboard.tsx`** thành chuẩn giao diện **Single Viewport Dashboard (Fit-to-Screen / Không cuộn trang)**:
-  1. **Đồng hồ Gauge Chart ECharts:** Tích hợp 2 biểu đồ Gauge vòng tròn sắc nét hiển thị tỷ lệ % CPU (`CPU WORKLOAD GAUGE`) và % RAM (`RAM MEMORY GAUGE`) của toàn cụm hạ tầng với vạch phân vùng màu cảnh báo đỏ/vàng/xanh.
-  2. **Bố cục 3 Hàng Tối Ưu Chiều Cao (Zero Vertical Scroll):**
-     - Hàng Top: 4 Thẻ Summary thông số vừa vặn.
-     - Hàng Giữa: 2 Thẻ Đồng hồ Gauge + Danh sách Sức khỏe Server Fleet.
-     - Hàng Dưới: Luồng Cảnh báo Sự cố trực tiếp + Biểu đồ So sánh Tải CPU các Node.
-- Đạt hiệu quả hiển thị 100% toàn bộ trạng thái và sự cố hạ tầng vừa khít trong duy nhất 1 màn hình full-HD mà không cần cuộn trang xuống!
+- Cập nhật trang **`OverviewDashboard.tsx`**:
+  1. **Menu Chọn Node Nhanh (Node Switcher Dropdown):** Tích hợp nút Dropdown chọn Server Node ngay trên góc phải của mỗi thẻ đồng hồ ECharts Gauge (`server-01 (Web)`, `server-02 (DB)`, `server-03 (App)`).
+  2. **1-Click Interactive Row Selection:** Cho phép Admin nhấp chuột trực tiếp vào bất kỳ dòng máy chủ nào trong danh sách *Server Fleet Node Health* bên cạnh để chuyển nhanh góc nhìn đồng hồ Gauge sang máy chủ đó.
+  3. **Real-time Gauge Update:** Đồng hồ CPU & RAM tự động xoay kim chi tiết theo đúng các thông số thời gian thực của máy chủ được chọn.

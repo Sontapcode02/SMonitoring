@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Server, ShieldAlert, Bell, Cpu, Activity, CheckCircle2, AlertTriangle, XCircle, RefreshCw } from 'lucide-react';
+import { Server, ShieldAlert, Bell, Cpu, Activity, CheckCircle2, RefreshCw, Filter } from 'lucide-react';
 
 interface ServerItem {
   id: number;
@@ -35,6 +35,9 @@ export const OverviewDashboard: React.FC = () => {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [realtimeMetrics, setRealtimeMetrics] = useState<Record<string, RealtimeMetric>>({});
   const [loading, setLoading] = useState<boolean>(true);
+  
+  // Dynamic server selection state for ECharts Gauge Charts
+  const [gaugeServer, setGaugeServer] = useState<string>('ubuntu-server-01');
 
   const fetchOverviewData = async () => {
     try {
@@ -98,15 +101,16 @@ export const OverviewDashboard: React.FC = () => {
   const activeAlerts = alerts.filter(a => a.status === 'new' || a.status === 'ack');
   const onlineServers = servers.filter(s => s.status === 'online').length;
   
+  // Specific Gauges values for selected server
+  const selectedServerMetric = realtimeMetrics[gaugeServer] || { cpu_percent: 5.0, ram_percent: 24.5 };
+  const gaugeCpuNum = Number((selectedServerMetric.cpu_percent || 0).toFixed(1));
+  const gaugeRamNum = Number((selectedServerMetric.ram_percent || 0).toFixed(1));
+
   const avgCpuNum = Object.values(realtimeMetrics).length > 0
     ? Number((Object.values(realtimeMetrics).reduce((acc, curr) => acc + (curr.cpu_percent || 0), 0) / Object.values(realtimeMetrics).length).toFixed(1))
     : 5.0;
 
-  const avgRamNum = Object.values(realtimeMetrics).length > 0
-    ? Number((Object.values(realtimeMetrics).reduce((acc, curr) => acc + (curr.ram_percent || 0), 0) / Object.values(realtimeMetrics).length).toFixed(1))
-    : 24.8;
-
-  // CPU ECharts Gauge Option
+  // CPU ECharts Gauge Option for Selected Server Node
   const cpuGaugeOption = {
     backgroundColor: 'transparent',
     series: [
@@ -133,21 +137,21 @@ export const OverviewDashboard: React.FC = () => {
         axisTick: { length: 6, lineStyle: { color: 'auto', width: 1 } },
         splitLine: { length: 10, lineStyle: { color: 'auto', width: 2 } },
         axisLabel: { color: '#9ca3af', fontSize: 10, distance: -20 },
-        title: { offsetCenter: [0, '-20%'], fontSize: 12, color: '#9ca3af' },
+        title: { offsetCenter: [0, '-20%'], fontSize: 11, color: '#9ca3af' },
         detail: {
           fontSize: 22,
           offsetCenter: [0, '25%'],
           valueAnimation: true,
           formatter: '{value}%',
-          color: avgCpuNum > 80 ? '#f43f5e' : '#06b6d4',
+          color: gaugeCpuNum > 80 ? '#f43f5e' : '#06b6d4',
           fontWeight: 700
         },
-        data: [{ value: avgCpuNum, name: 'AVG CPU' }]
+        data: [{ value: gaugeCpuNum, name: 'CPU WORKLOAD' }]
       }
     ]
   };
 
-  // RAM ECharts Gauge Option
+  // RAM ECharts Gauge Option for Selected Server Node
   const ramGaugeOption = {
     backgroundColor: 'transparent',
     series: [
@@ -174,7 +178,7 @@ export const OverviewDashboard: React.FC = () => {
         axisTick: { length: 6, lineStyle: { color: 'auto', width: 1 } },
         splitLine: { length: 10, lineStyle: { color: 'auto', width: 2 } },
         axisLabel: { color: '#9ca3af', fontSize: 10, distance: -20 },
-        title: { offsetCenter: [0, '-20%'], fontSize: 12, color: '#9ca3af' },
+        title: { offsetCenter: [0, '-20%'], fontSize: 11, color: '#9ca3af' },
         detail: {
           fontSize: 22,
           offsetCenter: [0, '25%'],
@@ -183,12 +187,12 @@ export const OverviewDashboard: React.FC = () => {
           color: '#c084fc',
           fontWeight: 700
         },
-        data: [{ value: avgRamNum, name: 'AVG RAM' }]
+        data: [{ value: gaugeRamNum, name: 'RAM MEMORY' }]
       }
     ]
   };
 
-  // Multi-server comparative line chart option (Compact)
+  // Multi-server comparative line chart option
   const compareChartOption = {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis' },
@@ -295,32 +299,81 @@ export const OverviewDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Middle Row: CPU Gauge, RAM Gauge & Server Fleet Health (3 Columns) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '260px 260px 1fr', gap: '16px', flex: 1, minHeight: 0 }}>
-        {/* CPU Gauge Card */}
-        <div className="glass-card" style={{ padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent-cyan)', marginBottom: '-10px' }}>CPU WORKLOAD GAUGE</div>
-          <ReactECharts option={cpuGaugeOption} style={{ height: '170px', width: '100%' }} />
+      {/* Middle Row: CPU Gauge, RAM Gauge & Server Fleet Health (3 Columns with Node Selector) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '270px 270px 1fr', gap: '16px', flex: 1, minHeight: 0 }}>
+        {/* CPU Gauge Card with Dynamic Server Selector */}
+        <div className="glass-card" style={{ padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-cyan)' }}>CPU GAUGE</span>
+            {/* Node Switcher Dropdown */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.4)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+              <Filter size={12} color="var(--accent-cyan)" />
+              <select
+                value={gaugeServer}
+                onChange={e => setGaugeServer(e.target.value)}
+                style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 700, fontSize: '11px', outline: 'none', cursor: 'pointer' }}
+              >
+                <option value="ubuntu-server-01" style={{ background: '#111827' }}>server-01 (Web)</option>
+                <option value="ubuntu-server-02" style={{ background: '#111827' }}>server-02 (DB)</option>
+                <option value="ubuntu-server-03" style={{ background: '#111827' }}>server-03 (App)</option>
+              </select>
+            </div>
+          </div>
+          <ReactECharts option={cpuGaugeOption} style={{ height: '150px', width: '100%' }} />
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+            Selected Node: <b style={{ color: 'var(--accent-cyan)' }}>{gaugeServer}</b>
+          </div>
         </div>
 
-        {/* RAM Gauge Card */}
-        <div className="glass-card" style={{ padding: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: '#c084fc', marginBottom: '-10px' }}>RAM MEMORY GAUGE</div>
-          <ReactECharts option={ramGaugeOption} style={{ height: '170px', width: '100%' }} />
+        {/* RAM Gauge Card with Dynamic Server Selector */}
+        <div className="glass-card" style={{ padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#c084fc' }}>RAM GAUGE</span>
+            {/* Node Switcher Dropdown */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.4)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+              <Filter size={12} color="#c084fc" />
+              <select
+                value={gaugeServer}
+                onChange={e => setGaugeServer(e.target.value)}
+                style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 700, fontSize: '11px', outline: 'none', cursor: 'pointer' }}
+              >
+                <option value="ubuntu-server-01" style={{ background: '#111827' }}>server-01 (Web)</option>
+                <option value="ubuntu-server-02" style={{ background: '#111827' }}>server-02 (DB)</option>
+                <option value="ubuntu-server-03" style={{ background: '#111827' }}>server-03 (App)</option>
+              </select>
+            </div>
+          </div>
+          <ReactECharts option={ramGaugeOption} style={{ height: '150px', width: '100%' }} />
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+            Selected Node: <b style={{ color: '#c084fc' }}>{gaugeServer}</b>
+          </div>
         </div>
 
         {/* Server Fleet Health List */}
         <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column' }}>
           <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Server size={16} color="var(--accent-cyan)" /> Server Fleet Node Health
+            <Server size={16} color="var(--accent-cyan)" /> Server Fleet Node Health Overview
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flex: 1 }}>
             {servers.map((srv) => {
               const m = realtimeMetrics[srv.name] || { cpu_percent: 0, ram_percent: 0 };
               const hasAlert = activeAlerts.some(a => a.server_id === srv.id);
+              const isGaugeSelected = srv.name === gaugeServer;
 
               return (
-                <div key={srv.id} style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)' }}>
+                <div
+                  key={srv.id}
+                  onClick={() => setGaugeServer(srv.name)}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    background: isGaugeSelected ? 'rgba(6, 182, 212, 0.15)' : 'rgba(0,0,0,0.3)',
+                    border: `1px solid ${isGaugeSelected ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  title="Click to view Gauges for this server"
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <span style={{ fontWeight: 700, fontSize: '13px' }}>{srv.name} <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({srv.ip_address})</span></span>
                     {srv.status === 'offline' ? (
