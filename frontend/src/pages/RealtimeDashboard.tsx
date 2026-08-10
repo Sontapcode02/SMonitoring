@@ -1,18 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Cpu, HardDrive, Activity, Wifi, Filter, Clock, AlertTriangle, RefreshCw, Server } from 'lucide-react';
-
-interface ServerMetric {
-  server_name: string;
-  instance: string;
-  timestamp: string;
-  cpu_percent: number;
-  ram_percent: number;
-  load1_per_cpu: number;
-  disk_iops: number;
-  net_in_mbps: number;
-  is_anomaly: boolean;
-}
+import { Cpu, HardDrive, Activity, Wifi, Filter, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface MetricPoint {
   time: string;
@@ -27,9 +15,7 @@ export const RealtimeDashboard: React.FC = () => {
   const [selectedServer, setSelectedServer] = useState('ubuntu-server-01');
   const [timeWindow, setTimeWindow] = useState('5m');
   const [isLiveConnected, setIsLiveConnected] = useState<boolean>(true);
-
-  // All servers live metric map
-  const [allServerMetrics, setAllServerMetrics] = useState<Record<string, ServerMetric>>({});
+  const [isSwitching, setIsSwitching] = useState<boolean>(false);
 
   // Focused server real-time metric states
   const [cpuUsage, setCpuUsage] = useState<number>(0);
@@ -41,14 +27,25 @@ export const RealtimeDashboard: React.FC = () => {
   // Time-series history for ECharts
   const [timeSeries, setTimeSeries] = useState<MetricPoint[]>([]);
 
-  // 1. Fetch initial historical metrics for the selected server
-  const fetchHistory = async () => {
+  // Instant server switch handler
+  const handleServerChange = (newServer: string) => {
+    setSelectedServer(newServer);
+    setIsSwitching(true);
+  };
+
+  // 1. Fetch historical & latest metrics instantly for the newly selected server
+  const fetchServerData = async () => {
     try {
-      const res = await fetch(`/api/metrics/history?server_name=${selectedServer}&limit=25`);
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          const points: MetricPoint[] = data.map((row: any) => ({
+      // Fetch both history & realtime in parallel for instant update
+      const [resHistory, resRealtime] = await Promise.all([
+        fetch(`/api/metrics/history?server_name=${selectedServer}&limit=30`),
+        fetch('/api/metrics/realtime')
+      ]);
+
+      if (resHistory.ok) {
+        const historyData = await resHistory.json();
+        if (Array.isArray(historyData) && historyData.length > 0) {
+          const points: MetricPoint[] = historyData.map((row: any) => ({
             time: row.timestamp ? row.timestamp.split(' ')[1] || row.timestamp : '',
             cpu: Number(row.cpu_percent || 0),
             ram: Number(row.ram_percent || 0),
@@ -58,79 +55,41 @@ export const RealtimeDashboard: React.FC = () => {
           }));
           setTimeSeries(points);
 
-          const last = data[data.length - 1];
-          setCpuUsage(Number(last.cpu_percent || 0));
-          setRamUsage(Number(last.ram_percent || 0));
-          setDiskIO(Number(last.disk_iops || 0));
-          setNetTraffic(Number(last.net_in_mbps || 0));
-          setLastUpdate(last.timestamp || '');
-          setIsLiveConnected(true);
+          const lastHistory = historyData[historyData.length - 1];
+          setCpuUsage(Number(lastHistory.cpu_percent || 0));
+          setRamUsage(Number(lastHistory.ram_percent || 0));
+          setDiskIO(Number(lastHistory.disk_iops || 0));
+          setNetTraffic(Number(lastHistory.net_in_mbps || 0));
+          setLastUpdate(lastHistory.timestamp || '');
         }
       }
-    } catch (err) {
-      console.error("Fetch metrics history error:", err);
-      setIsLiveConnected(false);
-    }
-  };
 
-  // 2. Fetch live realtime metrics loop for all servers
-  const fetchRealtime = async () => {
-    try {
-      const res = await fetch('/api/metrics/realtime');
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          const metricsMap: Record<string, ServerMetric> = {};
-          data.forEach((item: any) => {
-            metricsMap[item.server_name] = {
-              server_name: item.server_name,
-              instance: item.instance || '',
-              timestamp: item.timestamp || '',
-              cpu_percent: Number(item.cpu_percent || 0),
-              ram_percent: Number(item.ram_percent || 0),
-              load1_per_cpu: Number(item.load1_per_cpu || 0),
-              disk_iops: Number(item.disk_iops || 0),
-              net_in_mbps: Number(item.net_in_mbps || 0),
-              is_anomaly: Boolean(item.is_anomaly)
-            };
-          });
-          setAllServerMetrics(metricsMap);
-
-          // Update focused selected server metrics
-          const serverMetric = metricsMap[selectedServer];
+      if (resRealtime.ok) {
+        const realtimeData = await resRealtime.json();
+        if (Array.isArray(realtimeData)) {
+          const serverMetric = realtimeData.find((item: any) => item.server_name === selectedServer);
           if (serverMetric) {
-            const timeStr = serverMetric.timestamp ? serverMetric.timestamp.split(' ')[1] || serverMetric.timestamp : new Date().toLocaleTimeString();
-            const cpu = serverMetric.cpu_percent;
-            const ram = serverMetric.ram_percent;
-            const iops = serverMetric.disk_iops;
-            const netIn = serverMetric.net_in_mbps;
-            const isAnomaly = serverMetric.is_anomaly;
-
-            setCpuUsage(cpu);
-            setRamUsage(ram);
-            setDiskIO(iops);
-            setNetTraffic(netIn);
+            setCpuUsage(Number(serverMetric.cpu_percent || 0));
+            setRamUsage(Number(serverMetric.ram_percent || 0));
+            setDiskIO(Number(serverMetric.disk_iops || 0));
+            setNetTraffic(Number(serverMetric.net_in_mbps || 0));
             setLastUpdate(serverMetric.timestamp || '');
-            setIsLiveConnected(true);
-
-            setTimeSeries(prev => {
-              const newPoint: MetricPoint = { time: timeStr, cpu, ram, disk_iops: iops, net_in_mbps: netIn, isAnomaly };
-              const updated = [...prev, newPoint];
-              return updated.slice(-30);
-            });
           }
         }
       }
+
+      setIsLiveConnected(true);
     } catch (err) {
-      console.error("Fetch realtime metrics error:", err);
+      console.error("Fetch server data error:", err);
       setIsLiveConnected(false);
+    } finally {
+      setIsSwitching(false);
     }
   };
 
   useEffect(() => {
-    fetchHistory();
-    fetchRealtime();
-    const interval = setInterval(fetchRealtime, 3000);
+    fetchServerData();
+    const interval = setInterval(fetchServerData, 3000);
     return () => clearInterval(interval);
   }, [selectedServer]);
 
@@ -193,37 +152,33 @@ export const RealtimeDashboard: React.FC = () => {
     ]
   };
 
-  const defaultServers = [
-    { name: 'ubuntu-server-01', label: 'Web Server', ip: '192.168.199.133:9100' },
-    { name: 'ubuntu-server-02', label: 'DB Server', ip: '192.168.199.132:9100' },
-    { name: 'ubuntu-server-03', label: 'App Server', ip: '192.168.199.134:9100' },
-  ];
-
   return (
     <div style={{ padding: '30px', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Top Header & Filter Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
-            📊 PH2: Giám Sát Thời Gian Thực (Per-Server Metrics Live Stream)
+            📊 PH2: Giám Sát Thời Gian Thực (Real-time Prometheus Stream)
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-            Theo dõi chi tiết các thông số chỉ số riêng biệt cho từng máy chủ Ubuntu trong cụm hạ tầng.
+            Đang hiển thị dữ liệu trực tiếp cho máy chủ: <b style={{ color: 'var(--accent-cyan)' }}>{selectedServer}</b>
           </p>
         </div>
 
         {/* Filter Bar */}
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <button className="btn-primary" style={{ padding: '8px 12px' }} onClick={fetchHistory}>
-            <RefreshCw size={14} /> Refresh Stream
+          <button className="btn-primary" style={{ padding: '8px 12px' }} onClick={fetchServerData}>
+            <RefreshCw size={14} className={isSwitching ? 'spin' : ''} /> Refresh Stream
           </button>
 
+          {/* Node Server Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '6px 14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
             <Filter size={16} color="var(--accent-cyan)" />
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>CHỌN NODE:</span>
             <select
               value={selectedServer}
-              onChange={(e) => setSelectedServer(e.target.value)}
-              style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 600, fontSize: '13px', outline: 'none', cursor: 'pointer' }}
+              onChange={(e) => handleServerChange(e.target.value)}
+              style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 700, fontSize: '14px', outline: 'none', cursor: 'pointer' }}
             >
               <option value="ubuntu-server-01" style={{ background: '#111827' }}>ubuntu-server-01 (Web)</option>
               <option value="ubuntu-server-02" style={{ background: '#111827' }}>ubuntu-server-02 (DB)</option>
@@ -246,79 +201,58 @@ export const RealtimeDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* SECTION 1: PER-SERVER LIVE METRICS CARDS (BẢNG THÔNG SỐ RIÊNG TỪNG MÁY CHỦ) */}
-      <div style={{ marginBottom: '30px' }}>
-        <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '14px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Server size={18} color="var(--accent-cyan)" /> Thông Số Trực Tiếp Theo Từng Máy Chủ (Per-Server Metrics)
-        </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-          {defaultServers.map((srv) => {
-            const m = allServerMetrics[srv.name] || {
-              cpu_percent: 0, ram_percent: 0, disk_iops: 0, net_in_mbps: 0
-            };
-            const isSelected = selectedServer === srv.name;
-            const borderStyle = isSelected ? '2px solid var(--accent-cyan)' : '1px solid var(--border-color)';
-            const bgStyle = isSelected ? 'rgba(6, 182, 212, 0.1)' : 'rgba(0, 0, 0, 0.3)';
+      {/* 4 Sparkline / Gauge Cards Dedicated to Currently Selected Server */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
+        <div className="glass-card" style={{ padding: '20px', transition: 'all 0.3s' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>% CPU USAGE ({selectedServer})</span>
+            <Cpu size={20} color="var(--accent-cyan)" />
+          </div>
+          <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: cpuColor }}>
+            {cpuUsage.toFixed(1)}%
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Tải CPU nhân Linux thời gian thực</div>
+        </div>
 
-            return (
-              <div
-                key={srv.name}
-                className="glass-card"
-                onClick={() => setSelectedServer(srv.name)}
-                style={{ padding: '20px', cursor: 'pointer', border: borderStyle, background: bgStyle, transition: 'all 0.2s' }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <div>
-                    <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>{srv.name}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '8px' }}>({srv.label})</span>
-                  </div>
-                  {isSelected && (
-                    <span style={{ padding: '2px 8px', borderRadius: '10px', background: 'rgba(6, 182, 212, 0.2)', fontSize: '10px', fontWeight: 700, color: 'var(--accent-cyan)' }}>
-                      ĐANG CHỌN
-                    </span>
-                  )}
-                </div>
+        <div className="glass-card" style={{ padding: '20px', transition: 'all 0.3s' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>% RAM USAGE ({selectedServer})</span>
+            <Activity size={20} color="var(--accent-purple)" />
+          </div>
+          <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-purple)' }}>
+            {ramUsage.toFixed(1)}%
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Tỷ lệ RAM sử dụng thực tế</div>
+        </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px' }}>
-                  <div style={{ background: 'rgba(255,255,255,0.04)', padding: '10px', borderRadius: '8px' }}>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>CPU USAGE</div>
-                    <div style={{ fontSize: '20px', fontWeight: 700, color: m.cpu_percent > 80 ? '#fb7185' : '#06b6d4', marginTop: '2px' }}>
-                      {m.cpu_percent.toFixed(1)}%
-                    </div>
-                  </div>
+        <div className="glass-card" style={{ padding: '20px', transition: 'all 0.3s' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>DISK IOPS ({selectedServer})</span>
+            <HardDrive size={20} color="var(--accent-emerald)" />
+          </div>
+          <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-emerald)' }}>
+            {diskIO.toFixed(1)} ops/s
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Tốc độ đọc/ghi ổ cứng thực tế</div>
+        </div>
 
-                  <div style={{ background: 'rgba(255,255,255,0.04)', padding: '10px', borderRadius: '8px' }}>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>RAM USAGE</div>
-                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#c084fc', marginTop: '2px' }}>
-                      {m.ram_percent.toFixed(1)}%
-                    </div>
-                  </div>
-
-                  <div style={{ background: 'rgba(255,255,255,0.04)', padding: '10px', borderRadius: '8px' }}>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>DISK IOPS</div>
-                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#34d399', marginTop: '2px' }}>
-                      {m.disk_iops.toFixed(1)} ops
-                    </div>
-                  </div>
-
-                  <div style={{ background: 'rgba(255,255,255,0.04)', padding: '10px', borderRadius: '8px' }}>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600 }}>NETWORK RX</div>
-                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#fbbf24', marginTop: '2px' }}>
-                      {m.net_in_mbps.toFixed(2)} Mbps
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div className="glass-card" style={{ padding: '20px', transition: 'all 0.3s' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>NETWORK RX ({selectedServer})</span>
+            <Wifi size={20} color="var(--accent-amber)" />
+          </div>
+          <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-amber)' }}>
+            {netTraffic.toFixed(2)} Mbps
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Lưu lượng mạng nhận vào eth0</div>
         </div>
       </div>
 
-      {/* SECTION 2: FOCUSED SERVER METRICS & ECHARTS LINE STREAM */}
+      {/* Main ECharts Stream Area for Selected Server */}
       <div className="glass-card" style={{ padding: '24px', marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Activity size={20} color="var(--accent-cyan)" /> Luồng Dữ Liệu Thời Gian Thực Chi Tiết: <span style={{ color: 'var(--accent-cyan)' }}>[{selectedServer}]</span>
+            <Activity size={20} color="var(--accent-cyan)" /> Biểu Đồ Metric Thời Gian Thực: <span style={{ color: 'var(--accent-cyan)' }}>[{selectedServer}]</span>
           </h2>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
             Cập nhật từ Prometheus lúc: <b>{lastUpdate || 'Live'}</b>
@@ -337,7 +271,7 @@ export const RealtimeDashboard: React.FC = () => {
           <span style={{ color: 'var(--text-muted)' }}>|</span>
           <span style={{ color: 'var(--text-secondary)' }}>Tốc độ cào: <b>3s / sample</b></span>
           <span style={{ color: 'var(--text-muted)' }}>|</span>
-          <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>Source: http://localhost:9090</span>
+          <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>Node: {selectedServer}</span>
         </div>
       </div>
     </div>

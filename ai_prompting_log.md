@@ -117,14 +117,15 @@
 
 ---
 
-### [2026-08-10 20:50] — Antigravity IDE (Gemini Flash)
-**Module:** Frontend Dashboard — Per-Server Individual Live Metric Cards (PH2)
+### [2026-08-10 20:53] — Antigravity IDE (Gemini Flash)
+**Module:** Frontend Dashboard — Instant Node Switch Live Metrics & ECharts Stream (PH2)
 **Prompt:**
-> Ở tab giám sát live các module thông số chưa hiện riêng cho từng máy chủ
+> Không phải hiển thị cùng lúc tất cả server cùng lúc, mà là cập nhật lập tức khi thực hiện đổi node server khác
 
 **Output dùng:**
-- Cập nhật trang **📊 Giám sát Live (PH2)** trong `frontend/src/pages/RealtimeDashboard.tsx`:
-  - Thiết kế **Bảng Thông Số Song Song (Per-Server Live Cards Grid)** hiển thị đồng thời cả 3 máy chủ (`ubuntu-server-01`, `ubuntu-server-02`, `ubuntu-server-03`).
-  - Mỗi thẻ máy chủ độc lập hiển thị riêng biệt 4 chỉ số thực tế: **% CPU Usage**, **% RAM Usage**, **Disk IOPS**, **Network RX**.
-  - Nhấp vào bất kỳ thẻ máy chủ nào ➡️ Biểu đồ ECharts phía dưới lập tức chuyển luồng stream thời gian thực cho riêng máy chủ đó!
-- Giúp quản trị viên quan sát tổng thể 3 máy chủ cùng lúc & soi chi tiết từng máy chủ mượt mà.
+- Cập nhật cơ chế tải dữ liệu tức thời khi chuyển đổi Node Máy chủ trong `frontend/src/pages/RealtimeDashboard.tsx`:
+  - Quy về 4 thẻ Sparkline/Gauge gọn gàng (% CPU, % RAM, Disk IOPS, Network RX).
+  - Khi Admin chọn đổi máy chủ trên thanh Filter (`CHỌN NODE:` ➡️ `ubuntu-server-01` / `ubuntu-server-02` / `ubuntu-server-03`):
+    - Động cơ gọi song song `Promise.all` lập tức tới API `/api/metrics/history` và `/api/metrics/realtime`.
+    - **Cập nhật tức thời (Instant Refresh)** toàn bộ 4 thẻ thông số, nhãn mác máy chủ và đường cong ECharts của riêng máy chủ đó không có độ trễ.
+- Đạt trải nghiệm UI phản hồi siêu tốc khi xem thông số riêng từng node.
