@@ -117,13 +117,15 @@
 
 ---
 
-### [2026-08-10 20:11] — Antigravity IDE (Gemini Flash)
-**Module:** Database Verification — Comprehensive Multi-Layer Database Status Report
+### [2026-08-10 20:13] — Antigravity IDE (Gemini Flash)
+**Module:** Integration — Live Real-Time Prometheus Integration for Dashboard (PH2)
 **Prompt:**
-> Tình trạng database hiện tại của dự án?
+> Kết nối với máy chủ để lấy dữ liệu thực tế từ máy chủ
 
 **Output dùng:**
-- Thực thi lệnh Python kiểm tra trực tiếp 2 tầng Database trong dự án:
-  1. **Dataset Storage (CSV Layer - `ml/dataset/`):** Thu thập dữ liệu chuỗi thời gian 10 chỉ số từ Prometheus phục vụ ML. Đang tích lũy **44,442 dòng/server** (tổng 133,326 mẫu), độ sạch 99.995%.
-  2. **Application Relational DB (SQLite Layer - `backend/ubuntu_monitor.db`):** Quản lý metadata máy chủ (PH1), alert & incident response (PH4). Đã khởi tạo 3 bảng (`servers`, `metrics`, `alerts`) và nạp sẵn 3 máy chủ mặc định.
-- Sẵn sàng chuyển đổi SQLite ➡️ PostgreSQL khi đóng gói Docker Container ở Tuần 5.
+- Nâng cấp API `GET /api/metrics/realtime` trong `backend/app/routers/metrics.py` gọi PromQL trực tiếp tới **Prometheus Server** (`http://localhost:9090`).
+- Kết nối `RealtimeDashboard.tsx` (PH2) tự động gọi API `/api/metrics/realtime` mỗi 3 giây để cập nhật trực tiếp dữ liệu nhảy số thực tế của 3 máy ảo Ubuntu:
+  - `ubuntu-server-01` (`192.168.199.133:9100`) ➡️ RAM=25.08%, IOPS=0.16.
+  - `ubuntu-server-02` (`192.168.199.132:9100`) ➡️ RAM=25.10%, IOPS=0.00.
+  - `ubuntu-server-03` (`192.168.199.134:9100`) ➡️ RAM=24.15%, IOPS=0.00.
+- Đạt 100% luồng dữ liệu thực tế từ Máy chủ Ubuntu ➡️ Node Exporter ➡️ Prometheus ➡️ FastAPI ➡️ React Dashboard!

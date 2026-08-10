@@ -1,59 +1,109 @@
 import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Cpu, HardDrive, Activity, Wifi, Filter, Clock, AlertTriangle } from 'lucide-react';
+import { Cpu, HardDrive, Activity, Wifi, Filter, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
+
+interface MetricPoint {
+  time: string;
+  cpu: number;
+  ram: number;
+  disk_iops: number;
+  net_in_mbps: number;
+  isAnomaly: boolean;
+}
 
 export const RealtimeDashboard: React.FC = () => {
   const [selectedServer, setSelectedServer] = useState('ubuntu-server-01');
   const [timeWindow, setTimeWindow] = useState('5m');
+  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(true);
 
   // Real-time metric states
-  const [cpuUsage, setCpuUsage] = useState(42.5);
-  const [ramUsage, setRamUsage] = useState(61.2);
-  const [diskIO, setDiskIO] = useState(14.8);
-  const [netTraffic, setNetTraffic] = useState(28.4);
+  const [cpuUsage, setCpuUsage] = useState<number>(0);
+  const [ramUsage, setRamUsage] = useState<number>(0);
+  const [diskIO, setDiskIO] = useState<number>(0);
+  const [netTraffic, setNetTraffic] = useState<number>(0);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
 
   // Time-series history for ECharts
-  const [timeSeries, setTimeSeries] = useState<{ time: string; cpu: number; ram: number; isAnomaly: boolean }[]>([]);
+  const [timeSeries, setTimeSeries] = useState<MetricPoint[]>([]);
+
+  // 1. Fetch initial historical metrics for the selected server
+  const fetchHistory = async () => {
+    try {
+      const res = await fetch(`/api/metrics/history?server_name=${selectedServer}&limit=25`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const points: MetricPoint[] = data.map((row: any) => ({
+            time: row.timestamp ? row.timestamp.split(' ')[1] || row.timestamp : '',
+            cpu: Number(row.cpu_percent || 0),
+            ram: Number(row.ram_percent || 0),
+            disk_iops: Number(row.disk_iops || 0),
+            net_in_mbps: Number(row.net_in_mbps || 0),
+            isAnomaly: Boolean(row.is_anomaly)
+          }));
+          setTimeSeries(points);
+
+          const last = data[data.length - 1];
+          setCpuUsage(Number(last.cpu_percent || 0));
+          setRamUsage(Number(last.ram_percent || 0));
+          setDiskIO(Number(last.disk_iops || 0));
+          setNetTraffic(Number(last.net_in_mbps || 0));
+          setLastUpdate(last.timestamp || '');
+          setIsLiveConnected(true);
+        }
+      }
+    } catch (err) {
+      console.error("Fetch metrics history error:", err);
+      setIsLiveConnected(false);
+    }
+  };
+
+  // 2. Fetch live realtime metrics loop
+  const fetchRealtime = async () => {
+    try {
+      const res = await fetch('/api/metrics/realtime');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const serverMetric = data.find((item: any) => item.server_name === selectedServer);
+          if (serverMetric) {
+            const timeStr = serverMetric.timestamp ? serverMetric.timestamp.split(' ')[1] || serverMetric.timestamp : new Date().toLocaleTimeString();
+            const cpu = Number(serverMetric.cpu_percent || 0);
+            const ram = Number(serverMetric.ram_percent || 0);
+            const iops = Number(serverMetric.disk_iops || 0);
+            const netIn = Number(serverMetric.net_in_mbps || 0);
+            const isAnomaly = Boolean(serverMetric.is_anomaly);
+
+            setCpuUsage(cpu);
+            setRamUsage(ram);
+            setDiskIO(iops);
+            setNetTraffic(netIn);
+            setLastUpdate(serverMetric.timestamp || '');
+            setIsLiveConnected(true);
+
+            setTimeSeries(prev => {
+              const newPoint: MetricPoint = { time: timeStr, cpu, ram, disk_iops: iops, net_in_mbps: netIn, isAnomaly };
+              const updated = [...prev, newPoint];
+              return updated.slice(-30);
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Fetch realtime metrics error:", err);
+      setIsLiveConnected(false);
+    }
+  };
 
   useEffect(() => {
-    // Generate initial 20 points
-    const now = new Date();
-    const initData = [];
-    for (let i = 20; i >= 0; i--) {
-      const t = new Date(now.getTime() - i * 15000);
-      const isAnomaly = i >= 8 && i <= 10;
-      initData.push({
-        time: t.toLocaleTimeString(),
-        cpu: isAnomaly ? Math.min(100, 85 + Math.random() * 15) : 25 + Math.random() * 20,
-        ram: isAnomaly ? 88 + Math.random() * 5 : 55 + Math.random() * 10,
-        isAnomaly
-      });
-    }
-    setTimeSeries(initData);
-
-    // Live update interval
-    const interval = setInterval(() => {
-      const liveT = new Date().toLocaleTimeString();
-      const randomCpu = selectedServer === 'ubuntu-server-02' ? 55 + Math.random() * 25 : 30 + Math.random() * 20;
-      const randomRam = 60 + Math.random() * 5;
-      
-      setCpuUsage(Number(randomCpu.toFixed(1)));
-      setRamUsage(Number(randomRam.toFixed(1)));
-      setDiskIO(Number((Math.random() * 25).toFixed(1)));
-      setNetTraffic(Number((15 + Math.random() * 30).toFixed(1)));
-
-      setTimeSeries(prev => [
-        ...prev.slice(1),
-        { time: liveT, cpu: Number(randomCpu.toFixed(1)), ram: Number(randomRam.toFixed(1)), isAnomaly: false }
-      ]);
-    }, 3000);
-
+    fetchHistory();
+    const interval = setInterval(fetchRealtime, 3000);
     return () => clearInterval(interval);
   }, [selectedServer]);
 
   const cpuColor = cpuUsage > 80 ? 'var(--accent-rose)' : 'var(--accent-cyan)';
 
-  // ECharts Line Chart Option with Anomaly Highlight Band (markArea)
+  // ECharts Line Chart Option with Real-Time Data & Anomaly Highlight
   const lineChartOption = {
     backgroundColor: 'transparent',
     tooltip: {
@@ -97,15 +147,6 @@ export const RealtimeDashboard: React.FC = () => {
               { offset: 1, color: 'rgba(6, 182, 212, 0.0)' }
             ]
           }
-        },
-        markArea: {
-          itemStyle: { color: 'rgba(244, 63, 94, 0.2)' },
-          data: [
-            [
-              { name: '⚠️ ML Anomaly Zone Detected', xAxis: timeSeries[8]?.time || '' },
-              { xAxis: timeSeries[10]?.time || '' }
-            ]
-          ]
         }
       },
       {
@@ -125,15 +166,19 @@ export const RealtimeDashboard: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
-            📊 PH2: Giám Sát Thời Gian Thực (Real-time Dashboard)
+            📊 PH2: Giám Sát Thời Gian Thực (Real-time Prometheus Stream)
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-            Nơi Admin theo dõi từng giây số liệu hạ tầng qua WebSocket & phát hiện vùng bất thường.
+            Đang lấy dữ liệu thực tế thời gian thực trực tiếp từ <b>Prometheus Server</b> & cụm máy chủ Ubuntu.
           </p>
         </div>
 
         {/* Filter Bar */}
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <button className="btn-primary" style={{ padding: '8px 12px' }} onClick={fetchHistory}>
+            <RefreshCw size={14} /> Refresh Stream
+          </button>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '6px 14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
             <Filter size={16} color="var(--accent-cyan)" />
             <select
@@ -166,72 +211,73 @@ export const RealtimeDashboard: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
         <div className="glass-card" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>% CPU USAGE</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>% CPU USAGE (PROMETHEUS)</span>
             <Cpu size={20} color="var(--accent-cyan)" />
           </div>
           <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: cpuColor }}>
-            {cpuUsage}%
+            {cpuUsage.toFixed(1)}%
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Dung lượng xử lý nhân Linux</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Tải CPU nhân Linux thời gian thực</div>
         </div>
 
         <div className="glass-card" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>% RAM USAGE</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>% RAM USAGE (PROMETHEUS)</span>
             <Activity size={20} color="var(--accent-purple)" />
           </div>
           <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-purple)' }}>
-            {ramUsage}%
+            {ramUsage.toFixed(1)}%
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>2.4 / 4.0 GB MemAvailable</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Tỷ lệ RAM sử dụng thực tế</div>
         </div>
 
         <div className="glass-card" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>DISK I/O (MB/s)</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>DISK IOPS (PROMETHEUS)</span>
             <HardDrive size={20} color="var(--accent-emerald)" />
           </div>
           <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-emerald)' }}>
-            {diskIO} MB/s
+            {diskIO.toFixed(1)} ops/s
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Tốc độ đọc/ghi ổ cứng thực tế</div>
         </div>
 
         <div className="glass-card" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>NETWORK TRAFFIC</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: 600 }}>NETWORK RX (PROMETHEUS)</span>
             <Wifi size={20} color="var(--accent-amber)" />
           </div>
           <div style={{ fontSize: '32px', fontWeight: 700, marginTop: '8px', color: 'var(--accent-amber)' }}>
-            {netTraffic} Mbps
+            {netTraffic.toFixed(2)} Mbps
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Băng thông mạng eth0</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Lưu lượng mạng nhận vào eth0</div>
         </div>
       </div>
 
-      {/* Main ECharts Stream Area with Anomaly Highlight */}
+      {/* Main ECharts Stream Area */}
       <div className="glass-card" style={{ padding: '24px', marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Activity size={20} color="var(--accent-cyan)" /> Luồng Dữ Liệu Metrics Thời Gian Thực ({selectedServer})
+            <Activity size={20} color="var(--accent-cyan)" /> Biểu Đồ Metric Thời Gian Thực ({selectedServer})
           </h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#fb7185', background: 'rgba(244,63,94,0.1)', padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(244,63,94,0.2)' }}>
-            <AlertTriangle size={14} /> Vùng Highlight đỏ nhạt = Vùng có Anomaly từ ML
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            Cập nhật từ Prometheus lúc: <b>{lastUpdate || 'Live'}</b>
           </div>
         </div>
         <ReactECharts option={lineChartOption} style={{ height: '400px' }} />
       </div>
 
-      {/* Footer Right: WebSocket Telemetry Status */}
+      {/* Footer Right: Prometheus Connection Telemetry Status */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
         <div className="glass-card" style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#34d399', fontWeight: 600 }}>
-            <span className="pulse-dot online"></span> WebSocket Streaming: ACTIVE
+          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: isLiveConnected ? '#34d399' : '#fb7185', fontWeight: 600 }}>
+            <span className={`pulse-dot ${isLiveConnected ? 'online' : 'offline'}`}></span>
+            Prometheus Engine: {isLiveConnected ? 'CONNECTED (REALTIME)' : 'OFFLINE'}
           </span>
           <span style={{ color: 'var(--text-muted)' }}>|</span>
-          <span style={{ color: 'var(--text-secondary)' }}>Tốc độ nhận: <b>15 msgs/s</b></span>
+          <span style={{ color: 'var(--text-secondary)' }}>Tốc độ cào: <b>3s / sample</b></span>
           <span style={{ color: 'var(--text-muted)' }}>|</span>
-          <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>Latency: 12ms</span>
+          <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>Source: http://localhost:9090</span>
         </div>
       </div>
     </div>
