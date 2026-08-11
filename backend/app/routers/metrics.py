@@ -161,7 +161,7 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
         d_size_m = re.search(r'node_filesystem_size_bytes\s+([0-9\.e\+]+)', text)
         d_free_m = re.search(r'node_filesystem_avail_bytes\s+([0-9\.e\+]+)', text)
         d_size_gb = round(float(d_size_m.group(1)) / (1024**3), 2) if d_size_m else 10.0
-        d_free_gb = round(float(d_free_m.group(1)) / (1024**3), 2) if d_free_gb else 4.5
+        d_free_gb = round(float(d_free_m.group(1)) / (1024**3), 2) if d_free_m else 4.5
         d_pct = round(((d_size_gb - d_free_gb) / d_size_gb) * 100, 2) if d_size_gb > 0 else 55.4
 
         return {

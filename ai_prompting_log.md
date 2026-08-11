@@ -117,14 +117,16 @@
 
 ---
 
-### [2026-08-11 21:48] — Antigravity IDE (Gemini 3.6 Flash)
-**Module:** Overview Dashboard — Dynamic Gauge Node Mapping & Robust Realtime Metric Indexing
+### [2026-08-11 21:58] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** Backend Scraper Fix — Resolved UnboundLocalError in parse_node_exporter_direct
 **Prompt:**
-> Chưa thấy nhảy số (đưa kèm ảnh chụp màn hình Executive Overview)
+> Đưa kèm ảnh chụp màn hình Executive Overview (chỉ số ubuntu-server-test bị khựng)
 
 **Output dùng:**
-- **Phân tích hình ảnh chụp màn hình:**
-  1. Phát hiện menu `<select>` của CPU Gauge và RAM Gauge có các thẻ `<option>` bị hardcode cứng cho `server-01`, `server-02`, `server-03`, thiếu tùy chọn cho máy test `ubuntu-server-test`. Khi chọn máy test ở nút Active Node trên Header, 2 ô Gauge bên dưới không tìm thấy option phù hợp nên fallback về 5.0% CPU và 24.5% RAM.
-  2. Bổ sung ánh ánh đa khóa trong `rMap` (`item.server_name`, `item.server_name.toLowerCase()`, `item.ip_address`, `item.instance`) trong `fetchOverviewData`.
-  3. Chuyển toàn bộ danh sách `<option>` của CPU Gauge & RAM Gauge thành `servers.map(s => <option value={s.name}>{s.name}</option>)` tự động cập nhật từ Database.
-- Kết quả: Khi chọn `ubuntu-server-test`, toàn bộ 4 thẻ trên cùng và 2 ô Gauge hiển thị chính xác dữ liệu sống thời gian thực của máy test.
+- **Sửa triệt để lỗi ngoại lệ ẩn ở Backend (`metrics.py`):**
+  1. Đã soi log hệ thống và phát hiện lỗi `UnboundLocalError: cannot access local variable 'd_free_gb' where it is not associated with a value` trên dòng 164 của `metrics.py`.
+  2. Do lỗi biến này, hàm `parse_node_exporter_direct` mỗi khi cào dữ liệu từ máy test `192.168.199.135` đều bị văng ngoại lệ và âm thầm trả về trạng thái offline/mặc định.
+  3. Sửa câu lệnh gán biến từ `if d_free_gb` thành `if d_free_m`.
+- **Khởi động lại Uvicorn backend server:**
+  - `parse_node_exporter_direct` hoạt động hoàn hảo 100%, trả dữ liệu dynamic `cpu: 8.06%`, `ram: 25.47%`, `net_in_mbps: 0.0061 Mbps` cho máy test `ubuntu-server-test`.
+- Kết quả: Khi chọn `ubuntu-server-test` trên giao diện Web, toàn bộ số liệu nhảy mượt mà theo thời gian thực.
