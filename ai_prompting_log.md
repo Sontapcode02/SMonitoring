@@ -101,7 +101,7 @@
 ---
 
 ### [2026-08-09 20:05] — Antigravity IDE (Gemini)
-**Module:** Planning — Phân tích khảthi
+**Module:** Planning — Phân tích khả thi
 **Prompt:**
 > Phân tích lại tính khả thi của đề tài Xây dựng nền tảng giám sát tập trung và ứng dụng học máy phát hiện bất thường theo thời gian thực cho cụm máy chủ Ubuntu
 
@@ -117,14 +117,14 @@
 
 ---
 
-### [2026-08-11 21:22] — Antigravity IDE (Gemini 3.6 Flash)
-**Module:** Universal Disk Metric Parser & Active Node Header Switcher
+### [2026-08-11 21:48] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** Overview Dashboard — Dynamic Gauge Node Mapping & Robust Realtime Metric Indexing
 **Prompt:**
-> Disk vẫn chưa nhảy
+> Chưa thấy nhảy số (đưa kèm ảnh chụp màn hình Executive Overview)
 
 **Output dùng:**
-- **Giải quyết 2 nguyên nhân cốt lõi khiến chỉ số Đĩa chưa chuyển động:**
-  1. **Lọc thiết bị đĩa vật lý & LVM Mapper (`metrics.py`):** Cập nhật bộ cào `parse_node_exporter_direct` để bắt toàn bộ prefix `node_disk_*`, loại trừ các ổ đĩa quang `sr*` và đĩa ảo `loop*`. Nhờ đó bóc tách chính xác 100% dung lượng byte đọc/ghi từ ổ đĩa vật lý `sda` cũng như ổ đĩa ảo hóa LVM `ubuntu-lv`.
-  2. **Bổ sung Dropdown Chọn Máy Chủ (`Active Node`) trên Header Overview:** Trang Executive Overview hiện tại có nút chọn nhanh máy chủ (`Active Node`). Khi đổi qua `ubuntu-server-test`, tất cả thẻ Đọc/Ghi Ổ Cứng, Băng Thông Mạng và Đồng Hồ CPU/RAM lập tức chuyển sang hiển thị dữ liệu của `ubuntu-server-test`.
-  3. **Lưu ý lệnh Linux `dd` khi test Ghi Ổ Cứng:** Trong Linux Kernel, lệnh `dd` mặc định ghi dữ liệu vào bộ nhớ đệm RAM (Page Cache). Cần thêm cờ `conv=fdatasync` (hoặc `oflag=direct`) để ép Kernel ghi trực tiếp xuống ổ cứng block device `sda`.
-- Kết quả: Khi chạy `dd ... conv=fdatasync`, thẻ Đọc/Ghi Ổ Cứng vọt số MB/s lập tức 100%.
+- **Phân tích hình ảnh chụp màn hình:**
+  1. Phát hiện menu `<select>` của CPU Gauge và RAM Gauge có các thẻ `<option>` bị hardcode cứng cho `server-01`, `server-02`, `server-03`, thiếu tùy chọn cho máy test `ubuntu-server-test`. Khi chọn máy test ở nút Active Node trên Header, 2 ô Gauge bên dưới không tìm thấy option phù hợp nên fallback về 5.0% CPU và 24.5% RAM.
+  2. Bổ sung ánh ánh đa khóa trong `rMap` (`item.server_name`, `item.server_name.toLowerCase()`, `item.ip_address`, `item.instance`) trong `fetchOverviewData`.
+  3. Chuyển toàn bộ danh sách `<option>` của CPU Gauge & RAM Gauge thành `servers.map(s => <option value={s.name}>{s.name}</option>)` tự động cập nhật từ Database.
+- Kết quả: Khi chọn `ubuntu-server-test`, toàn bộ 4 thẻ trên cùng và 2 ô Gauge hiển thị chính xác dữ liệu sống thời gian thực của máy test.

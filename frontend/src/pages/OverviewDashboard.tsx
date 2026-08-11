@@ -73,7 +73,12 @@ export const OverviewDashboard: React.FC = () => {
         if (Array.isArray(rList)) {
           const rMap: Record<string, RealtimeMetric> = {};
           rList.forEach((item: any) => {
-            rMap[item.server_name] = item;
+            if (item.server_name) {
+              rMap[item.server_name] = item;
+              rMap[item.server_name.toLowerCase()] = item;
+            }
+            if (item.ip_address) rMap[item.ip_address] = item;
+            if (item.instance) rMap[item.instance] = item;
           });
           setRealtimeMetrics(rMap);
 
@@ -359,9 +364,9 @@ export const OverviewDashboard: React.FC = () => {
                 onChange={e => setGaugeServer(e.target.value)}
                 style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 700, fontSize: '11px', outline: 'none', cursor: 'pointer' }}
               >
-                <option value="ubuntu-server-01" style={{ background: '#111827' }}>server-01 (Web)</option>
-                <option value="ubuntu-server-02" style={{ background: '#111827' }}>server-02 (DB)</option>
-                <option value="ubuntu-server-03" style={{ background: '#111827' }}>server-03 (App)</option>
+                {servers.map(s => (
+                  <option key={s.id} value={s.name} style={{ background: '#111827' }}>{s.name}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -382,9 +387,9 @@ export const OverviewDashboard: React.FC = () => {
                 onChange={e => setGaugeServer(e.target.value)}
                 style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 700, fontSize: '11px', outline: 'none', cursor: 'pointer' }}
               >
-                <option value="ubuntu-server-01" style={{ background: '#111827' }}>server-01 (Web)</option>
-                <option value="ubuntu-server-02" style={{ background: '#111827' }}>server-02 (DB)</option>
-                <option value="ubuntu-server-03" style={{ background: '#111827' }}>server-03 (App)</option>
+                {servers.map(s => (
+                  <option key={s.id} value={s.name} style={{ background: '#111827' }}>{s.name}</option>
+                ))}
               </select>
             </div>
           </div>
