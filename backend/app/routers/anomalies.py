@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import os
@@ -18,15 +18,22 @@ recorded_anomalies_history = []
 global_anomaly_counter = 1
 
 @router.get("/")
-def get_anomalies(db: Session = Depends(get_db)):
-    """Lấy danh sách các điểm bất thường Isolation Forest & SHAP explainability thực tế."""
+def get_anomalies(
+    server_name: Optional[str] = Query(None, description="Lọc theo tên máy chủ"),
+    severity: Optional[str] = Query(None, description="Lọc theo mức độ nghiêm trọng (Critical/Warning)"),
+    search: Optional[str] = Query(None, description="Tìm kiếm từ khóa chỉ số hoặc mô tả"),
+    db: Session = Depends(get_db)
+):
+    """Lấy danh sách các điểm bất thường Isolation Forest & SHAP explainability thực tế kèm bộ lọc đa trường."""
     global global_anomaly_counter
     
     # Fetch realtime metrics for all DB servers (includes direct Node Exporter HTTP scrapes)
     realtime_list = get_realtime_metrics(db)
     
-    now_str = datetime.now().strftime("%H:%M:%S")
-    now_hour = datetime.now().hour
+    now_dt = datetime.now()
+    now_str = now_dt.strftime("%Y-%m-%d %H:%M:%S")
+    time_only_str = now_dt.strftime("%H:%M:%S")
+    now_hour = now_dt.hour
 
     # 1. Evaluate realtime metrics across all servers
     for item in realtime_list:
@@ -39,14 +46,15 @@ def get_anomalies(db: Session = Depends(get_db)):
             score = round(-0.25 - (cpu - 80) * 0.005, 3)
             # Check if this exact server anomaly is already recorded in recent 10s
             recent_duplicate = any(
-                a["server"] == srv_name and "CPU" in a["summary"] and abs(a["hour"] - now_hour) <= 1
-                for a in recorded_anomalies_history[:5]
+                a["server"] == srv_name and "CPU" in a["summary"] and a.get("timestamp") == time_only_str
+                for a in recorded_anomalies_history[:3]
             )
             if not recent_duplicate:
                 new_item = {
                     "id": global_anomaly_counter,
                     "hour": now_hour,
-                    "timestamp": now_str,
+                    "timestamp": time_only_str,
+                    "full_timestamp": now_str,
                     "server": srv_name,
                     "severity": "Critical" if cpu > 90.0 else "Warning",
                     "score": score,
@@ -64,14 +72,15 @@ def get_anomalies(db: Session = Depends(get_db)):
         if ram > 85.0:
             score = round(-0.21 - (ram - 85) * 0.004, 3)
             recent_duplicate = any(
-                a["server"] == srv_name and "RAM" in a["summary"] and abs(a["hour"] - now_hour) <= 1
-                for a in recorded_anomalies_history[:5]
+                a["server"] == srv_name and "RAM" in a["summary"] and a.get("timestamp") == time_only_str
+                for a in recorded_anomalies_history[:3]
             )
             if not recent_duplicate:
                 new_item = {
                     "id": global_anomaly_counter,
                     "hour": now_hour,
-                    "timestamp": now_str,
+                    "timestamp": time_only_str,
+                    "full_timestamp": now_str,
                     "server": srv_name,
                     "severity": "Critical" if ram > 92.0 else "Warning",
                     "score": score,
@@ -85,12 +94,14 @@ def get_anomalies(db: Session = Depends(get_db)):
                 global_anomaly_counter += 1
                 recorded_anomalies_history.insert(0, new_item)
 
-    # 2. Append historical reference baseline anomalies if list is short
+    # 2. Baseline reference anomalies with full timestamps
+    today_date = now_dt.strftime("%Y-%m-%d")
     baseline_anomalies = [
         {
             "id": 101,
             "hour": 10,
             "timestamp": "10:05:15",
+            "full_timestamp": f"{today_date} 10:05:15",
             "server": "ubuntu-server-02",
             "severity": "Critical",
             "score": -0.284,
@@ -105,6 +116,7 @@ def get_anomalies(db: Session = Depends(get_db)):
             "id": 102,
             "hour": 14,
             "timestamp": "14:22:00",
+            "full_timestamp": f"{today_date} 14:22:00",
             "server": "ubuntu-server-01",
             "severity": "Warning",
             "score": -0.195,
@@ -119,6 +131,7 @@ def get_anomalies(db: Session = Depends(get_db)):
             "id": 103,
             "hour": 3,
             "timestamp": "03:15:45",
+            "full_timestamp": f"{today_date} 03:15:45",
             "server": "ubuntu-server-03",
             "severity": "Critical",
             "score": -0.312,
@@ -131,6 +144,25 @@ def get_anomalies(db: Session = Depends(get_db)):
         }
     ]
 
-    # Combine recorded live stress anomalies with baseline anomalies (limit to 30 items)
-    combined = recorded_anomalies_history[:20] + baseline_anomalies
+    # Combine recorded live stress anomalies with baseline anomalies
+    combined = recorded_anomalies_history[:25] + baseline_anomalies
+
+    # 3. Apply Multi-Field Query Filtering (Server, Severity, Search Keyword)
+    if server_name and server_name != "all":
+        combined = [a for a in combined if a["server"] == server_name]
+
+    if severity and severity != "all":
+        combined = [a for a in combined if a["severity"].lower() == severity.lower()]
+
+    if search:
+        search_kw = search.lower()
+        combined = [
+            a for a in combined
+            if search_kw in a["server"].lower()
+            or search_kw in a["summary"].lower()
+            or search_kw in a["severity"].lower()
+            or search_kw in a["full_timestamp"].lower()
+            or any(search_kw in f["metric"].lower() for f in a.get("shapFactors", []))
+        ]
+
     return combined

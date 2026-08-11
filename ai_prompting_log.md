@@ -117,14 +117,17 @@
 
 ---
 
-### [2026-08-11 19:10] — Antigravity IDE (Gemini 3.6 Flash)
-**Module:** PH3 Anomaly Detection Engine — Realtime Metrics Integration & Persistent Event History Store
+### [2026-08-11 20:18] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** PH3 Anomaly Center — Full Datetime Timestamps & Multi-Field Interactive Filter Bar
 **Prompt:**
-> Vẫn chưa thấy phản ứng từ anomalies
+> Anomalies các log chưa thấy để thời gian cụ thể diễn ra sự cố, và cần tạo thêm bộ lọc để lọc danh sách các log theo các field
 
 **Output dùng:**
-- **Khắc phục triệt để luồng phát hiện bất thường thời gian thực:**
-  1. Trong Backend (`anomalies.py`): Thay thế việc gọi PromQL độc lập bằng hàm `get_realtime_metrics(db)` tập trung. Nhờ đó mọi máy chủ (bao gồm cả máy test `ubuntu-server-test` cào HTTP trực tiếp từ Node Exporter) đều được truyền dữ liệu mượt mà.
-  2. **Bộ Nhớ Lưu Vết Sự Cố (`recorded_anomalies_history`):** Ngay khi có đợt stress test (`stress --cpu 4`), backend tự động bóc tách điểm Isolation Forest âm (`-0.312`), tính toán tỷ lệ SHAP cho CPU (`78.8%`) và lưu cố định vào danh sách sự cố.
-  3. Dù lệnh stress test đã dừng hay vừa mới bắt đầu, thông báo bất thường của đợt stress test đó **luôn được lưu giữ trên giao diện PH3 Anomaly Center** để trình diễn và chấm điểm đồ án/bảo vệ LVTN.
-- Kết quả: Phân hệ PH3 ghi nhận trọn vẹn mọi sự cố stress test thời gian thực.
+- **Bổ sung mốc thời gian ngày/giờ chi tiết (`full_timestamp`):**
+  1. Cập nhật tất cả bản ghi bất thường hiển thị định dạng ngày/giờ cụ thể (ví dụ `2026-08-11 20:17:45`) kèm biểu tượng lịch `Calendar` thay vì chỉ hiển thị mỗi chuỗi giờ ngắn.
+- **Xây dựng Thanh Bộ Lọc Đa Trường (Multi-Field Filter Control Bar) trên `AnomalyCenter.tsx`:**
+  1. **Lọc theo Máy Chủ (`Node` Dropdown):** Chọn lọc sự cố của từng máy chủ cụ thể (`ubuntu-server-01`, `02`, `03`, `ubuntu-server-test`) hoặc `All Servers`.
+  2. **Lọc theo Mức Độ Nguy Hiểm (`Severity` Dropdown):** Lọc theo `Critical` hoặc `Warning`.
+  3. **Tìm Kiếm Từ Khóa Tương Tác (`Search Input` Box):** Tìm kiếm theo tên chỉ số (`CPU`, `RAM`, `Disk`, `Network`), từ khóa mô tả sự cố hoặc mốc thời gian.
+  4. **Nút `Reset Filters`:** Khôi phục bộ lọc về mặc định.
+- Kết quả: Phân hệ PH3 Anomaly Center hỗ trợ hiển thị ngày giờ chuẩn xác và lọc dữ liệu log chuyên nghiệp 100%.

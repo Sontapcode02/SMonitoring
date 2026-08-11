@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { AlertOctagon, Clock, HelpCircle, RefreshCw } from 'lucide-react';
+import { AlertOctagon, Clock, HelpCircle, RefreshCw, Filter, Search, Calendar, ShieldAlert } from 'lucide-react';
 
 interface AnomalyItem {
   id: number;
   hour: number;
   timestamp: string;
+  full_timestamp?: string;
   server: string;
   severity: 'Critical' | 'Warning';
   score: number;
@@ -13,11 +14,18 @@ interface AnomalyItem {
   summary: string;
 }
 
+interface ServerItem {
+  id: number;
+  name: string;
+  role: string;
+}
+
 const defaultAnomalies: AnomalyItem[] = [
   {
     id: 101,
     hour: 10,
     timestamp: '10:05:15',
+    full_timestamp: '2026-08-11 10:05:15',
     server: 'ubuntu-server-02',
     severity: 'Critical',
     score: -0.284,
@@ -32,6 +40,7 @@ const defaultAnomalies: AnomalyItem[] = [
     id: 102,
     hour: 14,
     timestamp: '14:22:00',
+    full_timestamp: '2026-08-11 14:22:00',
     server: 'ubuntu-server-01',
     severity: 'Warning',
     score: -0.195,
@@ -46,6 +55,7 @@ const defaultAnomalies: AnomalyItem[] = [
     id: 103,
     hour: 3,
     timestamp: '03:15:45',
+    full_timestamp: '2026-08-11 03:15:45',
     server: 'ubuntu-server-03',
     severity: 'Critical',
     score: -0.312,
@@ -61,31 +71,61 @@ const defaultAnomalies: AnomalyItem[] = [
 export const AnomalyCenter: React.FC = () => {
   const [anomalies, setAnomalies] = useState<AnomalyItem[]>(defaultAnomalies);
   const [selectedAnomaly, setSelectedAnomaly] = useState<AnomalyItem>(defaultAnomalies[0]);
+  const [servers, setServers] = useState<ServerItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchAnomalies = async () => {
+  // Multi-Field Filter States
+  const [filterServer, setFilterServer] = useState<string>('all');
+  const [filterSeverity, setFilterSeverity] = useState<string>('all');
+  const [searchKeyword, setSearchKeyword] = useState<string>('');
+
+  // Fetch registered servers for dropdown
+  const fetchServers = async () => {
     try {
-      const res = await fetch('/api/anomalies/');
+      const res = await fetch('/api/servers/');
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        setServers(data);
+      }
+    } catch (err) {
+      console.error("Fetch servers error:", err);
+    }
+  };
+
+  const fetchAnomalies = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filterServer !== 'all') params.append('server_name', filterServer);
+      if (filterSeverity !== 'all') params.append('severity', filterSeverity);
+      if (searchKeyword.trim() !== '') params.append('search', searchKeyword.trim());
+
+      const res = await fetch(`/api/anomalies/?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
           setAnomalies(data);
-          // If current selected anomaly is not in the new list, select the first one
-          if (!data.some((a: any) => a.id === selectedAnomaly.id)) {
+          if (data.length > 0 && !data.some((a: any) => a.id === selectedAnomaly.id)) {
             setSelectedAnomaly(data[0]);
           }
         }
       }
     } catch (err) {
       console.error("Fetch anomalies error:", err);
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchServers();
+  }, []);
 
   useEffect(() => {
     fetchAnomalies();
     const interval = setInterval(fetchAnomalies, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [filterServer, filterSeverity, searchKeyword]);
 
   // SHAP Horizontal Bar Chart Option
   const shapChartOption = {
@@ -100,14 +140,14 @@ export const AnomalyCenter: React.FC = () => {
     },
     yAxis: {
       type: 'category',
-      data: selectedAnomaly.shapFactors.map(f => f.metric),
+      data: selectedAnomaly?.shapFactors?.map(f => f.metric) || [],
       axisLabel: { color: '#f3f4f6', fontWeight: 600 }
     },
     series: [
       {
         name: 'SHAP Contribution Level (%)',
         type: 'bar',
-        data: selectedAnomaly.shapFactors.map(f => f.contribution),
+        data: selectedAnomaly?.shapFactors?.map(f => f.contribution) || [],
         itemStyle: {
           color: {
             type: 'linear', x: 0, y: 0, x2: 1, y2: 0,
@@ -129,10 +169,12 @@ export const AnomalyCenter: React.FC = () => {
     ]
   };
 
+  const isFiltered = filterServer !== 'all' || filterSeverity !== 'all' || searchKeyword.trim() !== '';
+
   return (
     <div style={{ padding: '30px', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Top Banner */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
             PH3: Anomaly Detection Center
@@ -144,6 +186,64 @@ export const AnomalyCenter: React.FC = () => {
         <button className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px' }} onClick={fetchAnomalies}>
           <RefreshCw size={14} className={loading ? 'spin' : ''} /> Refresh Stream
         </button>
+      </div>
+
+      {/* Multi-Field Filter Control Bar */}
+      <div className="glass-card" style={{ padding: '14px 20px', marginBottom: '24px', display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-cyan)', fontWeight: 700, fontSize: '13px' }}>
+          <Filter size={16} /> ANOMALY LOG FILTERS:
+        </div>
+
+        {/* Filter 1: Server Node */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Node:</span>
+          <select
+            value={filterServer}
+            onChange={(e) => setFilterServer(e.target.value)}
+            style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 600, fontSize: '13px', outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="all" style={{ background: '#111827' }}>All Servers</option>
+            {servers.map(s => (
+              <option key={s.id} value={s.name} style={{ background: '#111827' }}>{s.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Filter 2: Severity Level */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Severity:</span>
+          <select
+            value={filterSeverity}
+            onChange={(e) => setFilterSeverity(e.target.value)}
+            style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 600, fontSize: '13px', outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="all" style={{ background: '#111827' }}>All Severities</option>
+            <option value="critical" style={{ background: '#111827' }}>Critical</option>
+            <option value="warning" style={{ background: '#111827' }}>Warning</option>
+          </select>
+        </div>
+
+        {/* Filter 3: Search Input Keyword */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', flex: 1, minWidth: '220px' }}>
+          <Search size={14} color="var(--text-muted)" />
+          <input
+            type="text"
+            placeholder="Search metric (e.g. CPU, RAM, Disk), server, timestamp..."
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '13px', outline: 'none', width: '100%' }}
+          />
+        </div>
+
+        {/* Reset Filter Button */}
+        {isFiltered && (
+          <button
+            onClick={() => { setFilterServer('all'); setFilterSeverity('all'); setSearchKeyword(''); }}
+            style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(244,63,94,0.15)', border: '1px solid rgba(244,63,94,0.3)', color: '#fb7185', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+          >
+            Reset Filters
+          </button>
+        )}
       </div>
 
       {/* Heatmap Timeline (Top Half 0h - 24h Bar) */}
@@ -168,7 +268,7 @@ export const AnomalyCenter: React.FC = () => {
                   <div
                     key={item.id}
                     onClick={() => setSelectedAnomaly(item)}
-                    title={`${item.timestamp} ${item.server} - ${item.summary}`}
+                    title={`${item.full_timestamp || item.timestamp} [${item.server}] - ${item.summary}`}
                     style={{
                       width: '8px',
                       height: '24px',
@@ -178,7 +278,7 @@ export const AnomalyCenter: React.FC = () => {
                       boxShadow: item.severity === 'Critical' ? '0 0 10px #f43f5e' : '0 0 10px #f59e0b',
                       position: 'absolute',
                       top: '4px',
-                      zIndex: selectedAnomaly.id === item.id ? 10 : 2
+                      zIndex: selectedAnomaly?.id === item.id ? 10 : 2
                     }}
                   />
                 ))}
@@ -192,45 +292,68 @@ export const AnomalyCenter: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
         {/* Left Column: Anomaly Event List Table */}
         <div className="glass-card" style={{ padding: '24px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <AlertOctagon size={18} color="#f43f5e" /> Recorded Anomaly Incidents ({anomalies.length})
-          </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AlertOctagon size={18} color="#f43f5e" /> Recorded Anomaly Incidents ({anomalies.length})
+            </h2>
+            {isFiltered && (
+              <span style={{ fontSize: '11px', color: 'var(--accent-cyan)', background: 'rgba(6,182,212,0.15)', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                Filtered View
+              </span>
+            )}
+          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
-            {anomalies.map((item) => {
-              const isSelected = selectedAnomaly.id === item.id;
-              const borderCol = isSelected ? 'var(--accent-cyan)' : 'var(--border-color)';
-              const bgCol = isSelected ? 'rgba(6, 182, 212, 0.12)' : 'rgba(0, 0, 0, 0.2)';
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => setSelectedAnomaly(item)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '12px',
-                    background: bgCol,
-                    border: `1px solid ${borderCol}`,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>{item.server}</span>
-                    <span style={{
-                      padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 700,
-                      background: item.severity === 'Critical' ? 'rgba(244, 63, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                      color: item.severity === 'Critical' ? '#fb7185' : '#fbbf24'
-                    }}>
-                      {item.severity.toUpperCase()}
-                    </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '450px', overflowY: 'auto', paddingRight: '4px' }}>
+            {anomalies.length === 0 ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                No anomaly logs matched your filter criteria. Try resetting filters.
+              </div>
+            ) : (
+              anomalies.map((item) => {
+                const isSelected = selectedAnomaly?.id === item.id;
+                const borderCol = isSelected ? 'var(--accent-cyan)' : 'var(--border-color)';
+                const bgCol = isSelected ? 'rgba(6, 182, 212, 0.12)' : 'rgba(0, 0, 0, 0.2)';
+                const fullTimeDisplay = item.full_timestamp || `2026-08-11 ${item.timestamp}`;
+
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => setSelectedAnomaly(item)}
+                    style={{
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      background: bgCol,
+                      border: `1px solid ${borderCol}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>{item.server}</span>
+                      <span style={{
+                        padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 700,
+                        background: item.severity === 'Critical' ? 'rgba(244, 63, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                        color: item.severity === 'Critical' ? '#fb7185' : '#fbbf24'
+                      }}>
+                        {item.severity.toUpperCase()}
+                      </span>
+                    </div>
+
+                    {/* Specific Full Datetime Display */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-cyan)' }}>
+                        <Calendar size={13} /> {fullTimeDisplay}
+                      </span>
+                      <span>Isolation Score: <b style={{ color: '#f43f5e', fontFamily: 'var(--font-mono)' }}>{item.score}</b></span>
+                    </div>
+
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {item.summary}
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                    <span>Timestamp: <b>{item.timestamp}</b></span>
-                    <span>Isolation Score: <b style={{ color: '#f43f5e', fontFamily: 'var(--font-mono)' }}>{item.score}</b></span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -240,7 +363,7 @@ export const AnomalyCenter: React.FC = () => {
             <HelpCircle size={18} color="var(--accent-cyan)" /> SHAP Explainability & Root-Cause Analysis
           </h2>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-            Explaining why Isolation Forest flagged sample at <b>{selectedAnomaly.timestamp}</b> on <b>{selectedAnomaly.server}</b> as anomalous.
+            Explaining why Isolation Forest flagged sample at <b>{selectedAnomaly?.full_timestamp || selectedAnomaly?.timestamp}</b> on <b>{selectedAnomaly?.server}</b> as anomalous.
           </p>
 
           {/* SHAP Bar Chart */}
@@ -258,7 +381,7 @@ export const AnomalyCenter: React.FC = () => {
               AI Incident Explanation Summary
             </div>
             <div style={{ fontSize: '14px', lineHeight: '1.5', color: 'var(--text-primary)' }}>
-              "{selectedAnomaly.summary}"
+              "{selectedAnomaly?.summary}"
             </div>
           </div>
         </div>
