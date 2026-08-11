@@ -274,9 +274,24 @@ export const OverviewDashboard: React.FC = () => {
             Single viewport cluster health summary, ECharts gauges, and active incidents.
           </p>
         </div>
-        <button className="btn-primary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={fetchOverviewData}>
-          <RefreshCw size={14} className={loading ? 'spin' : ''} /> Refresh
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.4)', padding: '4px 10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+            <Filter size={13} color="var(--accent-cyan)" />
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Active Node:</span>
+            <select
+              value={gaugeServer}
+              onChange={(e) => setGaugeServer(e.target.value)}
+              style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 700, fontSize: '12px', outline: 'none', cursor: 'pointer' }}
+            >
+              {servers.map(s => (
+                <option key={s.id} value={s.name} style={{ background: '#111827' }}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+          <button className="btn-primary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={fetchOverviewData}>
+            <RefreshCw size={14} className={loading ? 'spin' : ''} /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* Top Row: 4 Summary Metric Cards (Compact) */}

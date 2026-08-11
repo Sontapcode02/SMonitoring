@@ -75,6 +75,8 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
         for line in text.splitlines():
             if line.startswith("#") or not line.strip():
                 continue
+            
+            # CPU Counters
             if line.startswith("node_cpu_seconds_total"):
                 parts = line.split()
                 if len(parts) >= 2:
@@ -84,32 +86,29 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
                         if 'mode="idle"' in line:
                             idle_sec += val
                     except ValueError: pass
-            elif line.startswith("node_disk_read_bytes_total"):
+
+            # Disk Counters (filter out optical sr and loop devices to avoid noise)
+            elif "node_disk_" in line and 'device="sr' not in line and 'device="loop' not in line:
                 parts = line.split()
                 if len(parts) >= 2:
-                    try: read_bytes += float(parts[-1])
+                    try:
+                        val = float(parts[-1])
+                        if "node_disk_read_bytes_total" in line:
+                            read_bytes += val
+                        elif "node_disk_written_bytes_total" in line:
+                            write_bytes += val
+                        elif "node_disk_reads_completed_total" in line:
+                            reads_cnt += val
+                        elif "node_disk_writes_completed_total" in line:
+                            writes_cnt += val
                     except ValueError: pass
-            elif line.startswith("node_disk_written_bytes_total"):
+
+            # Network Counters (filter out loopback)
+            elif line.startswith("node_network_receive_bytes_total") and 'device="lo"' not in line:
                 parts = line.split()
                 if len(parts) >= 2:
-                    try: write_bytes += float(parts[-1])
+                    try: rx_bytes += float(parts[-1])
                     except ValueError: pass
-            elif line.startswith("node_disk_reads_completed_total"):
-                parts = line.split()
-                if len(parts) >= 2:
-                    try: reads_cnt += float(parts[-1])
-                    except ValueError: pass
-            elif line.startswith("node_disk_writes_completed_total"):
-                parts = line.split()
-                if len(parts) >= 2:
-                    try: writes_cnt += float(parts[-1])
-                    except ValueError: pass
-            elif line.startswith("node_network_receive_bytes_total"):
-                if 'device="lo"' not in line:
-                    parts = line.split()
-                    if len(parts) >= 2:
-                        try: rx_bytes += float(parts[-1])
-                        except ValueError: pass
 
         key = f"{ip}:{port}"
         now_t = time.time()
@@ -117,9 +116,9 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
         # Defaults
         cpu_pct = 5.0
         disk_read_mbps = 0.0
-        disk_write_mbps = 0.001
-        disk_iops = 0.2
-        net_in_mbps = 0.0005
+        disk_write_mbps = 0.0
+        disk_iops = 0.0
+        net_in_mbps = 0.0
 
         if key in prev_metrics_memory:
             prev_idle, prev_total, prev_r_bytes, prev_w_bytes, prev_r_cnt, prev_w_cnt, prev_rx_bytes, prev_t = prev_metrics_memory[key]
@@ -162,7 +161,7 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
         d_size_m = re.search(r'node_filesystem_size_bytes\s+([0-9\.e\+]+)', text)
         d_free_m = re.search(r'node_filesystem_avail_bytes\s+([0-9\.e\+]+)', text)
         d_size_gb = round(float(d_size_m.group(1)) / (1024**3), 2) if d_size_m else 10.0
-        d_free_gb = round(float(d_free_m.group(1)) / (1024**3), 2) if d_free_m else 4.5
+        d_free_gb = round(float(d_free_m.group(1)) / (1024**3), 2) if d_free_gb else 4.5
         d_pct = round(((d_size_gb - d_free_gb) / d_size_gb) * 100, 2) if d_size_gb > 0 else 55.4
 
         return {
@@ -371,10 +370,10 @@ def get_realtime_metrics(db: Session = Depends(get_db)):
             res["disk_percent"] = direct_data["disk_percent"]
             res["disk_size_gb"] = direct_data["disk_size_gb"]
             res["disk_free_gb"] = direct_data["disk_free_gb"]
-            res["disk_iops"] = direct_data["disk_iops"]
-            res["disk_read_mbps"] = direct_data["disk_read_mbps"]
-            res["disk_write_mbps"] = direct_data["disk_write_mbps"]
-            res["net_in_mbps"] = direct_data["net_in_mbps"]
+            if direct_data["disk_iops"] > res["disk_iops"]: res["disk_iops"] = direct_data["disk_iops"]
+            if direct_data["disk_read_mbps"] > res["disk_read_mbps"]: res["disk_read_mbps"] = direct_data["disk_read_mbps"]
+            if direct_data["disk_write_mbps"] > res["disk_write_mbps"]: res["disk_write_mbps"] = direct_data["disk_write_mbps"]
+            if direct_data["net_in_mbps"] > res["net_in_mbps"]: res["net_in_mbps"] = direct_data["net_in_mbps"]
 
         # 9. EVALUATE ANOMALY & AUTOMATIC ALERT RECOVERY (AUTO-RESOLVE ALERTS WHEN METRICS STABILIZE)
         evaluate_and_trigger_alerts(res, db)

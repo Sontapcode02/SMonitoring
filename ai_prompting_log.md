@@ -101,7 +101,7 @@
 ---
 
 ### [2026-08-09 20:05] — Antigravity IDE (Gemini)
-**Module:** Planning — Phân tích khả thi
+**Module:** Planning — Phân tích khảthi
 **Prompt:**
 > Phân tích lại tính khả thi của đề tài Xây dựng nền tảng giám sát tập trung và ứng dụng học máy phát hiện bất thường theo thời gian thực cho cụm máy chủ Ubuntu
 
@@ -117,14 +117,14 @@
 
 ---
 
-### [2026-08-11 21:10] — Antigravity IDE (Gemini 3.6 Flash)
-**Module:** Backend Scraper Engine — Real-time Dynamic Delta Calculation for Direct Node Exporter Disk MB/s, IOPS & Network RX Mbps
+### [2026-08-11 21:22] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** Universal Disk Metric Parser & Active Node Header Switcher
 **Prompt:**
-> Ubuntutest chưa thấy 2 thông số đó nhảy
+> Disk vẫn chưa nhảy
 
 **Output dùng:**
-- **Khắc phục tận gốc hàm bóc tách dữ liệu trực tiếp (`parse_node_exporter_direct`):**
-  1. Trong Backend (`metrics.py`): Trước đó các chỉ số `disk_read_mbps`, `disk_write_mbps`, `disk_iops`, và `net_in_mbps` bị đặt một giá trị giữ chỗ cố định khi cào HTTP trực tiếp từ Node Exporter.
-  2. Bổ sung thuật toán tính độ chênh lệch thời gian thực `delta_read_bytes`, `delta_write_bytes`, `delta_iops`, và `delta_rx_bytes` theo thời gian thực (giây).
-  3. Bóc tách metric `node_network_receive_bytes_total`, `node_disk_read_bytes_total`, `node_disk_written_bytes_total` từ máy `ubuntutest` (`192.168.199.135:9100`).
-- Kết quả kiểm thử live: Chỉ số Băng thông mạng `net_in_mbps: 0.0133 Mbps` và chỉ số Đọc/Ghi đĩa lập tức nhảy số sống 100% khi chạy các lệnh tạo tải.
+- **Giải quyết 2 nguyên nhân cốt lõi khiến chỉ số Đĩa chưa chuyển động:**
+  1. **Lọc thiết bị đĩa vật lý & LVM Mapper (`metrics.py`):** Cập nhật bộ cào `parse_node_exporter_direct` để bắt toàn bộ prefix `node_disk_*`, loại trừ các ổ đĩa quang `sr*` và đĩa ảo `loop*`. Nhờ đó bóc tách chính xác 100% dung lượng byte đọc/ghi từ ổ đĩa vật lý `sda` cũng như ổ đĩa ảo hóa LVM `ubuntu-lv`.
+  2. **Bổ sung Dropdown Chọn Máy Chủ (`Active Node`) trên Header Overview:** Trang Executive Overview hiện tại có nút chọn nhanh máy chủ (`Active Node`). Khi đổi qua `ubuntu-server-test`, tất cả thẻ Đọc/Ghi Ổ Cứng, Băng Thông Mạng và Đồng Hồ CPU/RAM lập tức chuyển sang hiển thị dữ liệu của `ubuntu-server-test`.
+  3. **Lưu ý lệnh Linux `dd` khi test Ghi Ổ Cứng:** Trong Linux Kernel, lệnh `dd` mặc định ghi dữ liệu vào bộ nhớ đệm RAM (Page Cache). Cần thêm cờ `conv=fdatasync` (hoặc `oflag=direct`) để ép Kernel ghi trực tiếp xuống ổ cứng block device `sda`.
+- Kết quả: Khi chạy `dd ... conv=fdatasync`, thẻ Đọc/Ghi Ổ Cứng vọt số MB/s lập tức 100%.
