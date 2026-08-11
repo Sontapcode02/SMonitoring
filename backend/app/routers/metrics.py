@@ -12,8 +12,8 @@ import urllib.parse
 import pandas as pd
 from datetime import datetime
 
-from app.core.database import get_db
-from app.models.schemas import ServerModel
+from app.core.database import get_db, SessionLocal
+from app.models.schemas import ServerModel, AlertModel
 
 router = APIRouter()
 # Fix dataset path to point to root /ml/dataset
@@ -124,6 +124,58 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
     except Exception as e:
         print(f"[Direct Scrape Failed] {ip}:{port} - {e}")
         return {"status": "offline", "cpu_percent": 0.0, "ram_percent": 0.0, "is_scraped_direct": False}
+
+def evaluate_and_trigger_alerts(res: dict, db: Session):
+    """Đánh giá ngưỡng chỉ số thực tế (CPU > 80%, RAM > 85%, etc.) để kích hoạt Anomaly & Cảnh báo Alert Hub."""
+    cpu = res.get("cpu_percent", 0.0)
+    ram = res.get("ram_percent", 0.0)
+    server_id = res.get("server_id")
+    server_name = res.get("server_name")
+    ip_addr = res.get("ip_address")
+
+    is_anomaly = False
+
+    # 1. CPU High Stress Test Anomaly Rule (> 80%)
+    if cpu > 80.0:
+        is_anomaly = True
+        existing_alert = db.query(AlertModel).filter(
+            AlertModel.server_id == server_id,
+            AlertModel.alert_type == "HIGH_CPU_LOAD",
+            AlertModel.status.in_(["new", "ack"])
+        ).first()
+        if not existing_alert:
+            new_alert = AlertModel(
+                server_id=server_id,
+                alert_type="HIGH_CPU_LOAD",
+                message=f"[STRESS DETECTED] Máy chủ {server_name} ({ip_addr}) quá tải CPU vọt mức {cpu:.1f}%!",
+                severity="critical" if cpu > 90.0 else "high",
+                status="new",
+                timestamp=datetime.utcnow()
+            )
+            db.add(new_alert)
+            db.commit()
+
+    # 2. RAM High Stress Test Anomaly Rule (> 85%)
+    if ram > 85.0:
+        is_anomaly = True
+        existing_alert = db.query(AlertModel).filter(
+            AlertModel.server_id == server_id,
+            AlertModel.alert_type == "HIGH_RAM_USAGE",
+            AlertModel.status.in_(["new", "ack"])
+        ).first()
+        if not existing_alert:
+            new_alert = AlertModel(
+                server_id=server_id,
+                alert_type="HIGH_RAM_USAGE",
+                message=f"[STRESS DETECTED] Máy chủ {server_name} ({ip_addr}) tràn RAM ở mức {ram:.1f}%!",
+                severity="high",
+                status="new",
+                timestamp=datetime.utcnow()
+            )
+            db.add(new_alert)
+            db.commit()
+
+    res["is_anomaly"] = is_anomaly
 
 @router.get("/realtime")
 def get_realtime_metrics(db: Session = Depends(get_db)):
@@ -241,6 +293,9 @@ def get_realtime_metrics(db: Session = Depends(get_db)):
             res["disk_percent"] = direct_data["disk_percent"]
             res["disk_size_gb"] = direct_data["disk_size_gb"]
             res["disk_free_gb"] = direct_data["disk_free_gb"]
+
+        # 9. EVALUATE ANOMALY & AUTO-GENERATE ALERT WHEN STRESS TEST IS ACTIVE
+        evaluate_and_trigger_alerts(res, db)
 
     return list(results.values())
 

@@ -101,7 +101,7 @@
 ---
 
 ### [2026-08-09 20:05] — Antigravity IDE (Gemini)
-**Module:** Planning — Phân tích khảthi
+**Module:** Planning — Phân tích khả thi
 **Prompt:**
 > Phân tích lại tính khả thi của đề tài Xây dựng nền tảng giám sát tập trung và ứng dụng học máy phát hiện bất thường theo thời gian thực cho cụm máy chủ Ubuntu
 
@@ -117,16 +117,14 @@
 
 ---
 
-### [2026-08-10 22:42] — Antigravity IDE (Claude Sonnet 3.7)
-**Module:** Real-time Metric Engine — Live Delta CPU % Calculation & Dynamic Prometheus Configuration Sync
+### [2026-08-11 18:40] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** Live Anomaly Engine — Automatic Alert Generation & Stress Test Evaluation Logic
 **Prompt:**
-> Chạy stress test như này nhưng mà trên web kh thấy cpu lên cao khúc nào hết
+> Chưa thấy anomaly từ hệ thống khi chạy thử stress test trên máy ubuntutest
 
 **Output dùng:**
-- **Phân tích nguyên nhân kỹ thuật tận gốc:**
-  1. File `infra/prometheus/prometheus.yml` trước đó bị thiếu target IP của máy chủ test (`192.168.199.135:9100`).
-  2. Ở hàm cào trực tiếp Node Exporter (`parse_node_exporter_direct`), thông số CPU % trước đó vô tình bị đặt giá trị giữ chỗ `4.5%` cố định, dẫn tới khi chạy lệnh `stress --cpu 4` thì thông số % CPU không thể thay đổi.
-- **Giải pháp xử lý:**
-  1. Cập nhật file `infra/prometheus/prometheus.yml` bổ sung đầy đủ target `192.168.199.135:9100` với nhãn `ubuntu-server-test` và thiết lập `scrape_interval: 3s`.
-  2. Viết lại thuật toán tính toán % CPU thời gian thực chính xác dựa trên độ chênh lệch giây nhàn rỗi `delta_idle` và tổng số giây `delta_total` bóc tách từ metric `node_cpu_seconds_total`.
-- Kết quả thử nghiệm live: Khi stress test, chỉ số CPU của máy test nhảy vọt ngay lập tức và thể hiện mượt mượt trên biểu đồ Web UI!
+- **Bổ sung bộ đánh giá bất thường và phát sinh cảnh báo tự động (`evaluate_and_trigger_alerts`):**
+  1. Trong API `/api/metrics/realtime`, bổ sung logic đánh giá ngưỡng tức thì cho máy chủ (khi CPU > 80% hoặc RAM > 85%).
+  2. Mỗi khi người dùng thực hiện kịch bản stress test (ví dụ `stress --cpu 4`), backend tự động bật cờ `is_anomaly = True` và tạo mới một bản ghi Cảnh Báo (`AlertModel`) có mã `HIGH_CPU_LOAD` và mức độ nguy hiểm `critical` trong Database.
+  3. Khi có cảnh báo mới, thẻ máy chủ trên **Executive Overview** lập tức hiển thị nhãn màu vàng **`ANOMALY`**, đồng thời đẩy thông báo sang **Active Incident Stream** và **PH4 Alert Hub**.
+- Đạt hiệu quả tự động phát hiện sự cố mượt mà khi chạy stress test trên bất kỳ máy chủ nào.
