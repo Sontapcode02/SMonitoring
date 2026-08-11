@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Server, ShieldAlert, Bell, Cpu, Activity, CheckCircle2, RefreshCw, Filter } from 'lucide-react';
+import { Server, ShieldAlert, Bell, Cpu, Activity, CheckCircle2, RefreshCw, Filter, HardDrive, Wifi, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 
 interface ServerItem {
   id: number;
@@ -123,7 +123,7 @@ export const OverviewDashboard: React.FC = () => {
   const onlineServers = servers.filter(s => s.status === 'online').length;
   
   // Specific Gauges values for selected server
-  const selectedServerMetric = realtimeMetrics[gaugeServer] || { cpu_percent: 5.0, ram_percent: 24.5 };
+  const selectedServerMetric = realtimeMetrics[gaugeServer] || { cpu_percent: 5.0, ram_percent: 24.5, disk_percent: 55.4, disk_size_gb: 9.75, disk_free_gb: 4.35, disk_iops: 0.0, disk_read_mbps: 0.0, disk_write_mbps: 0.0, net_in_mbps: 0.0 };
   const gaugeCpuNum = Number((selectedServerMetric.cpu_percent || 0).toFixed(1));
   const gaugeRamNum = Number((selectedServerMetric.ram_percent || 0).toFixed(1));
 
@@ -281,24 +281,35 @@ export const OverviewDashboard: React.FC = () => {
 
       {/* Top Row: 4 Summary Metric Cards (Compact) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+        {/* Card 1: Disk Read / Write Speed */}
         <div className="glass-card" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>MONITORED SERVERS</span>
-            <Server size={16} color="var(--accent-cyan)" />
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>DISK READ / WRITE SPEED</span>
+            <HardDrive size={16} color="#60a5fa" />
           </div>
-          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px', color: 'var(--accent-cyan)' }}>{servers.length}</div>
-          <div style={{ fontSize: '11px', color: '#34d399' }}>{onlineServers} / {servers.length} Nodes Online</div>
+          <div style={{ fontSize: '15px', fontWeight: 700, marginTop: '4px', color: '#60a5fa', display: 'flex', gap: '10px' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+              <ArrowDownRight size={13} color="#34d399" /> R: {(selectedServerMetric.disk_read_mbps || 0).toFixed(3)} MB/s
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+              <ArrowUpRight size={13} color="#fb7185" /> W: {(selectedServerMetric.disk_write_mbps || 0).toFixed(3)} MB/s
+            </span>
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            IOPS: <b>{(selectedServerMetric.disk_iops || 0).toFixed(1)} ops/s</b> | Node: {gaugeServer}
+          </div>
         </div>
 
+        {/* Card 2: Network Traffic RX */}
         <div className="glass-card" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>ACTIVE ALERTS</span>
-            <Bell size={16} color={activeAlerts.length > 0 ? '#fb7185' : 'var(--accent-emerald)'} />
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>NETWORK TRAFFIC RX</span>
+            <Wifi size={16} color="var(--accent-amber)" />
           </div>
-          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px', color: activeAlerts.length > 0 ? '#fb7185' : '#34d399' }}>
-            {activeAlerts.length}
+          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px', color: 'var(--accent-amber)' }}>
+            {(selectedServerMetric.net_in_mbps || 0).toFixed(4)} Mbps
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{alerts.filter(a => a.status === 'resolved').length} Incidents Resolved</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Incoming eth0 Stream | Node: {gaugeServer}</div>
         </div>
 
         <div className="glass-card" style={{ padding: '12px 16px' }}>

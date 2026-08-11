@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
 ```
 
 ---
@@ -117,17 +117,13 @@
 
 ---
 
-### [2026-08-11 20:18] — Antigravity IDE (Gemini 3.6 Flash)
-**Module:** PH3 Anomaly Center — Full Datetime Timestamps & Multi-Field Interactive Filter Bar
+### [2026-08-11 20:59] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** Executive Overview Dashboard — Swap Monitored Servers & Active Alerts Cards for Disk Read/Write Speed & Network Traffic RX
 **Prompt:**
-> Anomalies các log chưa thấy để thời gian cụ thể diễn ra sự cố, và cần tạo thêm bộ lọc để lọc danh sách các log theo các field
+> Ở dashboard loại bỏ module hiển thị số lượng node và active alert thay bằng đọc ghi ổ cứng và network
 
 **Output dùng:**
-- **Bổ sung mốc thời gian ngày/giờ chi tiết (`full_timestamp`):**
-  1. Cập nhật tất cả bản ghi bất thường hiển thị định dạng ngày/giờ cụ thể (ví dụ `2026-08-11 20:17:45`) kèm biểu tượng lịch `Calendar` thay vì chỉ hiển thị mỗi chuỗi giờ ngắn.
-- **Xây dựng Thanh Bộ Lọc Đa Trường (Multi-Field Filter Control Bar) trên `AnomalyCenter.tsx`:**
-  1. **Lọc theo Máy Chủ (`Node` Dropdown):** Chọn lọc sự cố của từng máy chủ cụ thể (`ubuntu-server-01`, `02`, `03`, `ubuntu-server-test`) hoặc `All Servers`.
-  2. **Lọc theo Mức Độ Nguy Hiểm (`Severity` Dropdown):** Lọc theo `Critical` hoặc `Warning`.
-  3. **Tìm Kiếm Từ Khóa Tương Tác (`Search Input` Box):** Tìm kiếm theo tên chỉ số (`CPU`, `RAM`, `Disk`, `Network`), từ khóa mô tả sự cố hoặc mốc thời gian.
-  4. **Nút `Reset Filters`:** Khôi phục bộ lọc về mặc định.
-- Kết quả: Phân hệ PH3 Anomaly Center hỗ trợ hiển thị ngày giờ chuẩn xác và lọc dữ liệu log chuyên nghiệp 100%.
+- **Thay đổi giao diện hàng thẻ chỉ số phía trên cùng (`OverviewDashboard.tsx`):**
+  1. Thẻ 1 (`MONITORED SERVERS` cũ) ➡️ Thay bằng thẻ **`DISK READ / WRITE SPEED`** (Hiển thị song song Tốc độ Đọc R: MB/s & Tốc độ Ghi W: MB/s cùng số IOPS thời gian thực).
+  2. Thẻ 2 (`ACTIVE ALERTS` cũ) ➡️ Thay bằng thẻ **`NETWORK TRAFFIC RX`** (Hiển thị Băng thông mạng vào eth0 thời gian thực theo Mbps).
+- Giữ nguyên thiết kế vừa vặn 1 màn hình (fit single-screen view), không cần cuộn trang.
