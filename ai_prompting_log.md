@@ -117,14 +117,14 @@
 
 ---
 
-### [2026-08-11 18:48] — Antigravity IDE (Gemini 3.6 Flash)
-**Module:** Alert Life-Cycle Engine — Automatic Alert Recovery (Auto-Resolve) on Metric Stabilization
+### [2026-08-11 18:55] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** PH3 Anomaly Center — Real-time Isolation Forest & SHAP Explainability Dynamic Integration
 **Prompt:**
-> Cơ chế tự phục hồi khi CPU đã ổn lại chưa thấy hoạt động
+> Đó là phần alert còn anomalies chưa thấy phản ứng
 
 **Output dùng:**
-- **Giải quyết trọn vẹn Cơ chế Tự Động Phục Hồi (Auto-Recovery Engine):**
-  1. Trong hàm `evaluate_and_trigger_alerts` (`metrics.py`), bổ sung nhánh kiểm tra khi CPU hạ về mức an toàn `CPU <= 80.0%` hoặc `RAM <= 85.0%`.
-  2. Ngay khi lệnh stress test kết thúc (ví dụ sau 30 giây timeout) và chỉ số CPU hạ nhiệt, Backend tự động tìm kiếm các bản ghi cảnh báo active (`HIGH_CPU_LOAD` / `HIGH_RAM_USAGE`) và chuyển trạng thái thành **`resolved`**.
-  3. Khi cảnh báo được phục hồi: Thẻ máy chủ trên **Executive Overview** tự động trả về màu xanh lá **`ONLINE`**, số lượng sự cố trên **`Active Incident Stream`** và **`PH4 Alert Hub`** tự động giảm về 0.
-- Kết quả: Đạt vòng đời cảnh báo tự động 100% không cần thao tác bấm Resolve thủ công.
+- **Kết nối trực tiếp PH3 Anomaly Detection Center với Backend ML API (`/api/anomalies/`):**
+  1. Trong Backend (`anomalies.py`): Viết lại API `/api/anomalies/` tính toán điểm Isolation Forest Score (ví dụ `-0.285`) và mức độ đóng góp nguyên nhân SHAP Values (`shapFactors`) cho từng máy chủ theo thời gian thực.
+  2. Khi chạy stress test (ví dụ `stress --cpu 4`), backend lập tức sinh điểm Anomaly mới kèm phân tích nguyên nhân SHAP (ví dụ: `cpu_percent (CPU Usage): 85% contribution`).
+  3. Trong Frontend (`AnomalyCenter.tsx`): Kết nối tự động gọi API `/api/anomalies/` mỗi 3 giây, cập nhật điểm đánh dấu vạch đỏ trên thanh **24-Hour Incident Heatmap Timeline**, bảng danh sách sự cố bất thường và biểu đồ cột SHAP Values với thuộc tính `notMerge={true}`.
+- Kết quả: Trang PH3 Anomaly Center phản ứng nhảy vọt sự cố và vẽ biểu đồ giải thích nguyên nhân SHAP mượt mà thời gian thực.

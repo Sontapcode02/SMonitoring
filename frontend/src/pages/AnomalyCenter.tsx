@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { AlertOctagon, Clock, HelpCircle } from 'lucide-react';
+import { AlertOctagon, Clock, HelpCircle, RefreshCw } from 'lucide-react';
 
 interface AnomalyItem {
   id: number;
+  hour: number;
   timestamp: string;
   server: string;
   severity: 'Critical' | 'Warning';
@@ -12,9 +13,10 @@ interface AnomalyItem {
   summary: string;
 }
 
-const mockAnomalies: AnomalyItem[] = [
+const defaultAnomalies: AnomalyItem[] = [
   {
-    id: 1,
+    id: 101,
+    hour: 10,
     timestamp: '10:05:15',
     server: 'ubuntu-server-02',
     severity: 'Critical',
@@ -27,7 +29,8 @@ const mockAnomalies: AnomalyItem[] = [
     summary: 'Anomaly at 10:05 driven by unexpected Network RX spike exceeding historical baseline distribution.'
   },
   {
-    id: 2,
+    id: 102,
+    hour: 14,
     timestamp: '14:22:00',
     server: 'ubuntu-server-01',
     severity: 'Warning',
@@ -40,7 +43,8 @@ const mockAnomalies: AnomalyItem[] = [
     summary: 'Anomaly at 14:22 caused by CPU workload contention during business hours peak.'
   },
   {
-    id: 3,
+    id: 103,
+    hour: 3,
     timestamp: '03:15:45',
     server: 'ubuntu-server-03',
     severity: 'Critical',
@@ -55,7 +59,33 @@ const mockAnomalies: AnomalyItem[] = [
 ];
 
 export const AnomalyCenter: React.FC = () => {
-  const [selectedAnomaly, setSelectedAnomaly] = useState<AnomalyItem>(mockAnomalies[0]);
+  const [anomalies, setAnomalies] = useState<AnomalyItem[]>(defaultAnomalies);
+  const [selectedAnomaly, setSelectedAnomaly] = useState<AnomalyItem>(defaultAnomalies[0]);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const fetchAnomalies = async () => {
+    try {
+      const res = await fetch('/api/anomalies/');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setAnomalies(data);
+          // If current selected anomaly is not in the new list, select the first one
+          if (!data.some((a: any) => a.id === selectedAnomaly.id)) {
+            setSelectedAnomaly(data[0]);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Fetch anomalies error:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnomalies();
+    const interval = setInterval(fetchAnomalies, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   // SHAP Horizontal Bar Chart Option
   const shapChartOption = {
@@ -102,13 +132,18 @@ export const AnomalyCenter: React.FC = () => {
   return (
     <div style={{ padding: '30px', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Top Banner */}
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
-          PH3: Anomaly Detection Center
-        </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-          Demonstrating <b>Isolation Forest</b> detection power coupled with <b>SHAP Values</b> root-cause explainability.
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div>
+          <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
+            PH3: Anomaly Detection Center
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+            Demonstrating <b>Isolation Forest</b> detection power coupled with <b>SHAP Values</b> root-cause explainability.
+          </p>
+        </div>
+        <button className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px' }} onClick={fetchAnomalies}>
+          <RefreshCw size={14} className={loading ? 'spin' : ''} /> Refresh Stream
+        </button>
       </div>
 
       {/* Heatmap Timeline (Top Half 0h - 24h Bar) */}
@@ -122,34 +157,34 @@ export const AnomalyCenter: React.FC = () => {
 
         {/* 24-Hour Interactive Timeline Slider */}
         <div style={{ height: '40px', background: 'rgba(0,0,0,0.4)', borderRadius: '10px', display: 'flex', alignItems: 'center', position: 'relative', padding: '0 10px', border: '1px solid var(--border-color)' }}>
-          {Array.from({ length: 24 }).map((_, hour) => (
-            <div key={hour} style={{ flex: 1, position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '10px', color: 'var(--text-muted)', position: 'absolute', bottom: '2px' }}>{hour}h</span>
-              
-              {/* Highlight Ticks for Anomaly Events */}
-              {hour === 3 && (
-                <div
-                  onClick={() => setSelectedAnomaly(mockAnomalies[2])}
-                  title="03:15 Critical Anomaly"
-                  style={{ width: '8px', height: '24px', background: '#f43f5e', borderRadius: '4px', cursor: 'pointer', boxShadow: '0 0 10px #f43f5e', position: 'absolute', top: '4px' }}
-                />
-              )}
-              {hour === 10 && (
-                <div
-                  onClick={() => setSelectedAnomaly(mockAnomalies[0])}
-                  title="10:05 Critical Anomaly"
-                  style={{ width: '8px', height: '24px', background: '#f43f5e', borderRadius: '4px', cursor: 'pointer', boxShadow: '0 0 10px #f43f5e', position: 'absolute', top: '4px' }}
-                />
-              )}
-              {hour === 14 && (
-                <div
-                  onClick={() => setSelectedAnomaly(mockAnomalies[1])}
-                  title="14:22 Warning Anomaly"
-                  style={{ width: '8px', height: '24px', background: '#f59e0b', borderRadius: '4px', cursor: 'pointer', boxShadow: '0 0 10px #f59e0b', position: 'absolute', top: '4px' }}
-                />
-              )}
-            </div>
-          ))}
+          {Array.from({ length: 24 }).map((_, hour) => {
+            const hourAnomalies = anomalies.filter(a => a.hour === hour);
+            return (
+              <div key={hour} style={{ flex: 1, position: 'relative', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '10px', color: 'var(--text-muted)', position: 'absolute', bottom: '2px' }}>{hour}h</span>
+                
+                {/* Highlight Ticks for Anomaly Events in this hour */}
+                {hourAnomalies.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => setSelectedAnomaly(item)}
+                    title={`${item.timestamp} ${item.server} - ${item.summary}`}
+                    style={{
+                      width: '8px',
+                      height: '24px',
+                      background: item.severity === 'Critical' ? '#f43f5e' : '#f59e0b',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      boxShadow: item.severity === 'Critical' ? '0 0 10px #f43f5e' : '0 0 10px #f59e0b',
+                      position: 'absolute',
+                      top: '4px',
+                      zIndex: selectedAnomaly.id === item.id ? 10 : 2
+                    }}
+                  />
+                ))}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -158,11 +193,11 @@ export const AnomalyCenter: React.FC = () => {
         {/* Left Column: Anomaly Event List Table */}
         <div className="glass-card" style={{ padding: '24px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <AlertOctagon size={18} color="#f43f5e" /> Recorded Anomaly Incidents
+            <AlertOctagon size={18} color="#f43f5e" /> Recorded Anomaly Incidents ({anomalies.length})
           </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {mockAnomalies.map((item) => {
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
+            {anomalies.map((item) => {
               const isSelected = selectedAnomaly.id === item.id;
               const borderCol = isSelected ? 'var(--accent-cyan)' : 'var(--border-color)';
               const bgCol = isSelected ? 'rgba(6, 182, 212, 0.12)' : 'rgba(0, 0, 0, 0.2)';
@@ -209,7 +244,7 @@ export const AnomalyCenter: React.FC = () => {
           </p>
 
           {/* SHAP Bar Chart */}
-          <ReactECharts option={shapChartOption} style={{ height: '220px' }} />
+          <ReactECharts option={shapChartOption} notMerge={true} style={{ height: '220px' }} />
 
           {/* Natural Language Summary Card */}
           <div style={{
