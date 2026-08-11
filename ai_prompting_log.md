@@ -117,14 +117,14 @@
 
 ---
 
-### [2026-08-11 18:40] — Antigravity IDE (Gemini 3.6 Flash)
-**Module:** Live Anomaly Engine — Automatic Alert Generation & Stress Test Evaluation Logic
+### [2026-08-11 18:48] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** Alert Life-Cycle Engine — Automatic Alert Recovery (Auto-Resolve) on Metric Stabilization
 **Prompt:**
-> Chưa thấy anomaly từ hệ thống khi chạy thử stress test trên máy ubuntutest
+> Cơ chế tự phục hồi khi CPU đã ổn lại chưa thấy hoạt động
 
 **Output dùng:**
-- **Bổ sung bộ đánh giá bất thường và phát sinh cảnh báo tự động (`evaluate_and_trigger_alerts`):**
-  1. Trong API `/api/metrics/realtime`, bổ sung logic đánh giá ngưỡng tức thì cho máy chủ (khi CPU > 80% hoặc RAM > 85%).
-  2. Mỗi khi người dùng thực hiện kịch bản stress test (ví dụ `stress --cpu 4`), backend tự động bật cờ `is_anomaly = True` và tạo mới một bản ghi Cảnh Báo (`AlertModel`) có mã `HIGH_CPU_LOAD` và mức độ nguy hiểm `critical` trong Database.
-  3. Khi có cảnh báo mới, thẻ máy chủ trên **Executive Overview** lập tức hiển thị nhãn màu vàng **`ANOMALY`**, đồng thời đẩy thông báo sang **Active Incident Stream** và **PH4 Alert Hub**.
-- Đạt hiệu quả tự động phát hiện sự cố mượt mà khi chạy stress test trên bất kỳ máy chủ nào.
+- **Giải quyết trọn vẹn Cơ chế Tự Động Phục Hồi (Auto-Recovery Engine):**
+  1. Trong hàm `evaluate_and_trigger_alerts` (`metrics.py`), bổ sung nhánh kiểm tra khi CPU hạ về mức an toàn `CPU <= 80.0%` hoặc `RAM <= 85.0%`.
+  2. Ngay khi lệnh stress test kết thúc (ví dụ sau 30 giây timeout) và chỉ số CPU hạ nhiệt, Backend tự động tìm kiếm các bản ghi cảnh báo active (`HIGH_CPU_LOAD` / `HIGH_RAM_USAGE`) và chuyển trạng thái thành **`resolved`**.
+  3. Khi cảnh báo được phục hồi: Thẻ máy chủ trên **Executive Overview** tự động trả về màu xanh lá **`ONLINE`**, số lượng sự cố trên **`Active Incident Stream`** và **`PH4 Alert Hub`** tự động giảm về 0.
+- Kết quả: Đạt vòng đời cảnh báo tự động 100% không cần thao tác bấm Resolve thủ công.

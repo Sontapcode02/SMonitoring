@@ -126,7 +126,7 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
         return {"status": "offline", "cpu_percent": 0.0, "ram_percent": 0.0, "is_scraped_direct": False}
 
 def evaluate_and_trigger_alerts(res: dict, db: Session):
-    """Đánh giá ngưỡng chỉ số thực tế (CPU > 80%, RAM > 85%, etc.) để kích hoạt Anomaly & Cảnh báo Alert Hub."""
+    """Đánh giá ngưỡng chỉ số thực tế (CPU > 80%, RAM > 85%, etc.) để kích hoạt Anomaly & Tự Động Phục Hồi (Auto-Recovery)."""
     cpu = res.get("cpu_percent", 0.0)
     ram = res.get("ram_percent", 0.0)
     server_id = res.get("server_id")
@@ -135,7 +135,7 @@ def evaluate_and_trigger_alerts(res: dict, db: Session):
 
     is_anomaly = False
 
-    # 1. CPU High Stress Test Anomaly Rule (> 80%)
+    # 1. CPU High Stress Test Anomaly & Auto-Recovery Rule
     if cpu > 80.0:
         is_anomaly = True
         existing_alert = db.query(AlertModel).filter(
@@ -154,8 +154,19 @@ def evaluate_and_trigger_alerts(res: dict, db: Session):
             )
             db.add(new_alert)
             db.commit()
+    else:
+        # CPU has dropped back to safe range (<= 80%) -> AUTO-RECOVER active HIGH_CPU_LOAD alerts!
+        active_cpu_alerts = db.query(AlertModel).filter(
+            AlertModel.server_id == server_id,
+            AlertModel.alert_type == "HIGH_CPU_LOAD",
+            AlertModel.status.in_(["new", "ack"])
+        ).all()
+        if active_cpu_alerts:
+            for alert in active_cpu_alerts:
+                alert.status = "resolved"
+            db.commit()
 
-    # 2. RAM High Stress Test Anomaly Rule (> 85%)
+    # 2. RAM High Stress Test Anomaly & Auto-Recovery Rule
     if ram > 85.0:
         is_anomaly = True
         existing_alert = db.query(AlertModel).filter(
@@ -173,6 +184,17 @@ def evaluate_and_trigger_alerts(res: dict, db: Session):
                 timestamp=datetime.utcnow()
             )
             db.add(new_alert)
+            db.commit()
+    else:
+        # RAM has dropped back to safe range (<= 85%) -> AUTO-RECOVER active HIGH_RAM_USAGE alerts!
+        active_ram_alerts = db.query(AlertModel).filter(
+            AlertModel.server_id == server_id,
+            AlertModel.alert_type == "HIGH_RAM_USAGE",
+            AlertModel.status.in_(["new", "ack"])
+        ).all()
+        if active_ram_alerts:
+            for alert in active_ram_alerts:
+                alert.status = "resolved"
             db.commit()
 
     res["is_anomaly"] = is_anomaly
@@ -294,7 +316,7 @@ def get_realtime_metrics(db: Session = Depends(get_db)):
             res["disk_size_gb"] = direct_data["disk_size_gb"]
             res["disk_free_gb"] = direct_data["disk_free_gb"]
 
-        # 9. EVALUATE ANOMALY & AUTO-GENERATE ALERT WHEN STRESS TEST IS ACTIVE
+        # 9. EVALUATE ANOMALY & AUTOMATIC ALERT RECOVERY (AUTO-RESOLVE ALERTS WHEN CPU DROPS BACK TO SAFE RANGE)
         evaluate_and_trigger_alerts(res, db)
 
     return list(results.values())
