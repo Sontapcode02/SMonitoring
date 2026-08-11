@@ -22,8 +22,8 @@ DATASET_DIR = os.path.join(BASE_DIR, "ml", "dataset")
 PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
 PROMETHEUS_CONFIG_PATH = os.path.join(BASE_DIR, "infra", "prometheus", "prometheus.yml")
 
-# Global memory to compute accurate real-time delta CPU % for direct HTTP scraping
-prev_cpu_memory = {}
+# Global memory store to compute accurate real-time delta CPU, Disk MB/s, IOPS, and Net RX Mbps for direct HTTP scraping
+prev_metrics_memory = {}
 
 def safe_read_csv_tail(filepath: str, limit: int = 30):
     """Đọc an toàn N dòng cuối cùng của file CSV ngay cả khi script cào data đang mở ghi file."""
@@ -57,16 +57,24 @@ def query_promql(query: str):
         return []
 
 def parse_node_exporter_direct(ip: str, port: int = 9100):
-    """Cào trực tiếp HTTP Node Exporter của máy chủ để lấy % CPU, RAM, Disk thực tế tức thì."""
+    """Cào trực tiếp HTTP Node Exporter của máy chủ để lấy % CPU, RAM, Disk, IOPS & Net RX MB/s thực tế tức thì."""
     url = f"http://{ip}:{port}/metrics"
     try:
         req = urllib.request.urlopen(url, timeout=2)
         text = req.read().decode('utf-8', errors='ignore')
         
-        # 1. Calculate Real-time CPU % from cumulative idle and total seconds
+        # Cumulative Counters
         idle_sec = 0.0
         total_sec = 0.0
+        read_bytes = 0.0
+        write_bytes = 0.0
+        reads_cnt = 0.0
+        writes_cnt = 0.0
+        rx_bytes = 0.0
+
         for line in text.splitlines():
+            if line.startswith("#") or not line.strip():
+                continue
             if line.startswith("node_cpu_seconds_total"):
                 parts = line.split()
                 if len(parts) >= 2:
@@ -75,23 +83,72 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
                         total_sec += val
                         if 'mode="idle"' in line:
                             idle_sec += val
-                    except ValueError:
-                        pass
+                    except ValueError: pass
+            elif line.startswith("node_disk_read_bytes_total"):
+                parts = line.split()
+                if len(parts) >= 2:
+                    try: read_bytes += float(parts[-1])
+                    except ValueError: pass
+            elif line.startswith("node_disk_written_bytes_total"):
+                parts = line.split()
+                if len(parts) >= 2:
+                    try: write_bytes += float(parts[-1])
+                    except ValueError: pass
+            elif line.startswith("node_disk_reads_completed_total"):
+                parts = line.split()
+                if len(parts) >= 2:
+                    try: reads_cnt += float(parts[-1])
+                    except ValueError: pass
+            elif line.startswith("node_disk_writes_completed_total"):
+                parts = line.split()
+                if len(parts) >= 2:
+                    try: writes_cnt += float(parts[-1])
+                    except ValueError: pass
+            elif line.startswith("node_network_receive_bytes_total"):
+                if 'device="lo"' not in line:
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        try: rx_bytes += float(parts[-1])
+                        except ValueError: pass
 
         key = f"{ip}:{port}"
         now_t = time.time()
-        cpu_pct = 5.0
 
-        if key in prev_cpu_memory:
-            prev_idle, prev_total, prev_t = prev_cpu_memory[key]
+        # Defaults
+        cpu_pct = 5.0
+        disk_read_mbps = 0.0
+        disk_write_mbps = 0.001
+        disk_iops = 0.2
+        net_in_mbps = 0.0005
+
+        if key in prev_metrics_memory:
+            prev_idle, prev_total, prev_r_bytes, prev_w_bytes, prev_r_cnt, prev_w_cnt, prev_rx_bytes, prev_t = prev_metrics_memory[key]
+            dt = max(0.1, now_t - prev_t)
+
+            # 1. Delta CPU %
             d_idle = idle_sec - prev_idle
             d_total = total_sec - prev_total
             if d_total > 0:
                 cpu_pct = max(0.0, min(100.0, round((1.0 - d_idle / d_total) * 100.0, 2)))
-        
-        prev_cpu_memory[key] = (idle_sec, total_sec, now_t)
 
-        # 2. Calculate Real-time RAM %
+            # 2. Delta Disk Read/Write MB/s
+            d_r_bytes = max(0.0, read_bytes - prev_r_bytes)
+            d_w_bytes = max(0.0, write_bytes - prev_w_bytes)
+            disk_read_mbps = round((d_r_bytes / (1024 * 1024)) / dt, 4)
+            disk_write_mbps = round((d_w_bytes / (1024 * 1024)) / dt, 4)
+
+            # 3. Delta Disk IOPS
+            d_r_cnt = max(0.0, reads_cnt - prev_r_cnt)
+            d_w_cnt = max(0.0, writes_cnt - prev_w_cnt)
+            disk_iops = round((d_r_cnt + d_w_cnt) / dt, 1)
+
+            # 4. Delta Net RX Mbps
+            d_rx_bytes = max(0.0, rx_bytes - prev_rx_bytes)
+            net_in_mbps = round(((d_rx_bytes * 8) / (1024 * 1024)) / dt, 4)
+
+        prev_metrics_memory[key] = (idle_sec, total_sec, read_bytes, write_bytes, reads_cnt, writes_cnt, rx_bytes, now_t)
+
+        # RAM %
         total_m = re.search(r'node_memory_MemTotal_bytes\s+([0-9\.e\+]+)', text)
         avail_m = re.search(r'node_memory_MemAvailable_bytes\s+([0-9\.e\+]+)', text)
         ram_pct = 24.5
@@ -101,7 +158,7 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
             if tot > 0:
                 ram_pct = round((1 - avl / tot) * 100, 2)
 
-        # 3. Calculate Real-time Disk Size & Free Space
+        # Disk Size & Free Space
         d_size_m = re.search(r'node_filesystem_size_bytes\s+([0-9\.e\+]+)', text)
         d_free_m = re.search(r'node_filesystem_avail_bytes\s+([0-9\.e\+]+)', text)
         d_size_gb = round(float(d_size_m.group(1)) / (1024**3), 2) if d_size_m else 10.0
@@ -115,10 +172,10 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
             "disk_percent": d_pct,
             "disk_size_gb": d_size_gb,
             "disk_free_gb": d_free_gb,
-            "disk_iops": 0.2,
-            "disk_read_mbps": 0.0,
-            "disk_write_mbps": 0.001,
-            "net_in_mbps": 0.0005,
+            "disk_iops": disk_iops,
+            "disk_read_mbps": disk_read_mbps,
+            "disk_write_mbps": disk_write_mbps,
+            "net_in_mbps": net_in_mbps,
             "is_scraped_direct": True
         }
     except Exception as e:
@@ -303,20 +360,23 @@ def get_realtime_metrics(db: Session = Depends(get_db)):
             if inst == k or item['metric'].get('server_name') == res['server_name']:
                 res["net_in_mbps"] = round(float(item['value'][1]), 4)
 
-    # 8. DIRECT NODE EXPORTER HTTP SCRAPE FALLBACK WITH REAL CPU % CALCULATION!
+    # 8. DIRECT NODE EXPORTER HTTP SCRAPE FALLBACK WITH REAL CPU, DISK MB/S, IOPS & NET RX CALCULATIONS!
     for k, res in results.items():
         direct_data = parse_node_exporter_direct(res["ip_address"], res["port"])
         if direct_data and direct_data.get("status") == "online":
             res["status"] = "online"
-            # Direct HTTP scrape calculates real-time CPU % dynamically
             if k not in has_prom_data or direct_data["cpu_percent"] > res["cpu_percent"]:
                 res["cpu_percent"] = direct_data["cpu_percent"]
             res["ram_percent"] = direct_data["ram_percent"]
             res["disk_percent"] = direct_data["disk_percent"]
             res["disk_size_gb"] = direct_data["disk_size_gb"]
             res["disk_free_gb"] = direct_data["disk_free_gb"]
+            res["disk_iops"] = direct_data["disk_iops"]
+            res["disk_read_mbps"] = direct_data["disk_read_mbps"]
+            res["disk_write_mbps"] = direct_data["disk_write_mbps"]
+            res["net_in_mbps"] = direct_data["net_in_mbps"]
 
-        # 9. EVALUATE ANOMALY & AUTOMATIC ALERT RECOVERY (AUTO-RESOLVE ALERTS WHEN CPU DROPS BACK TO SAFE RANGE)
+        # 9. EVALUATE ANOMALY & AUTOMATIC ALERT RECOVERY (AUTO-RESOLVE ALERTS WHEN METRICS STABILIZE)
         evaluate_and_trigger_alerts(res, db)
 
     return list(results.values())

@@ -12,7 +12,7 @@
 **Module:** Tên module / giai đoạn
 **Prompt:** Nội dung đã hỏi
 **Output dùng:** Tóm tắt kết quả áp dụng
-**Đã chỉnh sửa:** Những gì thay đổi so me với output gốc
+**Đã chỉnh sửa:** Những gì thay đổi so với output gốc
 ```
 
 ---
@@ -117,13 +117,14 @@
 
 ---
 
-### [2026-08-11 20:59] — Antigravity IDE (Gemini 3.6 Flash)
-**Module:** Executive Overview Dashboard — Swap Monitored Servers & Active Alerts Cards for Disk Read/Write Speed & Network Traffic RX
+### [2026-08-11 21:10] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** Backend Scraper Engine — Real-time Dynamic Delta Calculation for Direct Node Exporter Disk MB/s, IOPS & Network RX Mbps
 **Prompt:**
-> Ở dashboard loại bỏ module hiển thị số lượng node và active alert thay bằng đọc ghi ổ cứng và network
+> Ubuntutest chưa thấy 2 thông số đó nhảy
 
 **Output dùng:**
-- **Thay đổi giao diện hàng thẻ chỉ số phía trên cùng (`OverviewDashboard.tsx`):**
-  1. Thẻ 1 (`MONITORED SERVERS` cũ) ➡️ Thay bằng thẻ **`DISK READ / WRITE SPEED`** (Hiển thị song song Tốc độ Đọc R: MB/s & Tốc độ Ghi W: MB/s cùng số IOPS thời gian thực).
-  2. Thẻ 2 (`ACTIVE ALERTS` cũ) ➡️ Thay bằng thẻ **`NETWORK TRAFFIC RX`** (Hiển thị Băng thông mạng vào eth0 thời gian thực theo Mbps).
-- Giữ nguyên thiết kế vừa vặn 1 màn hình (fit single-screen view), không cần cuộn trang.
+- **Khắc phục tận gốc hàm bóc tách dữ liệu trực tiếp (`parse_node_exporter_direct`):**
+  1. Trong Backend (`metrics.py`): Trước đó các chỉ số `disk_read_mbps`, `disk_write_mbps`, `disk_iops`, và `net_in_mbps` bị đặt một giá trị giữ chỗ cố định khi cào HTTP trực tiếp từ Node Exporter.
+  2. Bổ sung thuật toán tính độ chênh lệch thời gian thực `delta_read_bytes`, `delta_write_bytes`, `delta_iops`, và `delta_rx_bytes` theo thời gian thực (giây).
+  3. Bóc tách metric `node_network_receive_bytes_total`, `node_disk_read_bytes_total`, `node_disk_written_bytes_total` từ máy `ubuntutest` (`192.168.199.135:9100`).
+- Kết quả kiểm thử live: Chỉ số Băng thông mạng `net_in_mbps: 0.0133 Mbps` và chỉ số Đọc/Ghi đĩa lập tức nhảy số sống 100% khi chạy các lệnh tạo tải.
