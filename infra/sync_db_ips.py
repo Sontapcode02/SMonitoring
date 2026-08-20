@@ -14,6 +14,7 @@ targets = [
     ("ubuntu-server-02", "192.168.138.129", 9100, "db"),
     ("ubuntu-server-03", "192.168.138.130", 9100, "app"),
     ("ubuntu-server-test", "192.168.138.131", 9100, "test"),
+    ("windows-host-master", "192.168.138.1", 9182, "windows"),
 ]
 
 for name, ip, port, role in targets:
@@ -28,4 +29,5 @@ for name, ip, port, role in targets:
 
 conn.commit()
 conn.close()
-print("[Database Sync Complete] 4 servers updated to 192.168.138.128-131.")
+print("[Database Sync Complete] Server list updated with Windows host.")
+

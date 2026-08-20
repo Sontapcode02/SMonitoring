@@ -30,3 +30,9 @@ scrape_configs:
         labels:
           server_name: "ubuntu-server-test"
           role: "test-server"
+
+      - targets: ["192.168.138.1:9182"]
+        labels:
+          server_name: "windows-host-master"
+          role: "windows-host"
+

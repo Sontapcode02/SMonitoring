@@ -76,8 +76,8 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
             if line.startswith("#") or not line.strip():
                 continue
             
-            # CPU Counters
-            if line.startswith("node_cpu_seconds_total"):
+            # CPU Counters (Linux node_cpu_seconds_total & Windows windows_cpu_time_total)
+            if line.startswith("node_cpu_seconds_total") or line.startswith("windows_cpu_time_total"):
                 parts = line.split()
                 if len(parts) >= 2:
                     try:
@@ -87,24 +87,24 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
                             idle_sec += val
                     except ValueError: pass
 
-            # Disk Counters (filter out optical sr and loop devices to avoid noise)
-            elif "node_disk_" in line and 'device="sr' not in line and 'device="loop' not in line:
+            # Disk Counters (filter out optical sr and loop devices and Windows recovery volumes)
+            elif ("node_disk_" in line or "windows_logical_disk_" in line) and 'device="sr' not in line and 'device="loop' not in line and 'HarddiskVolume' not in line:
                 parts = line.split()
                 if len(parts) >= 2:
                     try:
                         val = float(parts[-1])
-                        if "node_disk_read_bytes_total" in line:
+                        if "read_bytes" in line or "read_bytes_total" in line:
                             read_bytes += val
-                        elif "node_disk_written_bytes_total" in line:
+                        elif "written_bytes" in line or "write_bytes_total" in line:
                             write_bytes += val
-                        elif "node_disk_reads_completed_total" in line:
+                        elif "reads_completed_total" in line or "reads_total" in line:
                             reads_cnt += val
-                        elif "node_disk_writes_completed_total" in line:
+                        elif "writes_completed_total" in line or "writes_total" in line:
                             writes_cnt += val
                     except ValueError: pass
 
             # Network Counters (filter out loopback)
-            elif line.startswith("node_network_receive_bytes_total") and 'device="lo"' not in line:
+            elif (line.startswith("node_network_receive_bytes_total") or line.startswith("windows_net_bytes_received_total")) and 'device="lo"' not in line:
                 parts = line.split()
                 if len(parts) >= 2:
                     try: rx_bytes += float(parts[-1])
@@ -147,19 +147,23 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
 
         prev_metrics_memory[key] = (idle_sec, total_sec, read_bytes, write_bytes, reads_cnt, writes_cnt, rx_bytes, now_t)
 
-        # RAM %
-        total_m = re.search(r'node_memory_MemTotal_bytes\s+([0-9\.e\+]+)', text)
-        avail_m = re.search(r'node_memory_MemAvailable_bytes\s+([0-9\.e\+]+)', text)
+        # RAM % (Linux node_memory_... & Windows windows_memory_available_bytes)
+        total_m = re.search(r'(?:node_memory_MemTotal_bytes|windows_cs_physical_memory_bytes)\s+([0-9\.e\+]+)', text)
+        avail_m = re.search(r'(?:node_memory_MemAvailable_bytes|windows_memory_available_bytes)\s+([0-9\.e\+]+)', text)
         ram_pct = 24.5
         if total_m and avail_m:
             tot = float(total_m.group(1))
             avl = float(avail_m.group(1))
             if tot > 0:
                 ram_pct = round((1 - avl / tot) * 100, 2)
+        elif avail_m:
+            avl_gb = float(avail_m.group(1)) / (1024**3)
+            tot_gb = 16.0
+            ram_pct = round(max(0.0, min(100.0, (1 - avl_gb / tot_gb) * 100)), 2)
 
-        # Disk Size & Free Space
-        d_size_m = re.search(r'node_filesystem_size_bytes\s+([0-9\.e\+]+)', text)
-        d_free_m = re.search(r'node_filesystem_avail_bytes\s+([0-9\.e\+]+)', text)
+        # Disk Size & Free Space (Linux node_filesystem_... & Windows windows_logical_disk_...)
+        d_size_m = re.search(r'(?:node_filesystem_size_bytes|windows_logical_disk_size_bytes\{volume="C:"\})\s+([0-9\.e\+]+)', text)
+        d_free_m = re.search(r'(?:node_filesystem_avail_bytes|windows_logical_disk_free_bytes\{volume="C:"\})\s+([0-9\.e\+]+)', text)
         d_size_gb = round(float(d_size_m.group(1)) / (1024**3), 2) if d_size_m else 10.0
         d_free_gb = round(float(d_free_m.group(1)) / (1024**3), 2) if d_free_m else 4.5
         d_pct = round(((d_size_gb - d_free_gb) / d_size_gb) * 100, 2) if d_size_gb > 0 else 55.4
