@@ -172,9 +172,9 @@ export const AnomalyCenter: React.FC = () => {
   const isFiltered = filterServer !== 'all' || filterSeverity !== 'all' || searchKeyword.trim() !== '';
 
   return (
-    <div style={{ padding: '30px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="page-container">
       {/* Top Banner */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
             PH3: Anomaly Detection Center

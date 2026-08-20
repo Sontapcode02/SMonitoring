@@ -15,10 +15,13 @@ DATASET_DIR = os.path.join(os.path.dirname(__file__), "..", "dataset")
 
 # Mapping IP sang server_id làm fallback
 IP_MAP = {
-    "192.168.199.133": "ubuntu-server-01",
-    "192.168.199.132": "ubuntu-server-02",
-    "192.168.199.134": "ubuntu-server-03",
+    "192.168.138.128": "ubuntu-server-01",
+    "192.168.138.129": "ubuntu-server-02",
+    "192.168.138.130": "ubuntu-server-03",
+    "192.168.138.131": "ubuntu-server-test",
 }
+
+
 
 # PromQL Queries chuẩn cho bộ 10 features
 QUERIES = {

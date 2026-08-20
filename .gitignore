@@ -9,3 +9,5 @@ dist/
 *.log
 ml/dataset/*.csv
 ml/models/*.pkl
+*.db
+

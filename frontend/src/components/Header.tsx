@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import ReactECharts from 'echarts-for-react';
 import { Search, Bell, User, LogOut, Key, ChevronRight } from 'lucide-react';
+
 
 interface HeaderProps {
   activeTabTitle: string;
@@ -80,14 +80,14 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
           <div style={{
             padding: '10px',
             borderRadius: '50%',
-            background: hasUnreadAlerts ? 'rgba(244, 63, 94, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+            background: hasUnreadAlerts ? 'rgba(253, 164, 175, 0.15)' : 'rgba(255, 255, 255, 0.05)',
             border: `1px solid ${bellBorder}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             transition: 'all 0.3s'
           }}>
-            <Bell size={18} color={hasUnreadAlerts ? '#f43f5e' : 'var(--text-secondary)'} />
+            <Bell size={18} color={hasUnreadAlerts ? 'var(--accent-rose)' : 'var(--text-secondary)'} />
             {hasUnreadAlerts && (
               <span style={{
                 position: 'absolute',
@@ -96,14 +96,14 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
                 width: '18px',
                 height: '18px',
                 borderRadius: '50%',
-                background: '#f43f5e',
-                color: 'white',
+                background: 'var(--accent-rose)',
+                color: '#0f172a',
                 fontSize: '10px',
-                fontWeight: 700,
+                fontWeight: 800,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 10px #f43f5e'
+                boxShadow: '0 0 8px rgba(253, 164, 175, 0.5)'
               }}>
                 {activeAlertCount}
               </span>

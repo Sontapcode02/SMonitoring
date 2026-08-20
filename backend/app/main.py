@@ -31,23 +31,39 @@ app.include_router(alerts.router,     prefix="/api/alerts",     tags=["Alerts"])
 app.include_router(ml.router,         prefix="/api/ml",         tags=["ML"])
 
 def seed_default_servers():
-    """Khởi tạo 3 máy chủ mặc định vào Database nếu chưa có."""
+    """Khởi tạo & đồng bộ 4 máy chủ mặc định (192.168.138.128 - 192.168.138.131) vào Database."""
     db = SessionLocal()
     try:
-        count = db.query(ServerModel).count()
-        if count == 0:
-            default_servers = [
-                ServerModel(name="ubuntu-server-01", ip_address="192.168.199.131", port=9100, role="web", status="online", last_ping=datetime.utcnow()),
-                ServerModel(name="ubuntu-server-02", ip_address="192.168.199.132", port=9100, role="db", status="online", last_ping=datetime.utcnow()),
-                ServerModel(name="ubuntu-server-03", ip_address="192.168.199.133", port=9100, role="app", status="online", last_ping=datetime.utcnow()),
-            ]
-            db.add_all(default_servers)
-            db.commit()
-            print("[Seed] Successfully seeded 3 default Ubuntu servers into Database.")
+        targets = [
+            {"name": "ubuntu-server-01", "ip_address": "192.168.138.128", "port": 9100, "role": "web"},
+            {"name": "ubuntu-server-02", "ip_address": "192.168.138.129", "port": 9100, "role": "db"},
+            {"name": "ubuntu-server-03", "ip_address": "192.168.138.130", "port": 9100, "role": "app"},
+            {"name": "ubuntu-server-test", "ip_address": "192.168.138.131", "port": 9100, "role": "test"},
+        ]
+        for t in targets:
+            existing = db.query(ServerModel).filter(ServerModel.name == t["name"]).first()
+            if not existing:
+                srv = ServerModel(
+                    name=t["name"],
+                    ip_address=t["ip_address"],
+                    port=t["port"],
+                    role=t["role"],
+                    status="online",
+                    last_ping=datetime.utcnow()
+                )
+                db.add(srv)
+            else:
+                existing.ip_address = t["ip_address"]
+                existing.port = t["port"]
+                existing.role = t["role"]
+        db.commit()
+        print("[Seed] Successfully synced 4 default Ubuntu servers (192.168.138.128-131) into Database.")
     except Exception as e:
         print(f"[Seed] Error seeding default servers: {e}")
     finally:
         db.close()
+
+
 
 @app.on_event("startup")
 async def startup():

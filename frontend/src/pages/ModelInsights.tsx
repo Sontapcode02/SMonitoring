@@ -67,9 +67,9 @@ export const ModelInsights: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '30px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="page-container">
       {/* Top Banner */}
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ marginBottom: '16px' }}>
         <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
           PH5: MLOps & Model Analytics (Model Insights)
         </h1>
@@ -78,7 +78,7 @@ export const ModelInsights: React.FC = () => {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '24px' }}>
         {/* Left Panel: Hyperparameter Tuning Sliders */}
         <div className="glass-card" style={{ padding: '24px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -137,8 +137,8 @@ export const ModelInsights: React.FC = () => {
 
         {/* Right Panel: Big Metrics & Dual Comparison Chart */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* 4 Big Metrics Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+          {/* 4 Big Metrics Cards (Auto-fit Grid) */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap: '16px' }}>
             <div className="glass-card" style={{ padding: '20px' }}>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>PRECISION</div>
               <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '6px', color: 'var(--accent-emerald)' }}>94.2%</div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { Cpu, HardDrive, Activity, Wifi, Filter, Clock, RefreshCw, ArrowDownRight, ArrowUpRight } from 'lucide-react';
 
@@ -23,11 +23,16 @@ interface ServerItem {
 export const RealtimeDashboard: React.FC = () => {
   const [servers, setServers] = useState<ServerItem[]>([]);
   const [selectedServer, setSelectedServer] = useState('ubuntu-server-01');
+  const selectedServerRef = useRef(selectedServer);
   const [timeWindow, setTimeWindow] = useState('5m');
   const [isLiveConnected, setIsLiveConnected] = useState<boolean>(true);
   const [isSwitching, setIsSwitching] = useState<boolean>(false);
 
+  // Per-host isolated time-series history for ECharts
+  const [hostTimeSeriesMap, setHostTimeSeriesMap] = useState<Record<string, MetricPoint[]>>({});
+
   // Focused server real-time metric states
+  const [allRealtimeMetrics, setAllRealtimeMetrics] = useState<any[]>([]);
   const [cpuUsage, setCpuUsage] = useState<number>(0);
   const [ramUsage, setRamUsage] = useState<number>(0);
   const [diskPercent, setDiskPercent] = useState<number>(0);
@@ -39,8 +44,17 @@ export const RealtimeDashboard: React.FC = () => {
   const [netTraffic, setNetTraffic] = useState<number>(0);
   const [lastUpdate, setLastUpdate] = useState<string>('');
 
-  // Time-series history for ECharts
-  const [timeSeries, setTimeSeries] = useState<MetricPoint[]>([]);
+  const DEFAULT_SERVERS: ServerItem[] = [
+    { id: 1, name: 'ubuntu-server-01', ip_address: '192.168.138.128', port: 9100, role: 'web', status: 'online' },
+    { id: 2, name: 'ubuntu-server-02', ip_address: '192.168.138.129', port: 9100, role: 'db', status: 'online' },
+    { id: 3, name: 'ubuntu-server-03', ip_address: '192.168.138.130', port: 9100, role: 'app', status: 'online' },
+    { id: 4, name: 'ubuntu-server-test', ip_address: '192.168.138.131', port: 9100, role: 'test', status: 'online' },
+  ];
+
+  // Update selectedServerRef whenever selectedServer changes
+  useEffect(() => {
+    selectedServerRef.current = selectedServer;
+  }, [selectedServer]);
 
   // 1. Fetch Server Fleet List from Database
   const fetchServers = async () => {
@@ -50,14 +64,17 @@ export const RealtimeDashboard: React.FC = () => {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
           setServers(data);
-          // If selected server is not in the list, set to first server
           if (!data.some((s: any) => s.name === selectedServer)) {
             setSelectedServer(data[0].name);
+            selectedServerRef.current = data[0].name;
           }
+          return;
         }
       }
+      setServers(DEFAULT_SERVERS);
     } catch (err) {
       console.error("Fetch server list error:", err);
+      setServers(DEFAULT_SERVERS);
     }
   };
 
@@ -68,21 +85,25 @@ export const RealtimeDashboard: React.FC = () => {
   // Instant server switch handler
   const handleServerChange = (newServer: string) => {
     setSelectedServer(newServer);
+    selectedServerRef.current = newServer;
     setIsSwitching(true);
   };
 
-  // Fetch historical & latest metrics instantly for the newly selected server
+  // Fetch historical & latest metrics strictly isolated per host
   const fetchServerData = async () => {
+    const currentHost = selectedServerRef.current;
     try {
       const [resHistory, resRealtime] = await Promise.all([
-        fetch(`/api/metrics/history?server_name=${selectedServer}&limit=30`),
+        fetch(`/api/metrics/history?server_name=${encodeURIComponent(currentHost)}&limit=30`),
         fetch('/api/metrics/realtime')
       ]);
+
+      let initialPoints: MetricPoint[] = [];
 
       if (resHistory.ok) {
         const historyData = await resHistory.json();
         if (Array.isArray(historyData) && historyData.length > 0) {
-          const points: MetricPoint[] = historyData.map((row: any) => ({
+          initialPoints = historyData.map((row: any) => ({
             time: row.timestamp ? row.timestamp.split(' ')[1] || row.timestamp : '',
             cpu: Number(row.cpu_percent || 0),
             ram: Number(row.ram_percent || 0),
@@ -90,27 +111,34 @@ export const RealtimeDashboard: React.FC = () => {
             net_in_mbps: Number(row.net_in_mbps || 0),
             isAnomaly: Boolean(row.is_anomaly)
           }));
-          setTimeSeries(points);
 
-          const lastHistory = historyData[historyData.length - 1];
-          setCpuUsage(Number(lastHistory.cpu_percent || 0));
-          setRamUsage(Number(lastHistory.ram_percent || 0));
-          setDiskPercent(Number(lastHistory.disk_percent || 55.4));
-          setDiskSizeGb(Number(lastHistory.disk_size_gb || 9.75));
-          setDiskFreeGb(Number(lastHistory.disk_free_gb || 4.35));
-          setDiskIO(Number(lastHistory.disk_iops || 0));
-          setDiskReadMb(Number(lastHistory.disk_read_mbps || 0));
-          setDiskWriteMb(Number(lastHistory.disk_write_mbps || 0));
-          setNetTraffic(Number(lastHistory.net_in_mbps || 0));
-          setLastUpdate(lastHistory.timestamp || '');
+          // Only update top metrics cards if fetching for the currently selected server
+          if (selectedServerRef.current === currentHost) {
+            const lastHistory = historyData[historyData.length - 1];
+            setCpuUsage(Number(lastHistory.cpu_percent || 0));
+            setRamUsage(Number(lastHistory.ram_percent || 0));
+            setDiskPercent(Number(lastHistory.disk_percent || 55.4));
+            setDiskSizeGb(Number(lastHistory.disk_size_gb || 9.75));
+            setDiskFreeGb(Number(lastHistory.disk_free_gb || 4.35));
+            setDiskIO(Number(lastHistory.disk_iops || 0));
+            setDiskReadMb(Number(lastHistory.disk_read_mbps || 0));
+            setDiskWriteMb(Number(lastHistory.disk_write_mbps || 0));
+            setNetTraffic(Number(lastHistory.net_in_mbps || 0));
+            setLastUpdate(lastHistory.timestamp || '');
+          }
         }
       }
 
       if (resRealtime.ok) {
         const realtimeData = await resRealtime.json();
-        if (Array.isArray(realtimeData)) {
-          const serverMetric = realtimeData.find((item: any) => item.server_name === selectedServer);
-          if (serverMetric) {
+        if (Array.isArray(realtimeData) && realtimeData.length > 0) {
+          setAllRealtimeMetrics(realtimeData);
+
+          // Update each host's time series independently
+          realtimeData.forEach((serverMetric: any) => {
+            const hostName = serverMetric.server_name;
+            if (!hostName) return;
+
             const freshCpu = Number(serverMetric.cpu_percent || 0);
             const freshRam = Number(serverMetric.ram_percent || 0);
             const freshDiskPct = Number(serverMetric.disk_percent || 55.4);
@@ -122,19 +150,31 @@ export const RealtimeDashboard: React.FC = () => {
             const freshNet = Number(serverMetric.net_in_mbps || 0);
             const freshTime = serverMetric.timestamp ? serverMetric.timestamp.split(' ')[1] || serverMetric.timestamp : '';
 
-            setCpuUsage(freshCpu);
-            setRamUsage(freshRam);
-            setDiskPercent(freshDiskPct);
-            setDiskSizeGb(freshDiskSize);
-            setDiskFreeGb(freshDiskFree);
-            setDiskIO(freshDiskIO);
-            setDiskReadMb(freshDiskRead);
-            setDiskWriteMb(freshDiskWrite);
-            setNetTraffic(freshNet);
-            setLastUpdate(serverMetric.timestamp || '');
+            // Update top cards if this is the active server
+            if (hostName === selectedServerRef.current) {
+              setCpuUsage(freshCpu);
+              setRamUsage(freshRam);
+              setDiskPercent(freshDiskPct);
+              setDiskSizeGb(freshDiskSize);
+              setDiskFreeGb(freshDiskFree);
+              setDiskIO(freshDiskIO);
+              setDiskReadMb(freshDiskRead);
+              setDiskWriteMb(freshDiskWrite);
+              setNetTraffic(freshNet);
+              setLastUpdate(serverMetric.timestamp || '');
+            }
 
-            // Dynamically append new point to ECharts timeSeries live
-            setTimeSeries(prev => {
+            // Append new point specifically to this host's independent metric array
+            setHostTimeSeriesMap(prevMap => {
+              const currentArray = prevMap[hostName] && prevMap[hostName].length > 0
+                ? prevMap[hostName]
+                : (hostName === currentHost && initialPoints.length > 0 ? initialPoints : []);
+
+              const lastPoint = currentArray.length > 0 ? currentArray[currentArray.length - 1] : null;
+              if (lastPoint && lastPoint.time === freshTime) {
+                return { ...prevMap, [hostName]: currentArray };
+              }
+
               const newPoint: MetricPoint = {
                 time: freshTime,
                 cpu: freshCpu,
@@ -143,10 +183,14 @@ export const RealtimeDashboard: React.FC = () => {
                 net_in_mbps: freshNet,
                 isAnomaly: Boolean(serverMetric.is_anomaly)
               };
-              const updated = [...prev, newPoint];
-              return updated.slice(-30);
+
+              const updatedArray = [...currentArray, newPoint].slice(-30);
+              return {
+                ...prevMap,
+                [hostName]: updatedArray
+              };
             });
-          }
+          });
         }
       }
 
@@ -155,7 +199,9 @@ export const RealtimeDashboard: React.FC = () => {
       console.error("Fetch server data error:", err);
       setIsLiveConnected(false);
     } finally {
-      setIsSwitching(false);
+      if (selectedServerRef.current === currentHost) {
+        setIsSwitching(false);
+      }
     }
   };
 
@@ -166,6 +212,7 @@ export const RealtimeDashboard: React.FC = () => {
   }, [selectedServer]);
 
   const cpuColor = cpuUsage > 80 ? 'var(--accent-rose)' : 'var(--accent-cyan)';
+  const activeTimeSeries = hostTimeSeriesMap[selectedServer] || [];
 
   // ECharts Line Chart Option with Real-Time Data & Anomaly Highlight
   const lineChartOption = {
@@ -184,7 +231,7 @@ export const RealtimeDashboard: React.FC = () => {
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: timeSeries.map(d => d.time),
+      data: activeTimeSeries.map(d => d.time),
       axisLine: { lineStyle: { color: '#374151' } },
       axisLabel: { color: '#9ca3af' }
     },
@@ -200,15 +247,15 @@ export const RealtimeDashboard: React.FC = () => {
         name: '% CPU Usage',
         type: 'line',
         smooth: true,
-        data: timeSeries.map(d => d.cpu),
-        itemStyle: { color: '#06b6d4' },
+        data: activeTimeSeries.map(d => d.cpu),
+        itemStyle: { color: '#73bf69' },
         lineStyle: { width: 3 },
         areaStyle: {
           color: {
             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(6, 182, 212, 0.4)' },
-              { offset: 1, color: 'rgba(6, 182, 212, 0.0)' }
+              { offset: 0, color: 'rgba(115, 191, 105, 0.35)' },
+              { offset: 1, color: 'rgba(115, 191, 105, 0.0)' }
             ]
           }
         }
@@ -217,17 +264,17 @@ export const RealtimeDashboard: React.FC = () => {
         name: '% RAM Usage',
         type: 'line',
         smooth: true,
-        data: timeSeries.map(d => d.ram),
-        itemStyle: { color: '#8b5cf6' },
+        data: activeTimeSeries.map(d => d.ram),
+        itemStyle: { color: '#5794f2' },
         lineStyle: { width: 2, type: 'dashed' }
       }
     ]
   };
 
   return (
-    <div style={{ padding: '30px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="page-container">
       {/* Top Header & Filter Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '8px' }}>
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
             PH2: Real-time Live Monitoring
@@ -238,7 +285,7 @@ export const RealtimeDashboard: React.FC = () => {
         </div>
 
         {/* Filter Bar */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button className="btn-primary" style={{ padding: '8px 12px' }} onClick={fetchServerData}>
             <RefreshCw size={14} className={isSwitching ? 'spin' : ''} /> Refresh Stream
           </button>
@@ -254,12 +301,16 @@ export const RealtimeDashboard: React.FC = () => {
             >
               {servers.length > 0 ? (
                 servers.map(s => (
-                  <option key={s.id} value={s.name} style={{ background: '#111827' }}>
-                    {s.name} ({s.role ? s.role.toUpperCase() : 'NODE'})
+                  <option key={s.id || s.name} value={s.name} style={{ background: '#111827' }}>
+                    {s.name} ({s.ip_address ? s.ip_address : '192.168.138.x'}) - {s.role ? s.role.toUpperCase() : 'NODE'}
                   </option>
                 ))
               ) : (
-                <option value="ubuntu-server-01" style={{ background: '#111827' }}>ubuntu-server-01 (WEB)</option>
+                DEFAULT_SERVERS.map(s => (
+                  <option key={s.id} value={s.name} style={{ background: '#111827' }}>
+                    {s.name} ({s.ip_address}) - {s.role.toUpperCase()}
+                  </option>
+                ))
               )}
             </select>
           </div>
@@ -279,8 +330,10 @@ export const RealtimeDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 5 Sparkline / Gauge Cards Dedicated to Currently Selected Server */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '24px' }}>
+      {/* 5 Sparkline / Gauge Cards Dedicated to Currently Selected Server (Auto-fit Grid) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '16px' }}>
+
+
         <div className="glass-card" style={{ padding: '16px', transition: 'all 0.3s' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>% CPU USAGE</span>

@@ -11,22 +11,22 @@ scrape_configs:
   # ── 2. Ubuntu Server Fleet Monitoring Targets ──────────
   - job_name: "ubuntu-server-fleet"
     static_configs:
-      - targets: ["192.168.199.133:9100"]
+      - targets: ["192.168.138.128:9100"]
         labels:
           server_name: "ubuntu-server-01"
           role: "web-server"
 
-      - targets: ["192.168.199.132:9100"]
+      - targets: ["192.168.138.129:9100"]
         labels:
           server_name: "ubuntu-server-02"
           role: "db-server"
 
-      - targets: ["192.168.199.134:9100"]
+      - targets: ["192.168.138.130:9100"]
         labels:
           server_name: "ubuntu-server-03"
           role: "app-server"
 
-      - targets: ["192.168.199.135:9100"]
+      - targets: ["192.168.138.131:9100"]
         labels:
           server_name: "ubuntu-server-test"
           role: "test-server"

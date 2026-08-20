@@ -86,9 +86,9 @@ export const AlertHub: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '30px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="page-container">
       {/* Top Banner */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', marginBottom: '6px' }}>
             PH4: Alert Hub & Incident Response Center
@@ -99,7 +99,7 @@ export const AlertHub: React.FC = () => {
         </div>
 
         {/* Action Controls & Tab Switcher */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             className="btn-primary"
             style={{ background: 'linear-gradient(135deg, var(--accent-emerald), #059669)', fontSize: '13px' }}
@@ -137,9 +137,9 @@ export const AlertHub: React.FC = () => {
         </div>
       </div>
 
-      {/* TAB 1: KANBAN BOARD FOR INCIDENT RESPONSE */}
+      {/* TAB 1: KANBAN BOARD FOR INCIDENT RESPONSE (Auto-fit Grid) */}
       {activeTab === 'kanban' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
           {/* Column 1: Mới (New) */}
           <div className="glass-card" style={{ padding: '20px', minHeight: '500px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>

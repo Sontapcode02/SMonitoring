@@ -151,25 +151,25 @@ export const OverviewDashboard: React.FC = () => {
         center: ['50%', '70%'],
         axisLine: {
           lineStyle: {
-            width: 12,
+            width: 14,
             color: [
-              [0.6, '#06b6d4'],
-              [0.8, '#fbbf24'],
-              [1, '#f43f5e']
+              [0.6, '#73bf69'],
+              [0.8, '#ff9830'],
+              [1, '#f2495c']
             ]
           }
         },
-        pointer: { icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z', length: '60%', width: 6, offsetCenter: [0, '-10%'], itemStyle: { color: '#06b6d4' } },
+        pointer: { icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z', length: '60%', width: 6, offsetCenter: [0, '-10%'], itemStyle: { color: '#73bf69' } },
         axisTick: { length: 6, lineStyle: { color: 'auto', width: 1 } },
         splitLine: { length: 10, lineStyle: { color: 'auto', width: 2 } },
-        axisLabel: { color: '#9ca3af', fontSize: 10, distance: -20 },
-        title: { offsetCenter: [0, '-20%'], fontSize: 11, color: '#9ca3af' },
+        axisLabel: { color: '#8e9499', fontSize: 10, distance: -20 },
+        title: { offsetCenter: [0, '-20%'], fontSize: 11, color: '#8e9499' },
         detail: {
           fontSize: 22,
           offsetCenter: [0, '25%'],
           valueAnimation: true,
           formatter: '{value}%',
-          color: gaugeCpuNum > 80 ? '#f43f5e' : '#06b6d4',
+          color: gaugeCpuNum > 80 ? '#f2495c' : '#73bf69',
           fontWeight: 700
         },
         data: [{ value: gaugeCpuNum, name: 'CPU WORKLOAD' }]
@@ -192,25 +192,25 @@ export const OverviewDashboard: React.FC = () => {
         center: ['50%', '70%'],
         axisLine: {
           lineStyle: {
-            width: 12,
+            width: 14,
             color: [
-              [0.7, '#8b5cf6'],
-              [0.9, '#fbbf24'],
-              [1, '#f43f5e']
+              [0.7, '#5794f2'],
+              [0.9, '#ff9830'],
+              [1, '#f2495c']
             ]
           }
         },
-        pointer: { icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z', length: '60%', width: 6, offsetCenter: [0, '-10%'], itemStyle: { color: '#8b5cf6' } },
+        pointer: { icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z', length: '60%', width: 6, offsetCenter: [0, '-10%'], itemStyle: { color: '#5794f2' } },
         axisTick: { length: 6, lineStyle: { color: 'auto', width: 1 } },
         splitLine: { length: 10, lineStyle: { color: 'auto', width: 2 } },
-        axisLabel: { color: '#9ca3af', fontSize: 10, distance: -20 },
-        title: { offsetCenter: [0, '-20%'], fontSize: 11, color: '#9ca3af' },
+        axisLabel: { color: '#8e9499', fontSize: 10, distance: -20 },
+        title: { offsetCenter: [0, '-20%'], fontSize: 11, color: '#8e9499' },
         detail: {
           fontSize: 22,
           offsetCenter: [0, '25%'],
           valueAnimation: true,
           formatter: '{value}%',
-          color: '#c084fc',
+          color: '#5794f2',
           fontWeight: 700
         },
         data: [{ value: gaugeRamNum, name: 'RAM MEMORY' }]
@@ -224,19 +224,19 @@ export const OverviewDashboard: React.FC = () => {
     tooltip: { trigger: 'axis' },
     legend: {
       data: ['ubuntu-server-01', 'ubuntu-server-02', 'ubuntu-server-03'],
-      textStyle: { color: '#9ca3af', fontSize: 11 }
+      textStyle: { color: '#c7d0d9', fontSize: 11 }
     },
     grid: { left: '3%', right: '4%', bottom: '8%', top: '15%', containLabel: true },
     xAxis: {
       type: 'category',
       data: compTimes.length > 0 ? compTimes : ['Live'],
-      axisLine: { lineStyle: { color: '#374151' } },
-      axisLabel: { color: '#9ca3af', fontSize: 10 }
+      axisLine: { lineStyle: { color: '#2c3235' } },
+      axisLabel: { color: '#8e9499', fontSize: 10 }
     },
     yAxis: {
       type: 'value',
       max: 100,
-      axisLabel: { formatter: '{value}%', color: '#9ca3af', fontSize: 10 },
+      axisLabel: { formatter: '{value}%', color: '#8e9499', fontSize: 10 },
       splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)' } }
     },
     series: [
@@ -245,7 +245,7 @@ export const OverviewDashboard: React.FC = () => {
         type: 'line',
         smooth: true,
         data: srv1History,
-        itemStyle: { color: '#06b6d4' },
+        itemStyle: { color: '#73bf69' },
         lineStyle: { width: 2 }
       },
       {
@@ -253,7 +253,7 @@ export const OverviewDashboard: React.FC = () => {
         type: 'line',
         smooth: true,
         data: srv2History,
-        itemStyle: { color: '#8b5cf6' },
+        itemStyle: { color: '#5794f2' },
         lineStyle: { width: 2 }
       },
       {
@@ -261,16 +261,16 @@ export const OverviewDashboard: React.FC = () => {
         type: 'line',
         smooth: true,
         data: srv3History,
-        itemStyle: { color: '#10b981' },
+        itemStyle: { color: '#b877d9' },
         lineStyle: { width: 2 }
       }
     ]
   };
 
   return (
-    <div style={{ padding: '20px 30px', maxWidth: '1400px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+    <div className="page-container" style={{ gap: '16px', overflowY: 'auto' }}>
       {/* Top Banner (Compact Row) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.5px' }}>
             Executive Overview & Single-Screen Dashboard
@@ -279,7 +279,7 @@ export const OverviewDashboard: React.FC = () => {
             Single viewport cluster health summary, ECharts gauges, and active incidents.
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.4)', padding: '4px 10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
             <Filter size={13} color="var(--accent-cyan)" />
             <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Active Node:</span>
@@ -299,8 +299,8 @@ export const OverviewDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Top Row: 4 Summary Metric Cards (Compact) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+      {/* Top Row: 4 Summary Metric Cards (Compact Auto-fit) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '14px' }}>
         {/* Card 1: Disk Read / Write Speed */}
         <div className="glass-card" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
