@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Server, ShieldAlert, Bell, Cpu, Activity, CheckCircle2, RefreshCw, Filter, HardDrive, Wifi, ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { Server, ShieldAlert, Bell, Cpu, Activity, CheckCircle2, RefreshCw, Filter, HardDrive, Wifi, ArrowDownRight, ArrowUpRight, Clock } from 'lucide-react';
 
 interface ServerItem {
   id: number;
@@ -41,8 +41,25 @@ export const OverviewDashboard: React.FC = () => {
   const [realtimeMetrics, setRealtimeMetrics] = useState<Record<string, RealtimeMetric>>({});
   const [loading, setLoading] = useState<boolean>(true);
   
-  // Dynamic server selection state for ECharts Gauge Charts
   const [gaugeServer, setGaugeServer] = useState<string>('ubuntu-server-01');
+  const [liveClientTime, setLiveClientTime] = useState<string>('');
+
+  // Live client machine clock updated every second
+  useEffect(() => {
+    const updateTime = () => {
+      const d = new Date();
+      const yr = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, '0');
+      const da = String(d.getDate()).padStart(2, '0');
+      const hr = String(d.getHours()).padStart(2, '0');
+      const mi = String(d.getMinutes()).padStart(2, '0');
+      const se = String(d.getSeconds()).padStart(2, '0');
+      setLiveClientTime(`${yr}-${mo}-${da} ${hr}:${mi}:${se}`);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Comparative time-series history state
   const [compTimes, setCompTimes] = useState<string[]>([]);
@@ -267,15 +284,49 @@ export const OverviewDashboard: React.FC = () => {
     ]
   };
 
+  // Incident-First Sorting: Offline (4) -> Anomaly (3) -> Active Alert (2) -> Healthy (1)
+  const getIncidentWeight = (srv: ServerItem) => {
+    if (srv.status === 'offline') return 4;
+    const rt = realtimeMetrics[srv.name] || realtimeMetrics[srv.name.toLowerCase()];
+    if (srv.has_anomaly || (rt && (rt as any).is_anomaly)) return 3;
+    const hasUnackAlert = alerts.some(a => a.server_id === srv.id && a.status === 'new');
+    if (hasUnackAlert) return 2;
+    return 1;
+  };
+
+  const sortedServers = [...servers].sort((a, b) => {
+    const wA = getIncidentWeight(a);
+    const wB = getIncidentWeight(b);
+    if (wB !== wA) return wB - wA;
+    return a.name.localeCompare(b.name);
+  });
+
   return (
     <div className="page-container" style={{ gap: '16px', overflowY: 'auto' }}>
       {/* Top Banner (Compact Row) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.5px' }}>
-            Executive Overview & Single-Screen Dashboard
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>
+              Executive Overview & Single-Screen Dashboard
+            </h1>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 12px',
+              borderRadius: '20px',
+              background: 'rgba(56, 189, 248, 0.15)',
+              border: '1px solid rgba(56, 189, 248, 0.4)',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: '#38bdf8'
+            }}>
+              <Clock size={13} color="#38bdf8" />
+              <span style={{ fontWeight: 700, fontFamily: 'monospace' }}>{(selectedServerMetric as any)?.timestamp || 'Syncing...'}</span>
+            </div>
+          </div>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '4px' }}>
             Single viewport cluster health summary, ECharts gauges, and active incidents.
           </p>
         </div>
@@ -288,7 +339,7 @@ export const OverviewDashboard: React.FC = () => {
               onChange={(e) => setGaugeServer(e.target.value)}
               style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 700, fontSize: '12px', outline: 'none', cursor: 'pointer' }}
             >
-              {servers.map(s => (
+              {sortedServers.map(s => (
                 <option key={s.id} value={s.name} style={{ background: '#111827' }}>{s.name}</option>
               ))}
             </select>
@@ -405,7 +456,7 @@ export const OverviewDashboard: React.FC = () => {
             <Server size={16} color="var(--accent-cyan)" /> Server Fleet Node Health Overview
           </h2>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
-            {servers.map((srv) => {
+            {sortedServers.map((srv) => {
               const m = realtimeMetrics[srv.name] || { cpu_percent: 0, ram_percent: 0, disk_percent: 55.4, disk_free_gb: 4.35, disk_size_gb: 9.75, disk_read_mbps: 0, disk_write_mbps: 0 };
               const hasAlert = activeAlerts.some(a => a.server_id === srv.id);
               const isGaugeSelected = srv.name === gaugeServer;

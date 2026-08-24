@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import servers, metrics, anomalies, alerts, ml
+from app.routers import servers, metrics, anomalies, alerts, ml, simulator
 from app.core.database import engine, Base, SessionLocal
 from app.models.schemas import ServerModel
 from app.core.scheduler import start_scheduler
@@ -29,6 +29,7 @@ app.include_router(metrics.router,    prefix="/api/metrics",    tags=["Metrics"]
 app.include_router(anomalies.router,  prefix="/api/anomalies",  tags=["Anomalies"])
 app.include_router(alerts.router,     prefix="/api/alerts",     tags=["Alerts"])
 app.include_router(ml.router,         prefix="/api/ml",         tags=["ML"])
+app.include_router(simulator.router,  prefix="/api/simulator",  tags=["Simulator"])
 
 def seed_default_servers():
     """Khởi tạo & đồng bộ 4 máy chủ mặc định (192.168.138.128 - 192.168.138.131) vào Database."""

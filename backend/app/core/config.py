@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     ML_MODEL_DIR: str = "../ml/models"
     ML_DETECT_INTERVAL: int = 30  # seconds
+    SIMULATOR_MODE: bool = False  # Set SIMULATOR_MODE=true in .env or via API to enable isolated in-memory telemetry simulation
 
     class Config:
         env_file = ".env"
