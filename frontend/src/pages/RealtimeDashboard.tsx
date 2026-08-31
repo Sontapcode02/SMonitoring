@@ -390,93 +390,79 @@ export const RealtimeDashboard: React.FC = () => {
   };
 
   const processTimeSeriesGaps = (rawPoints: MetricPoint[], windowStr: string) => {
+    const now = Date.now();
+    const windowMs = WINDOW_MS_MAP[windowStr] || (5 * 60 * 1000);
+
     if (!Array.isArray(rawPoints) || rawPoints.length === 0) {
-      return { points: [], markAreas: [] };
+      return { points: [], markAreas: [], minMs: now - windowMs, maxMs: now };
     }
 
-    // Strip virtual gap points to prevent re-processing
+    // Strip virtual gap points if any
     const cleanRawPoints = rawPoints.filter(pt => !pt.time.includes('...'));
-    if (cleanRawPoints.length === 0) return { points: [], markAreas: [] };
+    if (cleanRawPoints.length === 0) {
+      return { points: [], markAreas: [], minMs: now - windowMs, maxMs: now };
+    }
 
     const thresholdSec = ['5m', '15m', '30m'].includes(windowStr) ? 90 : (['1h', '6h'].includes(windowStr) ? 180 : 300);
-    const windowMs = WINDOW_MS_MAP[windowStr] || (5 * 60 * 1000);
-    const showDate = ['6h', '12h', '24h'].includes(windowStr);
 
-    const processedPoints: MetricPoint[] = [];
-    const markAreas: any[] = [];
-
-    // Scale timeline to full chosen live window if DB has fewer hours of data
+    // Latest point determines end of window
     const latestPt = cleanRawPoints[cleanRawPoints.length - 1];
-    const latestMs = parseTimestampMs(latestPt.rawTimestamp || latestPt.time) || Date.now();
+    const latestMs = parseTimestampMs(latestPt.rawTimestamp || latestPt.time) || now;
     const targetWindowStartMs = latestMs - windowMs;
+
+    const processedPoints: { tsMs: number; cpu: number | null; ram: number | null; disk_iops: number | null; net_in_mbps: number | null; isAnomaly: boolean }[] = [];
+    const markAreas: any[] = [];
 
     const firstPt = cleanRawPoints[0];
     const firstPtMs = parseTimestampMs(firstPt.rawTimestamp || firstPt.time);
 
+    // If earliest DB data starts LATER than target window start time, shade the missing uncollected span proportionally
     if (firstPtMs > 0 && targetWindowStartMs > 0 && (firstPtMs - targetWindowStartMs) > thresholdSec * 1000) {
-      const windowStartStr = formatTimestamp(new Date(targetWindowStartMs), showDate);
-
-      // Highlight uncollected history span before the earliest data point in DB
       markAreas.push([
-        { xAxis: windowStartStr },
-        { xAxis: firstPt.time }
+        { xAxis: targetWindowStartMs },
+        { xAxis: firstPtMs }
       ]);
-
-      // Insert start-of-window null point to scale X-axis properly
-      processedPoints.push({
-        time: windowStartStr,
-        rawTimestamp: windowStartStr,
-        cpu: null,
-        ram: null,
-        disk_iops: null,
-        net_in_mbps: null,
-        isAnomaly: false
-      });
     }
 
-    let nullGapStart: MetricPoint | null = null;
+    let nullGapStartMs: number | null = null;
 
     for (let i = 0; i < cleanRawPoints.length; i++) {
       const curr = cleanRawPoints[i];
+      const currMs = parseTimestampMs(curr.rawTimestamp || curr.time);
       const isNullPt = curr.cpu === null || curr.cpu === undefined;
 
       if (isNullPt) {
-        if (!nullGapStart) {
-          nullGapStart = i > 0 ? cleanRawPoints[i - 1] : curr;
+        if (nullGapStartMs === null) {
+          nullGapStartMs = i > 0 ? parseTimestampMs(cleanRawPoints[i - 1].rawTimestamp || cleanRawPoints[i - 1].time) : currMs;
         }
-        processedPoints.push(curr);
+        if (currMs > 0) {
+          processedPoints.push({ tsMs: currMs, cpu: null, ram: null, disk_iops: null, net_in_mbps: null, isAnomaly: false });
+        }
         continue;
       } else {
-        if (nullGapStart) {
+        if (nullGapStartMs !== null && currMs > 0) {
           markAreas.push([
-            { xAxis: nullGapStart.time },
-            { xAxis: curr.time }
+            { xAxis: nullGapStartMs },
+            { xAxis: currMs }
           ]);
-          nullGapStart = null;
+          nullGapStartMs = null;
         }
       }
 
       if (processedPoints.length > 0) {
         const prev = processedPoints[processedPoints.length - 1];
-        if (prev.cpu !== null && prev.cpu !== undefined) {
-          const t1 = parseTimestampMs(prev.rawTimestamp || prev.time);
-          const t2 = parseTimestampMs(curr.rawTimestamp || curr.time);
-          const diffSec = (t2 - t1) / 1000;
+        if (prev.cpu !== null && prev.cpu !== undefined && currMs > 0) {
+          const diffSec = (currMs - prev.tsMs) / 1000;
 
-          if (t1 > 0 && t2 > 0 && diffSec > thresholdSec) {
+          if (diffSec > thresholdSec) {
             markAreas.push([
-              {
-                xAxis: prev.time
-              },
-              {
-                xAxis: curr.time
-              }
+              { xAxis: prev.tsMs },
+              { xAxis: currMs }
             ]);
 
-            const gapTime = `${prev.time} ...`;
+            // Add intermediate null point to break line cleanly
             processedPoints.push({
-              time: gapTime,
-              rawTimestamp: gapTime,
+              tsMs: prev.tsMs + 1000,
               cpu: null,
               ram: null,
               disk_iops: null,
@@ -487,31 +473,66 @@ export const RealtimeDashboard: React.FC = () => {
         }
       }
 
-      processedPoints.push(curr);
+      if (currMs > 0) {
+        processedPoints.push({
+          tsMs: currMs,
+          cpu: curr.cpu,
+          ram: curr.ram,
+          disk_iops: curr.disk_iops,
+          net_in_mbps: curr.net_in_mbps,
+          isAnomaly: curr.isAnomaly
+        });
+      }
     }
 
-    if (nullGapStart && cleanRawPoints.length > 0) {
-      markAreas.push([
-        { xAxis: nullGapStart.time },
-        { xAxis: cleanRawPoints[cleanRawPoints.length - 1].time }
-      ]);
+    if (nullGapStartMs !== null && cleanRawPoints.length > 0) {
+      const lastMs = parseTimestampMs(cleanRawPoints[cleanRawPoints.length - 1].rawTimestamp || cleanRawPoints[cleanRawPoints.length - 1].time);
+      if (lastMs > 0) {
+        markAreas.push([
+          { xAxis: nullGapStartMs },
+          { xAxis: lastMs }
+        ]);
+      }
     }
 
-    return { points: processedPoints, markAreas };
+    return {
+      points: processedPoints,
+      markAreas,
+      minMs: targetWindowStartMs,
+      maxMs: latestMs
+    };
   };
 
   const cpuColor = cpuUsage > 80 ? 'var(--accent-rose)' : 'var(--accent-cyan)';
   const rawTimeSeries = hostTimeSeriesMap[selectedServer] || [];
-  const { points: processedPoints, markAreas: gapHighlightAreas } = processTimeSeriesGaps(rawTimeSeries, timeWindow);
+  const { points: processedPoints, markAreas: gapHighlightAreas, minMs: chartMinMs, maxMs: chartMaxMs } = processTimeSeriesGaps(rawTimeSeries, timeWindow);
 
-  // ECharts Line Chart Option with Real-Time Data & Anomaly Highlight
+  // ECharts Line Chart Option with True Linear Time Axis
   const lineChartOption = {
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'axis',
       backgroundColor: 'rgba(17, 24, 39, 0.9)',
       borderColor: 'rgba(255, 255, 255, 0.1)',
-      textStyle: { color: '#fff' }
+      textStyle: { color: '#fff' },
+      formatter: (params: any) => {
+        if (!params || params.length === 0) return '';
+        const rawTime = params[0].value[0];
+        const date = new Date(rawTime);
+        const showDate = ['6h', '12h', '24h'].includes(timeWindow);
+        const timeStr = formatTimestamp(date, showDate);
+        let res = `<div style="font-weight: bold; margin-bottom: 4px; color: #9ca3af;">${timeStr}</div>`;
+        params.forEach((item: any) => {
+          const val = item.value[1];
+          if (val !== null && val !== undefined) {
+            res += `<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <span>${item.marker} ${item.seriesName}</span>
+              <b style="color: #fff;">${val}%</b>
+            </div>`;
+          }
+        });
+        return res;
+      }
     },
     legend: {
       data: ['% CPU Usage', '% RAM Usage'],
@@ -519,11 +540,29 @@ export const RealtimeDashboard: React.FC = () => {
     },
     grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
     xAxis: {
-      type: 'category',
+      type: 'time',
+      min: chartMinMs,
+      max: chartMaxMs,
       boundaryGap: false,
-      data: processedPoints.map(d => d.time),
       axisLine: { lineStyle: { color: '#374151' } },
-      axisLabel: { color: '#9ca3af' }
+      axisLabel: {
+        color: '#9ca3af',
+        formatter: (val: number) => {
+          const date = new Date(val);
+          if (['6h', '12h', '24h'].includes(timeWindow)) {
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            const h = String(date.getHours()).padStart(2, '0');
+            const mi = String(date.getMinutes()).padStart(2, '0');
+            return `${m}-${d} ${h}:${mi}`;
+          } else {
+            const h = String(date.getHours()).padStart(2, '0');
+            const mi = String(date.getMinutes()).padStart(2, '0');
+            const s = String(date.getSeconds()).padStart(2, '0');
+            return `${h}:${mi}:${s}`;
+          }
+        }
+      }
     },
     yAxis: {
       type: 'value',
@@ -539,7 +578,7 @@ export const RealtimeDashboard: React.FC = () => {
         smooth: true,
         showSymbol: false,
         connectNulls: false,
-        data: processedPoints.map(d => d.cpu),
+        data: processedPoints.map(d => [d.tsMs, d.cpu]),
         itemStyle: { color: '#38bdf8' },
         lineStyle: { width: 3, color: '#38bdf8' },
         areaStyle: {
@@ -570,7 +609,7 @@ export const RealtimeDashboard: React.FC = () => {
         smooth: true,
         showSymbol: false,
         connectNulls: false,
-        data: processedPoints.map(d => d.ram),
+        data: processedPoints.map(d => [d.tsMs, d.ram]),
         itemStyle: { color: '#c084fc' },
         lineStyle: { width: 2.5, type: 'dashed', color: '#c084fc' },
         areaStyle: {
