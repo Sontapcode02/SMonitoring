@@ -9,6 +9,15 @@ from datetime import datetime
 # Auto create database tables upon startup
 Base.metadata.create_all(bind=engine)
 
+# Ensure is_simulated column exists on metrics table
+try:
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE metrics ADD COLUMN IF NOT EXISTS is_simulated BOOLEAN DEFAULT FALSE;"))
+        conn.commit()
+except Exception as e:
+    print(f"[DB Migration Warning] {e}")
+
 app = FastAPI(
     title="Ubuntu Monitor API",
     description="Nền tảng giám sát tập trung + ML Anomaly Detection (LVTN)",

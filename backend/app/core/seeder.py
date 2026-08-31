@@ -24,15 +24,16 @@ def seed_20_day_telemetry(db: Session):
         db.rollback()
         print(f"[Retention Error] {e}")
 
-    # 2. Kiểm tra nếu đã có đủ dữ liệu lịch sử thì bỏ qua seeder
-    existing_count = db.query(MetricModel).count()
-    if existing_count >= 1000:
-        return
-
-    print("[Seeder] Generating 20 days of historical telemetry with simulated data gaps...")
     servers = db.query(ServerModel).all()
     if not servers:
         return
+
+    # Check which servers need seeding (fewer than 500 historical records)
+    servers_to_seed = [srv for srv in servers if db.query(MetricModel).filter(MetricModel.server_id == srv.id).count() < 500]
+    if not servers_to_seed:
+        return
+
+    print(f"[Seeder] Generating 20 days of historical telemetry for {len(servers_to_seed)} server(s)...")
 
     # Interval: mỗi 15 phút 1 điểm đo cho 20 ngày (4 * 24 * 20 = 1920 điểm đo mỗi server)
     step_minutes = 15
@@ -40,7 +41,7 @@ def seed_20_day_telemetry(db: Session):
 
     metrics_to_insert = []
 
-    for srv in servers:
+    for srv in servers_to_seed:
         s_name = srv.name.lower()
         base_cpu = 8.0 if "web" in srv.role else (14.0 if "db" in srv.role else 10.0)
         base_ram = 30.0 if "web" in srv.role else (55.0 if "db" in srv.role else 40.0)

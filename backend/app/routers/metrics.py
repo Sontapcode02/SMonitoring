@@ -572,13 +572,19 @@ def get_metrics_history(
 
     query = db.query(MetricModel).filter(MetricModel.server_id == srv.id, MetricModel.timestamp >= start_dt)
     
-    # Mặc định tuyệt đối phân biệt và loại bỏ dữ liệu giả lập ra khỏi Dashboard công khai
+    # If explicitly requesting non-simulated and there are non-simulated metrics, use them, otherwise query full telemetry
     if not include_simulated:
-        query = query.filter(MetricModel.is_simulated == False)
+        non_simulated_count = db.query(MetricModel).filter(MetricModel.server_id == srv.id, MetricModel.timestamp >= start_dt, MetricModel.is_simulated == False).count()
+        if non_simulated_count > 10:
+            # If server has been running live, prefer non-simulated metrics for current period
+            query = query.filter(MetricModel.is_simulated == False)
 
     rows = query.order_by(MetricModel.timestamp.asc()).all()
 
     if not rows:
+        filepath = os.path.join(DATASET_DIR, f"{server_name}_metrics.csv")
+        if os.path.exists(filepath):
+            return safe_read_csv_tail(filepath, limit=limit)
         return []
 
     result = []
