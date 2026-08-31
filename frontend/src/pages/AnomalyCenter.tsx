@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { AlertOctagon, Clock, HelpCircle, RefreshCw, Filter, Search, Calendar, ShieldAlert } from 'lucide-react';
+import { AlertOctagon, Clock, HelpCircle, RefreshCw, Filter, Search, Calendar, ShieldAlert, Trash2 } from 'lucide-react';
 
 interface AnomalyItem {
   id: number;
@@ -78,6 +78,22 @@ export const AnomalyCenter: React.FC = () => {
   const [filterServer, setFilterServer] = useState<string>('all');
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
   const [searchKeyword, setSearchKeyword] = useState<string>('');
+
+  const handleDeleteAnomaly = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    try {
+      const res = await fetch(`/api/anomalies/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setAnomalies(prev => prev.filter(item => item.id !== id));
+        if (selectedAnomaly?.id === id) {
+          const remaining = anomalies.filter(item => item.id !== id);
+          if (remaining.length > 0) setSelectedAnomaly(remaining[0]);
+        }
+      }
+    } catch (err) {
+      console.error("Delete anomaly error:", err);
+    }
+  };
 
   // Fetch registered servers for dropdown
   const fetchServers = async () => {
@@ -330,13 +346,33 @@ export const AnomalyCenter: React.FC = () => {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                       <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>{item.server}</span>
-                      <span style={{
-                        padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 700,
-                        background: item.severity === 'Critical' ? 'rgba(244, 63, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                        color: item.severity === 'Critical' ? '#fb7185' : '#fbbf24'
-                      }}>
-                        {item.severity.toUpperCase()}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{
+                          padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 700,
+                          background: item.severity === 'Critical' ? 'rgba(244, 63, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                          color: item.severity === 'Critical' ? '#fb7185' : '#fbbf24'
+                        }}>
+                          {item.severity.toUpperCase()}
+                        </span>
+                        <button
+                          onClick={(e) => handleDeleteAnomaly(e, item.id)}
+                          title="Xóa chủ động bản ghi Anomaly này"
+                          style={{
+                            background: 'rgba(244, 63, 94, 0.15)',
+                            border: '1px solid rgba(244, 63, 94, 0.3)',
+                            color: '#fb7185',
+                            borderRadius: '6px',
+                            padding: '4px 8px',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Specific Full Datetime Display */}

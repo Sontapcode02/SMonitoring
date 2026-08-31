@@ -18,6 +18,7 @@ router = APIRouter()
 
 # Persistent memory store for all live stress anomalies detected during server operations
 recorded_anomalies_history = []
+deleted_anomaly_ids = set()
 global_anomaly_counter = 1
 
 @router.get("/")
@@ -28,7 +29,7 @@ def get_anomalies(
     db: Session = Depends(get_db)
 ):
     """Lấy danh sách các điểm bất thường Isolation Forest & SHAP explainability thực tế kèm bộ lọc đa trường."""
-    global global_anomaly_counter
+    global global_anomaly_counter, recorded_anomalies_history, deleted_anomaly_ids
     
     # Fetch realtime metrics for all DB servers (includes direct Node Exporter HTTP scrapes)
     realtime_list = get_realtime_metrics(db)
@@ -152,7 +153,7 @@ def get_anomalies(
     ]
 
     # Combine recorded live stress anomalies with baseline anomalies
-    combined = recorded_anomalies_history[:25] + baseline_anomalies
+    combined = [a for a in recorded_anomalies_history[:25] + baseline_anomalies if a["id"] not in deleted_anomaly_ids]
 
     # 3. Apply Multi-Field Query Filtering (Server, Severity, Search Keyword)
     if server_name and server_name != "all":
@@ -173,3 +174,15 @@ def get_anomalies(
         ]
 
     return combined
+
+@router.delete("/{anomaly_id}")
+def delete_anomaly_record(anomaly_id: int):
+    """Xóa chủ động 1 bản ghi anomaly record khỏi danh sách PH3."""
+    global recorded_anomalies_history, deleted_anomaly_ids
+    deleted_anomaly_ids.add(anomaly_id)
+    recorded_anomalies_history = [a for a in recorded_anomalies_history if a["id"] != anomaly_id]
+    return {
+        "status": "success",
+        "message": f"Đã xóa bản ghi anomaly #{anomaly_id} thành công!",
+        "deleted_id": anomaly_id
+    }
