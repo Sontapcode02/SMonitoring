@@ -5,7 +5,10 @@ import os
 import json
 import urllib.request
 import urllib.parse
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+# Vietnam Timezone (GMT+7)
+VN_TZ = timezone(timedelta(hours=7))
 
 from app.core.database import get_db, SessionLocal
 from app.models.schemas import ServerModel, AlertModel
@@ -30,7 +33,7 @@ def get_anomalies(
     # Fetch realtime metrics for all DB servers (includes direct Node Exporter HTTP scrapes)
     realtime_list = get_realtime_metrics(db)
     
-    now_dt = datetime.now()
+    now_dt = datetime.now(VN_TZ)
     now_str = now_dt.strftime("%Y-%m-%d %H:%M:%S")
     time_only_str = now_dt.strftime("%H:%M:%S")
     now_hour = now_dt.hour
@@ -94,14 +97,18 @@ def get_anomalies(
                 global_anomaly_counter += 1
                 recorded_anomalies_history.insert(0, new_item)
 
-    # 2. Baseline reference anomalies with full timestamps
+    # 2. Baseline reference anomalies with full timestamps in VN_TZ (GMT+7)
     today_date = now_dt.strftime("%Y-%m-%d")
+    dt1 = now_dt - timedelta(hours=2)
+    dt2 = now_dt - timedelta(hours=5)
+    dt3 = now_dt - timedelta(hours=9)
+
     baseline_anomalies = [
         {
             "id": 101,
-            "hour": 10,
-            "timestamp": "10:05:15",
-            "full_timestamp": f"{today_date} 10:05:15",
+            "hour": dt1.hour,
+            "timestamp": dt1.strftime("%H:%M:%S"),
+            "full_timestamp": dt1.strftime("%Y-%m-%d %H:%M:%S"),
             "server": "ubuntu-server-02",
             "severity": "Critical",
             "score": -0.284,
@@ -110,13 +117,13 @@ def get_anomalies(
                 {"metric": "disk_iops (Disk IOPS)", "contribution": 25},
                 {"metric": "cpu_percent (CPU Usage)", "contribution": 15}
             ],
-            "summary": "Anomaly at 10:05 driven by unexpected Network RX spike exceeding historical baseline distribution."
+            "summary": f"Anomaly at {dt1.strftime('%H:%M')} driven by unexpected Network RX spike exceeding historical baseline distribution."
         },
         {
             "id": 102,
-            "hour": 14,
-            "timestamp": "14:22:00",
-            "full_timestamp": f"{today_date} 14:22:00",
+            "hour": dt2.hour,
+            "timestamp": dt2.strftime("%H:%M:%S"),
+            "full_timestamp": dt2.strftime("%Y-%m-%d %H:%M:%S"),
             "server": "ubuntu-server-01",
             "severity": "Warning",
             "score": -0.195,
@@ -125,13 +132,13 @@ def get_anomalies(
                 {"metric": "load1_per_cpu (Process Load)", "contribution": 25},
                 {"metric": "ram_percent (RAM Usage)", "contribution": 10}
             ],
-            "summary": "Anomaly at 14:22 caused by CPU workload contention during business hours peak."
+            "summary": f"Anomaly at {dt2.strftime('%H:%M')} caused by CPU workload contention during business hours peak."
         },
         {
             "id": 103,
-            "hour": 3,
-            "timestamp": "03:15:45",
-            "full_timestamp": f"{today_date} 03:15:45",
+            "hour": dt3.hour,
+            "timestamp": dt3.strftime("%H:%M:%S"),
+            "full_timestamp": dt3.strftime("%Y-%m-%d %H:%M:%S"),
             "server": "ubuntu-server-03",
             "severity": "Critical",
             "score": -0.312,
@@ -140,7 +147,7 @@ def get_anomalies(
                 {"metric": "tcp_connections (TCP Sockets)", "contribution": 20},
                 {"metric": "cpu_percent (CPU Usage)", "contribution": 10}
             ],
-            "summary": "Off-hours anomaly at 03:15 AM caused by suspicious high disk write throughput (Data Exfiltration Risk)."
+            "summary": f"Off-hours anomaly at {dt3.strftime('%H:%M')} caused by suspicious high disk write throughput (Data Exfiltration Risk)."
         }
     ]
 
