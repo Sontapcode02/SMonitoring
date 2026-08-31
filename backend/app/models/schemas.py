@@ -43,6 +43,7 @@ class MetricModel(Base):
     net_packets_in_pps = Column(Float, default=0.0)
     tcp_connections = Column(Float, default=0.0)
     is_anomaly = Column(Boolean, default=False)
+    is_simulated = Column(Boolean, default=False, nullable=False, index=True)
 
     server = relationship("ServerModel", back_populates="metrics")
 
@@ -94,6 +95,7 @@ class MetricResponse(BaseModel):
     disk_iops: float
     net_in_mbps: float
     is_anomaly: bool
+    is_simulated: bool = False
 
     class Config:
         from_attributes = True

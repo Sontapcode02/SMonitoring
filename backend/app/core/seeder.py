@@ -80,7 +80,8 @@ def seed_20_day_telemetry(db: Session):
                 disk_iops=disk_iops,
                 net_in_mbps=net_in,
                 net_out_mbps=round(net_in * 0.8, 2),
-                is_anomaly=is_anom
+                is_anomaly=is_anom,
+                is_simulated=True
             )
             metrics_to_insert.append(metric_entry)
 

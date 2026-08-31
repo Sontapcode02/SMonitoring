@@ -490,8 +490,19 @@ def save_metric_snapshots_to_db(db: Session, realtime_results: list):
                     disk_write_mbps=float(r.get("disk_write_mbps", 0.0)),
                     disk_iops=float(r.get("disk_iops", 0.0)),
                     net_in_mbps=float(r.get("net_in_mbps", 0.0)),
+                new_records.append(MetricModel(
+                    server_id=srv_id,
+                    timestamp=now_dt,
+                    cpu_percent=float(r.get("cpu_percent", 0.0)),
+                    ram_percent=float(r.get("ram_percent", 0.0)),
+                    load1_per_cpu=float(r.get("load1_per_cpu", 0.0)),
+                    disk_read_mbps=float(r.get("disk_read_mbps", 0.0)),
+                    disk_write_mbps=float(r.get("disk_write_mbps", 0.0)),
+                    disk_iops=float(r.get("disk_iops", 0.0)),
+                    net_in_mbps=float(r.get("net_in_mbps", 0.0)),
                     net_out_mbps=float(r.get("net_out_mbps", 0.0)),
-                    is_anomaly=bool(r.get("is_anomaly", False))
+                    is_anomaly=bool(r.get("is_anomaly", False)),
+                    is_simulated=bool(r.get("is_simulated", False))
                 ))
         if new_records:
             db.bulk_save_objects(new_records)
@@ -514,12 +525,12 @@ def get_metrics_history(
     server_name: str = "ubuntu-server-01",
     window: str = "5m",
     limit: int = 200,
+    include_simulated: bool = Query(False, description="Đặt True nếu muốn bao gồm cả dữ liệu giả lập Seeder vào đồ thị"),
     db: Session = Depends(get_db)
 ):
     """
     Lấy dữ liệu telemetry lịch sử từ Database (MetricModel) lưu trữ tối đa 20 ngày.
-    Hỗ trợ tùy chọn khung thời gian window (5m, 15m, 30m, 1h, 6h, 12h, 24h).
-    Tự động chèn điểm null tại các khoảng trống dữ liệu để vẽ đồ thị gãy đứt (discontinuous line).
+    Mặc định tự động LỌC BỎ dữ liệu giả lập (is_simulated = False) trên các đồ thị công khai.
     """
     # Trigger 20-day historical data seeder if DB is empty
     seed_20_day_telemetry(db)
@@ -533,24 +544,23 @@ def get_metrics_history(
         filepath = os.path.join(DATASET_DIR, f"{server_name}_metrics.csv")
         return safe_read_csv_tail(filepath, limit=limit)
 
-    rows = (
-        db.query(MetricModel)
-        .filter(MetricModel.server_id == srv.id, MetricModel.timestamp >= start_dt)
-        .order_by(MetricModel.timestamp.asc())
-        .all()
-    )
+    query = db.query(MetricModel).filter(MetricModel.server_id == srv.id, MetricModel.timestamp >= start_dt)
+    
+    # Mặc định tuyệt đối phân biệt và loại bỏ dữ liệu giả lập ra khỏi Dashboard công khai
+    if not include_simulated:
+        query = query.filter(MetricModel.is_simulated == False)
+
+    rows = query.order_by(MetricModel.timestamp.asc()).all()
 
     if not rows:
         return []
 
     result = []
-    # Threshold to identify data gaps (offline server / missed scrapes)
     max_gap_sec = 60 if delta <= timedelta(minutes=30) else (1800 if delta >= timedelta(hours=1) else 300)
 
     for i, r in enumerate(rows):
         formatted_time = r.timestamp.strftime("%H:%M:%S" if delta <= timedelta(hours=1) else "%m-%d %H:%M")
 
-        # Insert null entry if gap exceeds max_gap_sec
         if i > 0:
             time_diff = (r.timestamp - rows[i-1].timestamp).total_seconds()
             if time_diff > max_gap_sec:
@@ -564,7 +574,8 @@ def get_metrics_history(
                     "ram_percent": None,
                     "disk_iops": None,
                     "net_in_mbps": None,
-                    "is_anomaly": False
+                    "is_anomaly": False,
+                    "is_simulated": False
                 })
 
         result.append({
@@ -574,7 +585,8 @@ def get_metrics_history(
             "ram_percent": round(r.ram_percent, 1) if r.ram_percent is not None else None,
             "disk_iops": round(r.disk_iops, 1) if r.disk_iops is not None else None,
             "net_in_mbps": round(r.net_in_mbps, 2) if r.net_in_mbps is not None else None,
-            "is_anomaly": bool(r.is_anomaly)
+            "is_anomaly": bool(r.is_anomaly),
+            "is_simulated": bool(getattr(r, "is_simulated", False))
         })
 
     return result
