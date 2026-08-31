@@ -69,3 +69,22 @@ def auto_recover_alerts(db: Session = Depends(get_db)):
         "recovered_count": recovered_count,
         "details": recovered_details
     }
+
+@router.delete("/purge")
+def purge_old_alerts(
+    status_to_purge: str = "resolved",
+    db: Session = Depends(get_db)
+):
+    """Xóa sạch các cảnh báo rác / đã giải quyết (Resolved) khỏi Database."""
+    query = db.query(AlertModel)
+    if status_to_purge:
+        query = query.filter(AlertModel.status == status_to_purge)
+    
+    deleted_cnt = query.delete()
+    db.commit()
+
+    return {
+        "status": "success",
+        "message": f"Đã làm sạch thành công {deleted_cnt} cảnh báo rác ({status_to_purge}) khỏi Database!",
+        "purged_count": deleted_cnt
+    }

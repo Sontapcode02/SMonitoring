@@ -43,17 +43,21 @@ async def start_scheduler():
     asyncio.create_task(_data_retention_cleanup_loop())
 
 async def _data_retention_cleanup_loop():
-    """Background task tự động dọn dẹp dữ liệu DB quá tuổi thọ 20 ngày mỗi 1 giờ."""
+    """Background task tự động dọn dẹp dữ liệu DB quá tuổi thọ 20 ngày & cảnh báo rác đã giải quyết mỗi 1 giờ."""
     while True:
         try:
             db = SessionLocal()
             now = datetime.now(VN_TZ)
             cutoff_date = (now - timedelta(days=RETENTION_DAYS)).replace(tzinfo=None)
+            alert_cutoff = (now - timedelta(days=1)).replace(tzinfo=None)
             
             deleted_metrics = db.query(MetricModel).filter(MetricModel.timestamp < cutoff_date).delete()
+            deleted_alerts = db.query(AlertModel).filter(AlertModel.status == "resolved", AlertModel.timestamp < alert_cutoff).delete()
             db.commit()
             if deleted_metrics > 0:
                 print(f"[Data Retention Engine] Auto-purged {deleted_metrics} telemetry metrics older than {RETENTION_DAYS} days.")
+            if deleted_alerts > 0:
+                print(f"[Data Retention Engine] Auto-purged {deleted_alerts} old resolved alerts.")
             db.close()
         except Exception as e:
             print(f"[Data Retention Error]: {e}")
