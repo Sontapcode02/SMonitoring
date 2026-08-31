@@ -367,6 +367,28 @@ export const RealtimeDashboard: React.FC = () => {
     return 0;
   };
 
+  const WINDOW_MS_MAP: Record<string, number> = {
+    '5m': 5 * 60 * 1000,
+    '15m': 15 * 60 * 1000,
+    '30m': 30 * 60 * 1000,
+    '1h': 60 * 60 * 1000,
+    '6h': 6 * 3600 * 1000,
+    '12h': 12 * 3600 * 1000,
+    '24h': 24 * 3600 * 1000
+  };
+
+  const formatTimestamp = (date: Date, showDate: boolean): string => {
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const h = String(date.getHours()).padStart(2, '0');
+    const mi = String(date.getMinutes()).padStart(2, '0');
+    const s = String(date.getSeconds()).padStart(2, '0');
+    if (showDate) {
+      return `${m}-${d} ${h}:${mi}`;
+    }
+    return `${h}:${mi}:${s}`;
+  };
+
   const processTimeSeriesGaps = (rawPoints: MetricPoint[], windowStr: string) => {
     if (!Array.isArray(rawPoints) || rawPoints.length === 0) {
       return { points: [], markAreas: [] };
@@ -377,9 +399,41 @@ export const RealtimeDashboard: React.FC = () => {
     if (cleanRawPoints.length === 0) return { points: [], markAreas: [] };
 
     const thresholdSec = ['5m', '15m', '30m'].includes(windowStr) ? 90 : (['1h', '6h'].includes(windowStr) ? 180 : 300);
+    const windowMs = WINDOW_MS_MAP[windowStr] || (5 * 60 * 1000);
+    const showDate = ['6h', '12h', '24h'].includes(windowStr);
 
     const processedPoints: MetricPoint[] = [];
     const markAreas: any[] = [];
+
+    // Scale timeline to full chosen live window if DB has fewer hours of data
+    const latestPt = cleanRawPoints[cleanRawPoints.length - 1];
+    const latestMs = parseTimestampMs(latestPt.rawTimestamp || latestPt.time) || Date.now();
+    const targetWindowStartMs = latestMs - windowMs;
+
+    const firstPt = cleanRawPoints[0];
+    const firstPtMs = parseTimestampMs(firstPt.rawTimestamp || firstPt.time);
+
+    if (firstPtMs > 0 && targetWindowStartMs > 0 && (firstPtMs - targetWindowStartMs) > thresholdSec * 1000) {
+      const windowStartStr = formatTimestamp(new Date(targetWindowStartMs), showDate);
+
+      // Highlight uncollected history span before the earliest data point in DB
+      markAreas.push([
+        { xAxis: windowStartStr },
+        { xAxis: firstPt.time }
+      ]);
+
+      // Insert start-of-window null point to scale X-axis properly
+      processedPoints.push({
+        time: windowStartStr,
+        rawTimestamp: windowStartStr,
+        cpu: null,
+        ram: null,
+        disk_iops: null,
+        net_in_mbps: null,
+        isAnomaly: false
+      });
+    }
+
     let nullGapStart: MetricPoint | null = null;
 
     for (let i = 0; i < cleanRawPoints.length; i++) {
