@@ -507,13 +507,32 @@ export const RealtimeDashboard: React.FC = () => {
   const rawTimeSeries = hostTimeSeriesMap[selectedServer] || [];
   const { points: processedPoints, markAreas: gapHighlightAreas, minMs: chartMinMs, maxMs: chartMaxMs } = processTimeSeriesGaps(rawTimeSeries, timeWindow);
 
-  // ECharts Line Chart Option with True Linear Time Axis
+  const getMetricStats = (points: any[], key: 'cpu' | 'ram') => {
+    const valid = points.map(p => p[key]).filter((v): v is number => v !== null && v !== undefined && !isNaN(v));
+    if (valid.length === 0) return { last: 0, min: 0, avg: 0, max: 0 };
+    const last = valid[valid.length - 1];
+    const min = Math.min(...valid);
+    const max = Math.max(...valid);
+    const sum = valid.reduce((acc, curr) => acc + curr, 0);
+    const avg = sum / valid.length;
+    return {
+      last: Number(last.toFixed(1)),
+      min: Number(min.toFixed(1)),
+      avg: Number(avg.toFixed(1)),
+      max: Number(max.toFixed(1))
+    };
+  };
+
+  const cpuStats = getMetricStats(processedPoints, 'cpu');
+  const ramStats = getMetricStats(processedPoints, 'ram');
+
+  // ECharts Line Chart Option with True Linear Time Axis & Zabbix Grid Styling
   const lineChartOption = {
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'axis',
-      backgroundColor: 'rgba(17, 24, 39, 0.9)',
-      borderColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: 'rgba(17, 24, 39, 0.95)',
+      borderColor: 'rgba(255, 255, 255, 0.15)',
       textStyle: { color: '#fff' },
       formatter: (params: any) => {
         if (!params || params.length === 0) return '';
@@ -544,7 +563,8 @@ export const RealtimeDashboard: React.FC = () => {
       min: chartMinMs,
       max: chartMaxMs,
       boundaryGap: false,
-      axisLine: { lineStyle: { color: '#374151' } },
+      axisLine: { lineStyle: { color: '#4b5563' } },
+      splitLine: { show: true, lineStyle: { color: 'rgba(255, 255, 255, 0.06)', type: 'dashed' } },
       axisLabel: {
         color: '#9ca3af',
         formatter: (val: number) => {
@@ -567,8 +587,8 @@ export const RealtimeDashboard: React.FC = () => {
     yAxis: {
       type: 'value',
       max: 100,
-      axisLine: { lineStyle: { color: '#374151' } },
-      splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)' } },
+      axisLine: { lineStyle: { color: '#4b5563' } },
+      splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.06)', type: 'dashed' } },
       axisLabel: { color: '#9ca3af', formatter: '{value}%' }
     },
     series: [
@@ -580,21 +600,21 @@ export const RealtimeDashboard: React.FC = () => {
         connectNulls: false,
         data: processedPoints.map(d => [d.tsMs, d.cpu]),
         itemStyle: { color: '#38bdf8' },
-        lineStyle: { width: 3, color: '#38bdf8' },
+        lineStyle: { width: 2.5, color: '#38bdf8' },
         areaStyle: {
           color: {
             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(56, 189, 248, 0.35)' },
+              { offset: 0, color: 'rgba(56, 189, 248, 0.25)' },
               { offset: 1, color: 'rgba(56, 189, 248, 0.0)' }
             ]
           }
         },
         markArea: {
           itemStyle: {
-            color: 'rgba(244, 63, 94, 0.15)',
+            color: 'rgba(255, 255, 255, 0.04)',
             borderWidth: 1,
-            borderColor: 'rgba(244, 63, 94, 0.4)',
+            borderColor: 'rgba(255, 255, 255, 0.15)',
             borderType: 'dashed'
           },
           label: {
@@ -810,6 +830,62 @@ export const RealtimeDashboard: React.FC = () => {
           </div>
         </div>
         <ReactECharts option={lineChartOption} notMerge={true} style={{ height: '400px' }} />
+
+        {/* Zabbix-style Metrics Legend Footer Bar (last, min, avg, max) */}
+        <div style={{
+          marginTop: '16px',
+          paddingTop: '16px',
+          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '12px',
+          fontSize: '12px',
+          fontFamily: 'monospace'
+        }}>
+          {/* CPU Stats */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'rgba(17, 24, 39, 0.5)',
+            padding: '8px 14px',
+            borderRadius: '8px',
+            border: '1px solid rgba(56, 189, 248, 0.2)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#38bdf8', display: 'inline-block' }}></span>
+              <span style={{ fontWeight: 600, color: '#e5e7eb' }}>% CPU Usage</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#9ca3af' }}>
+              <span>last: <b style={{ color: '#38bdf8' }}>{cpuStats.last}%</b></span>
+              <span>min: <b style={{ color: '#e5e7eb' }}>{cpuStats.min}%</b></span>
+              <span>avg: <b style={{ color: '#e5e7eb' }}>{cpuStats.avg}%</b></span>
+              <span>max: <b style={{ color: '#fb7185' }}>{cpuStats.max}%</b></span>
+            </div>
+          </div>
+
+          {/* RAM Stats */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'rgba(17, 24, 39, 0.5)',
+            padding: '8px 14px',
+            borderRadius: '8px',
+            border: '1px solid rgba(192, 132, 252, 0.2)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#c084fc', display: 'inline-block' }}></span>
+              <span style={{ fontWeight: 600, color: '#e5e7eb' }}>% RAM Usage</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#9ca3af' }}>
+              <span>last: <b style={{ color: '#c084fc' }}>{ramStats.last}%</b></span>
+              <span>min: <b style={{ color: '#e5e7eb' }}>{ramStats.min}%</b></span>
+              <span>avg: <b style={{ color: '#e5e7eb' }}>{ramStats.avg}%</b></span>
+              <span>max: <b style={{ color: '#fb7185' }}>{ramStats.max}%</b></span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 2 Bottom Widgets: System Services Health Status & Top Resource-Consuming Processes */}
