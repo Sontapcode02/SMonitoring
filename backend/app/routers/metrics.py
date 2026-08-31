@@ -526,16 +526,6 @@ def save_metric_snapshots_to_db(db: Session, realtime_results: list):
                     disk_write_mbps=float(r.get("disk_write_mbps", 0.0)),
                     disk_iops=float(r.get("disk_iops", 0.0)),
                     net_in_mbps=float(r.get("net_in_mbps", 0.0)),
-                new_records.append(MetricModel(
-                    server_id=srv_id,
-                    timestamp=now_dt,
-                    cpu_percent=float(r.get("cpu_percent", 0.0)),
-                    ram_percent=float(r.get("ram_percent", 0.0)),
-                    load1_per_cpu=float(r.get("load1_per_cpu", 0.0)),
-                    disk_read_mbps=float(r.get("disk_read_mbps", 0.0)),
-                    disk_write_mbps=float(r.get("disk_write_mbps", 0.0)),
-                    disk_iops=float(r.get("disk_iops", 0.0)),
-                    net_in_mbps=float(r.get("net_in_mbps", 0.0)),
                     net_out_mbps=float(r.get("net_out_mbps", 0.0)),
                     is_anomaly=bool(r.get("is_anomaly", False)),
                     is_simulated=bool(r.get("is_simulated", False))
