@@ -1,9 +1,12 @@
 import asyncio
 import socket
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from app.core.database import SessionLocal
-from app.models.schemas import ServerModel, AlertModel
+from app.models.schemas import ServerModel, AlertModel, MetricModel
+
+VN_TZ = timezone(timedelta(hours=7))
+RETENTION_DAYS = 20
 
 def ping_node_exporter(ip: str, port: int = 9100, timeout: float = 1.5) -> bool:
     """Kiểm tra socket connection tới Node Exporter / Prometheus Engine của máy chủ."""
@@ -33,10 +36,29 @@ def ping_node_exporter(ip: str, port: int = 9100, timeout: float = 1.5) -> bool:
     return False
 
 async def start_scheduler():
-    """Background task định kỳ ping Node Exporter và quản lý vòng đời sự cố (Alert Lifecycle Engine) & WebSocket Broadcast."""
-    print("[Scheduler] Starting live Node Exporter healthcheck & WebSocket Broadcast loop...")
+    """Background task định kỳ ping Node Exporter, quản lý vòng đời dữ liệu 20 ngày (Retention Policy) & WebSocket Broadcast."""
+    print(f"[Scheduler] Starting live Node Exporter healthcheck, {RETENTION_DAYS}-Day Data Retention Engine & WebSocket Broadcast loop...")
     asyncio.create_task(_healthcheck_loop())
     asyncio.create_task(_websocket_metrics_broadcast_loop())
+    asyncio.create_task(_data_retention_cleanup_loop())
+
+async def _data_retention_cleanup_loop():
+    """Background task tự động dọn dẹp dữ liệu DB quá tuổi thọ 20 ngày mỗi 1 giờ."""
+    while True:
+        try:
+            db = SessionLocal()
+            now = datetime.now(VN_TZ)
+            cutoff_date = (now - timedelta(days=RETENTION_DAYS)).replace(tzinfo=None)
+            
+            deleted_metrics = db.query(MetricModel).filter(MetricModel.timestamp < cutoff_date).delete()
+            db.commit()
+            if deleted_metrics > 0:
+                print(f"[Data Retention Engine] Auto-purged {deleted_metrics} telemetry metrics older than {RETENTION_DAYS} days.")
+            db.close()
+        except Exception as e:
+            print(f"[Data Retention Error]: {e}")
+
+        await asyncio.sleep(3600)  # Execute retention purge every 1 hour
 
 async def _websocket_metrics_broadcast_loop():
     """Background loop đẩy chỉ số realtime telemetry lên WebSocket mỗi 3 giây."""
