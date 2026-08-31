@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Cpu, HardDrive, Activity, Wifi, Filter, Clock, RefreshCw, ArrowDownRight, ArrowUpRight, Zap, Server, Flame, Search } from 'lucide-react';
+import { Cpu, HardDrive, Activity, Wifi, Filter, Clock, RefreshCw, ArrowDownRight, ArrowUpRight, Zap, Server, Flame, Search, Brain } from 'lucide-react';
 import { useWebSocketWithFallback } from '../hooks/useWebSocketWithFallback';
 
 interface MetricPoint {
@@ -671,6 +671,31 @@ export const RealtimeDashboard: React.FC = () => {
               <Zap size={13} className={isWsConnected ? '' : 'spin'} />
               Stream Mode: {isWsConnected ? 'WebSocket Live' : 'HTTP Polling Fallback'}
             </div>
+
+            {/* ML Isolation Forest Anomaly Risk Badge */}
+            {(() => {
+              const curMetric = allRealtimeMetrics.find(m => m.server_name === selectedServer);
+              const mlRiskPct = curMetric?.anomaly_score_pct ? Number(curMetric.anomaly_score_pct) : 0.0;
+              const isMlAnom = Boolean(curMetric?.is_ml_anomaly || mlRiskPct >= 65.0);
+              return (
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  background: isMlAnom ? 'rgba(239, 68, 68, 0.18)' : 'rgba(168, 85, 247, 0.15)',
+                  border: `1px solid ${isMlAnom ? 'rgba(239, 68, 68, 0.5)' : 'rgba(168, 85, 247, 0.4)'}`,
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  color: isMlAnom ? '#f87171' : '#c084fc'
+                }}>
+                  <Brain size={13} />
+                  ML Risk Score: {mlRiskPct > 0 ? `${mlRiskPct.toFixed(1)}%` : '0.0% (Normal)'}
+                  {isMlAnom && <span style={{ padding: '1px 6px', borderRadius: '4px', background: '#ef4444', color: 'white', fontSize: '10px' }}>ANOMALY</span>}
+                </div>
+              );
+            })()}
 
             {/* Realtime Device Clock Display Badge */}
             <div style={{

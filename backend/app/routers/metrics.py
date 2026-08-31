@@ -190,8 +190,10 @@ def parse_node_exporter_direct(ip: str, port: int = 9100):
         print(f"[Direct Scrape Failed] {ip}:{port} - {e}")
         return {"status": "offline", "cpu_percent": 0.0, "ram_percent": 0.0, "is_scraped_direct": False}
 
+from app.core.ml_engine import ml_engine
+
 def evaluate_and_trigger_alerts(res: dict, db: Session):
-    """Đánh giá ngưỡng chỉ số thực tế (CPU > 80%, RAM > 85%, etc.) để kích hoạt Anomaly & Tự Động Phục Hồi (Auto-Recovery)."""
+    """Đánh giá chỉ số thực tế & dự đoán ML Isolation Forest để kích hoạt Anomaly & Tự Động Phục Hồi (Auto-Recovery)."""
     cpu = res.get("cpu_percent", 0.0)
     ram = res.get("ram_percent", 0.0)
     server_id = res.get("server_id")
@@ -200,7 +202,43 @@ def evaluate_and_trigger_alerts(res: dict, db: Session):
 
     is_anomaly = False
 
-    # 1. CPU High Stress Test Anomaly & Auto-Recovery Rule
+    # 1. ML ISOLATION FOREST INFERENCE (10 FEATURES)
+    is_ml_anom, ml_score_pct, dec_score = ml_engine.predict_anomaly(server_name, res)
+    res["is_ml_anomaly"] = is_ml_anom
+    res["anomaly_score_pct"] = ml_score_pct
+    res["decision_score"] = dec_score
+
+    if is_ml_anom:
+        is_anomaly = True
+        existing_ml_alert = db.query(AlertModel).filter(
+            AlertModel.server_id == server_id,
+            AlertModel.alert_type == "ML_ANOMALY",
+            AlertModel.status.in_(["new", "ack"])
+        ).first()
+        if not existing_ml_alert:
+            new_alert = AlertModel(
+                server_id=server_id,
+                alert_type="ML_ANOMALY",
+                message=f"[ML ANOMALY DETECTED] Mô hình ML Isolation Forest phát hiện biến động bất thường trên {server_name} ({ip_addr})! Mức rủi ro: {ml_score_pct:.1f}%",
+                severity="critical" if ml_score_pct >= 85.0 else "high",
+                status="new",
+                timestamp=datetime.utcnow()
+            )
+            db.add(new_alert)
+            db.commit()
+    else:
+        # Auto-recover ML Anomaly alerts if score dropped to safe range
+        active_ml_alerts = db.query(AlertModel).filter(
+            AlertModel.server_id == server_id,
+            AlertModel.alert_type == "ML_ANOMALY",
+            AlertModel.status.in_(["new", "ack"])
+        ).all()
+        if active_ml_alerts:
+            for alert in active_ml_alerts:
+                alert.status = "resolved"
+            db.commit()
+
+    # 2. CPU High Stress Test Anomaly & Auto-Recovery Rule
     if cpu > 80.0:
         is_anomaly = True
         existing_alert = db.query(AlertModel).filter(
@@ -220,7 +258,6 @@ def evaluate_and_trigger_alerts(res: dict, db: Session):
             db.add(new_alert)
             db.commit()
     else:
-        # CPU has dropped back to safe range (<= 80%) -> AUTO-RECOVER active HIGH_CPU_LOAD alerts!
         active_cpu_alerts = db.query(AlertModel).filter(
             AlertModel.server_id == server_id,
             AlertModel.alert_type == "HIGH_CPU_LOAD",
@@ -231,7 +268,7 @@ def evaluate_and_trigger_alerts(res: dict, db: Session):
                 alert.status = "resolved"
             db.commit()
 
-    # 2. RAM High Stress Test Anomaly & Auto-Recovery Rule
+    # 3. RAM High Stress Test Anomaly & Auto-Recovery Rule
     if ram > 85.0:
         is_anomaly = True
         existing_alert = db.query(AlertModel).filter(
@@ -251,7 +288,6 @@ def evaluate_and_trigger_alerts(res: dict, db: Session):
             db.add(new_alert)
             db.commit()
     else:
-        # RAM has dropped back to safe range (<= 85%) -> AUTO-RECOVER active HIGH_RAM_USAGE alerts!
         active_ram_alerts = db.query(AlertModel).filter(
             AlertModel.server_id == server_id,
             AlertModel.alert_type == "HIGH_RAM_USAGE",
