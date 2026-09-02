@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { AlertOctagon, Clock, HelpCircle, RefreshCw, Filter, Search, Calendar, ShieldAlert, Trash2 } from 'lucide-react';
 
 interface AnomalyItem {
   id: number;
@@ -200,14 +199,14 @@ export const AnomalyCenter: React.FC = () => {
           </p>
         </div>
         <button className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px' }} onClick={fetchAnomalies}>
-          <RefreshCw size={14} className={loading ? 'spin' : ''} /> Refresh Stream
+          Refresh Stream
         </button>
       </div>
 
       {/* Multi-Field Filter Control Bar */}
       <div className="glass-card" style={{ padding: '14px 20px', marginBottom: '24px', display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-cyan)', fontWeight: 700, fontSize: '13px' }}>
-          <Filter size={16} /> ANOMALY LOG FILTERS:
+          ANOMALY LOG FILTERS:
         </div>
 
         {/* Filter 1: Server Node */}
@@ -241,7 +240,6 @@ export const AnomalyCenter: React.FC = () => {
 
         {/* Filter 3: Search Input Keyword */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--border-color)', flex: 1, minWidth: '220px' }}>
-          <Search size={14} color="var(--text-muted)" />
           <input
             type="text"
             placeholder="Search metric (e.g. CPU, RAM, Disk), server, timestamp..."
@@ -265,8 +263,8 @@ export const AnomalyCenter: React.FC = () => {
       {/* Heatmap Timeline (Top Half 0h - 24h Bar) */}
       <div className="glass-card" style={{ padding: '20px', marginBottom: '30px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-          <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Clock size={16} color="var(--accent-cyan)" /> 24-Hour Incident Heatmap Timeline (00:00 - 24:00)
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
+            24-Hour Incident Heatmap Timeline (00:00 - 24:00)
           </span>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>*Click anomaly ticks to inspect incident details</span>
         </div>
@@ -309,8 +307,8 @@ export const AnomalyCenter: React.FC = () => {
         {/* Left Column: Anomaly Event List Table */}
         <div className="glass-card" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <AlertOctagon size={18} color="#f43f5e" /> Recorded Anomaly Incidents ({anomalies.length})
+            <h2 style={{ fontSize: '16px', fontWeight: 600 }}>
+              Recorded Anomaly Incidents ({anomalies.length})
             </h2>
             {isFiltered && (
               <span style={{ fontSize: '11px', color: 'var(--accent-cyan)', background: 'rgba(6,182,212,0.15)', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>
@@ -362,23 +360,22 @@ export const AnomalyCenter: React.FC = () => {
                             border: '1px solid rgba(244, 63, 94, 0.3)',
                             color: '#fb7185',
                             borderRadius: '6px',
-                            padding: '4px 8px',
+                            padding: '4px 10px',
                             cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
+                            fontSize: '12px',
+                            fontWeight: 600,
                             transition: 'all 0.2s'
                           }}
                         >
-                          <Trash2 size={13} />
+                          Xóa
                         </button>
                       </div>
                     </div>
 
                     {/* Specific Full Datetime Display */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-cyan)' }}>
-                        <Calendar size={13} /> {fullTimeDisplay}
+                      <span style={{ color: 'var(--accent-cyan)' }}>
+                        {fullTimeDisplay}
                       </span>
                       <span>Isolation Score: <b style={{ color: '#f43f5e', fontFamily: 'var(--font-mono)' }}>{item.score}</b></span>
                     </div>
@@ -395,8 +392,8 @@ export const AnomalyCenter: React.FC = () => {
 
         {/* Right Column: SHAP Explainability & Natural Language Summary */}
         <div className="glass-card" style={{ padding: '24px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <HelpCircle size={18} color="var(--accent-cyan)" /> SHAP Explainability & Root-Cause Analysis
+          <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '6px' }}>
+            SHAP Explainability & Root-Cause Analysis
           </h2>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
             Explaining why Isolation Forest flagged sample at <b>{selectedAnomaly?.full_timestamp || selectedAnomaly?.timestamp}</b> on <b>{selectedAnomaly?.server}</b> as anomalous.

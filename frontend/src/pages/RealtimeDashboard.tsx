@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Cpu, HardDrive, Activity, Wifi, Filter, Clock, RefreshCw, ArrowDownRight, ArrowUpRight, Zap, Server, Flame, Search, Brain } from 'lucide-react';
 import { useWebSocketWithFallback } from '../hooks/useWebSocketWithFallback';
 
 interface MetricPoint {
@@ -668,7 +667,6 @@ export const RealtimeDashboard: React.FC = () => {
               fontWeight: 700,
               color: isWsConnected ? '#34d399' : '#fbbf24'
             }}>
-              <Zap size={13} className={isWsConnected ? '' : 'spin'} />
               Stream Mode: {isWsConnected ? 'WebSocket Live' : 'HTTP Polling Fallback'}
             </div>
 
@@ -690,7 +688,6 @@ export const RealtimeDashboard: React.FC = () => {
                   fontWeight: 700,
                   color: isMlAnom ? '#f87171' : '#c084fc'
                 }}>
-                  <Brain size={13} />
                   ML Risk Score: {mlRiskPct > 0 ? `${mlRiskPct.toFixed(1)}%` : '0.0% (Normal)'}
                   {isMlAnom && <span style={{ padding: '1px 6px', borderRadius: '4px', background: '#ef4444', color: 'white', fontSize: '10px' }}>ANOMALY</span>}
                 </div>
@@ -710,7 +707,7 @@ export const RealtimeDashboard: React.FC = () => {
               fontWeight: 600,
               color: '#38bdf8'
             }}>
-              <Clock size={13} color="#38bdf8" />
+              <span>LẬP TỨC</span>
               <span style={{ fontWeight: 700, fontFamily: 'monospace' }}>{lastUpdate || 'Syncing...'}</span>
             </div>
           </div>
@@ -722,12 +719,11 @@ export const RealtimeDashboard: React.FC = () => {
         {/* Filter Bar */}
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button className="btn-primary" style={{ padding: '8px 12px' }} onClick={fetchServerData}>
-            <RefreshCw size={14} className={isSwitching ? 'spin' : ''} /> Refresh Stream
+            Làm Mới Stream
           </button>
 
           {/* Node Server Selector (Dynamic Server Fleet Options) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '6px 14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
-            <Filter size={16} color="var(--accent-cyan)" />
             <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>NODE:</span>
             <select
               value={selectedServer}
@@ -757,7 +753,7 @@ export const RealtimeDashboard: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '6px 14px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
-            <Clock size={16} color="var(--accent-purple)" />
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>CỬA SỔ:</span>
             <select
               value={timeWindow}
               onChange={(e) => setTimeWindow(e.target.value)}
@@ -782,7 +778,7 @@ export const RealtimeDashboard: React.FC = () => {
         <div className="glass-card" style={{ padding: '16px', transition: 'all 0.3s' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>% CPU USAGE</span>
-            <Cpu size={18} color="var(--accent-cyan)" />
+            <span style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: 700 }}>CPU</span>
           </div>
           <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '6px', color: cpuColor }}>
             {cpuUsage.toFixed(1)}%
@@ -793,7 +789,7 @@ export const RealtimeDashboard: React.FC = () => {
         <div className="glass-card" style={{ padding: '16px', transition: 'all 0.3s' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>% RAM USAGE</span>
-            <Activity size={18} color="var(--accent-purple)" />
+            <span style={{ fontSize: '11px', color: 'var(--accent-purple)', fontWeight: 700 }}>RAM</span>
           </div>
           <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '6px', color: 'var(--accent-purple)' }}>
             {ramUsage.toFixed(1)}%
@@ -805,7 +801,7 @@ export const RealtimeDashboard: React.FC = () => {
         <div className="glass-card" style={{ padding: '16px', transition: 'all 0.3s' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>DISK CAPACITY</span>
-            <HardDrive size={18} color="var(--accent-emerald)" />
+            <span style={{ fontSize: '11px', color: 'var(--accent-emerald)', fontWeight: 700 }}>DISK</span>
           </div>
           <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '6px', color: 'var(--accent-emerald)' }}>
             {diskPercent.toFixed(1)}%
@@ -819,15 +815,11 @@ export const RealtimeDashboard: React.FC = () => {
         <div className="glass-card" style={{ padding: '16px', transition: 'all 0.3s' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>READ / WRITE SPEED</span>
-            <HardDrive size={18} color="#60a5fa" />
+            <span style={{ fontSize: '11px', color: '#60a5fa', fontWeight: 700 }}>DISK</span>
           </div>
           <div style={{ fontSize: '18px', fontWeight: 700, marginTop: '8px', color: '#60a5fa', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <ArrowDownRight size={14} color="#34d399" /> R: {diskReadMb.toFixed(3)} MB/s
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <ArrowUpRight size={14} color="#fb7185" /> W: {diskWriteMb.toFixed(3)} MB/s
-            </span>
+            <span>R: {diskReadMb.toFixed(3)} MB/s</span>
+            <span>W: {diskWriteMb.toFixed(3)} MB/s</span>
           </div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>IOPS: <b>{diskIO.toFixed(1)} ops/s</b></div>
         </div>
@@ -835,7 +827,7 @@ export const RealtimeDashboard: React.FC = () => {
         <div className="glass-card" style={{ padding: '16px', transition: 'all 0.3s' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>NETWORK RX</span>
-            <Wifi size={18} color="var(--accent-amber)" />
+            <span style={{ fontSize: '11px', color: 'var(--accent-amber)', fontWeight: 700 }}>ETH0</span>
           </div>
           <div style={{ fontSize: '28px', fontWeight: 700, marginTop: '6px', color: 'var(--accent-amber)' }}>
             {netTraffic.toFixed(4)} Mbps
@@ -848,7 +840,7 @@ export const RealtimeDashboard: React.FC = () => {
       <div className="glass-card" style={{ padding: '24px', marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Activity size={20} color="var(--accent-cyan)" /> Real-time Metrics Stream: <span style={{ color: 'var(--accent-cyan)' }}>[{selectedServer}]</span>
+            Real-time Metrics Stream: <span style={{ color: 'var(--accent-cyan)' }}>[{selectedServer}]</span>
           </h2>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
             Updated from Prometheus at: <b>{lastUpdate || 'Live'}</b>
@@ -859,56 +851,25 @@ export const RealtimeDashboard: React.FC = () => {
         {/* Zabbix-style Metrics Legend Footer Bar (last, min, avg, max) */}
         <div style={{
           marginTop: '16px',
-          paddingTop: '16px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          padding: '12px 16px',
+          background: 'rgba(0, 0, 0, 0.3)',
+          borderRadius: '8px',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
           gap: '12px',
-          fontSize: '12px',
-          fontFamily: 'monospace'
+          fontSize: '12px'
         }}>
-          {/* CPU Stats */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'rgba(17, 24, 39, 0.5)',
-            padding: '8px 14px',
-            borderRadius: '8px',
-            border: '1px solid rgba(56, 189, 248, 0.2)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#38bdf8', display: 'inline-block' }}></span>
-              <span style={{ fontWeight: 600, color: '#e5e7eb' }}>% CPU Usage</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#9ca3af' }}>
-              <span>last: <b style={{ color: '#38bdf8' }}>{cpuStats.last}%</b></span>
-              <span>min: <b style={{ color: '#e5e7eb' }}>{cpuStats.min}%</b></span>
-              <span>avg: <b style={{ color: '#e5e7eb' }}>{cpuStats.avg}%</b></span>
-              <span>max: <b style={{ color: '#fb7185' }}>{cpuStats.max}%</b></span>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Mắt xem metrics:</span>
+            <span style={{ color: 'var(--text-muted)' }}>Chỉ số thời gian thực từ Node Exporter</span>
           </div>
-
-          {/* RAM Stats */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'rgba(17, 24, 39, 0.5)',
-            padding: '8px 14px',
-            borderRadius: '8px',
-            border: '1px solid rgba(192, 132, 252, 0.2)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#c084fc', display: 'inline-block' }}></span>
-              <span style={{ fontWeight: 600, color: '#e5e7eb' }}>% RAM Usage</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#9ca3af' }}>
-              <span>last: <b style={{ color: '#c084fc' }}>{ramStats.last}%</b></span>
-              <span>min: <b style={{ color: '#e5e7eb' }}>{ramStats.min}%</b></span>
-              <span>avg: <b style={{ color: '#e5e7eb' }}>{ramStats.avg}%</b></span>
-              <span>max: <b style={{ color: '#fb7185' }}>{ramStats.max}%</b></span>
-            </div>
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+            <div><span style={{ color: 'var(--text-muted)' }}>Mới nhất:</span> <b style={{ color: '#38bdf8' }}>{cpuStats.last}%</b></div>
+            <div><span style={{ color: 'var(--text-muted)' }}>RAM:</span> <b style={{ color: '#a855f7' }}>{ramStats.last}%</b></div>
+            <div><span style={{ color: 'var(--text-muted)' }}>Disk:</span> <b style={{ color: '#34d399' }}>{diskPercent.toFixed(1)}%</b></div>
           </div>
         </div>
       </div>
@@ -920,7 +881,7 @@ export const RealtimeDashboard: React.FC = () => {
         <div className="glass-card" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Server size={18} color="var(--accent-cyan)" /> System Services Status
+              System Services Status
             </h3>
             <span style={{ fontSize: '12px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
               {activeServices.filter(s => s.status === 'running').length} / {activeServices.length || 8} Active
@@ -931,7 +892,7 @@ export const RealtimeDashboard: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
             {/* Search Input Box */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <Search size={14} color="var(--text-muted)" />
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>🔍</span>
               <input
                 type="text"
                 placeholder="Search enterprise service..."
@@ -1021,7 +982,7 @@ export const RealtimeDashboard: React.FC = () => {
         <div className="glass-card" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Flame size={18} color="var(--accent-rose)" /> Top Resource Processes (`htop` view)
+              Top Resource Processes (`htop` view)
             </h3>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Live Top 5</span>
           </div>

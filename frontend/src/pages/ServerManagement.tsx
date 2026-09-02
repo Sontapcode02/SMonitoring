@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Server, Plus, Trash2, RefreshCw, Edit3, Cpu, CheckCircle2, AlertTriangle, XCircle, Radar } from 'lucide-react';
 
 interface ServerItem {
   id: number;
@@ -247,13 +246,12 @@ export const ServerManagement: React.FC = () => {
                   border: 'none',
                   color: 'inherit',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
+                  fontSize: '12px',
                   padding: '2px',
                   marginLeft: '2px'
                 }}
               >
-                <RefreshCw size={12} className={pingingId === promNode.id ? 'spin' : ''} />
+                ↻
               </button>
             )}
           </div>
@@ -276,18 +274,17 @@ export const ServerManagement: React.FC = () => {
           disabled={scanningPrometheus}
           title="Tự động quét & đồng bộ các Node đang hoạt động từ Prometheus API"
         >
-          <Radar size={16} className={scanningPrometheus ? 'spin' : ''} />
           {scanningPrometheus ? ' Scanning...' : ' Auto-Scan Prometheus Nodes'}
         </button>
         <button className="btn-primary" style={{ minWidth: '110px', justifyContent: 'center' }} onClick={fetchServersAndAlerts}>
-          <RefreshCw size={16} className={loading ? 'spin' : ''} /> Refresh
+          Refresh
         </button>
         <button
           className="btn-primary"
           style={{ background: 'linear-gradient(135deg, #10b981, #059669)', minWidth: '130px', justifyContent: 'center' }}
           onClick={openAddModal}
         >
-          <Plus size={16} /> Add Server
+          Add Server
         </button>
       </div>
 
@@ -349,8 +346,8 @@ export const ServerManagement: React.FC = () => {
 
       {/* Server List Table */}
       <div className="glass-card" style={{ padding: '24px', overflow: 'hidden' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Server size={20} color="var(--accent-cyan)" /> Ubuntu & Windows Server Infrastructure List
+        <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>
+          Ubuntu & Windows Server Infrastructure List
         </h2>
 
         {loading && monitoredServers.length === 0 ? (
@@ -371,9 +368,7 @@ export const ServerManagement: React.FC = () => {
               {monitoredServers.map((srv) => (
                 <tr key={srv.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '14px' }}>
                   <td style={{ padding: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <Cpu size={18} color="var(--accent-blue)" /> {srv.name}
-                    </div>
+                    {srv.name}
                   </td>
                   <td style={{ padding: '16px', fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>
                     {srv.ip_address}:{srv.port}
@@ -381,7 +376,7 @@ export const ServerManagement: React.FC = () => {
                   <td style={{ padding: '16px' }}>
                     {srv.role === 'prometheus' || srv.name === 'prometheus' ? (
                       <span style={{ background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.4)', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>
-                        📊 METRIC ENGINE
+                        METRIC ENGINE
                       </span>
                     ) : (
                       <span className={`tag-role-${srv.role.toLowerCase()}`}>
@@ -392,15 +387,15 @@ export const ServerManagement: React.FC = () => {
                   <td style={{ padding: '16px' }}>
                     {srv.status === 'offline' ? (
                       <span className="badge-offline">
-                        <XCircle size={14} color="#fecdd3" /> Offline
+                        Offline
                       </span>
                     ) : srv.has_anomaly ? (
                       <span className="badge-warning">
-                        <AlertTriangle size={14} color="#fef08a" /> Anomaly Detected
+                        Anomaly Detected
                       </span>
                     ) : (
                       <span className="badge-online">
-                        <CheckCircle2 size={14} color="#a7f3d0" /> Online & Healthy
+                        Online & Healthy
                       </span>
                     )}
                   </td>
@@ -415,16 +410,16 @@ export const ServerManagement: React.FC = () => {
                         onClick={() => handlePing(srv.id)}
                         disabled={pingingId === srv.id}
                       >
-                        <RefreshCw size={14} className={pingingId === srv.id ? 'spin' : ''} /> Test Connection
+                        Test Connection
                       </button>
                       <button
                         style={{ padding: '6px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.08)', border: '1px solid var(--border-color)', color: 'white', cursor: 'pointer' }}
                         onClick={() => openEditModal(srv)}
                       >
-                        <Edit3 size={14} /> Edit
+                        Edit
                       </button>
                       <button className="btn-danger" onClick={() => handleDelete(srv.id, srv.name)}>
-                        <Trash2 size={14} /> Delete
+                        Delete
                       </button>
                     </div>
                   </td>

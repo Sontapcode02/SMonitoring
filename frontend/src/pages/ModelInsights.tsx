@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Sliders, RefreshCw, BarChart3, CheckCircle } from 'lucide-react';
 
 export const ModelInsights: React.FC = () => {
   const [contamination, setContamination] = useState<number>(0.05);
@@ -81,13 +80,13 @@ export const ModelInsights: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '24px' }}>
         {/* Left Panel: Hyperparameter Tuning Sliders */}
         <div className="glass-card" style={{ padding: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sliders size={20} color="var(--accent-cyan)" /> Hyperparameter Tuning
+          <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>
+            Hyperparameter Tuning
           </h2>
 
           {retrainSuccess && (
-            <div style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <CheckCircle size={16} /> Model successfully retrained & updated!
+            <div style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }}>
+              ✅ Model successfully retrained & updated!
             </div>
           )}
 
@@ -130,7 +129,6 @@ export const ModelInsights: React.FC = () => {
             onClick={handleRetrain}
             disabled={isRetraining}
           >
-            <RefreshCw size={16} className={isRetraining ? 'spin' : ''} />
             {isRetraining ? 'Retraining Model...' : 'Retrain / Update Model'}
           </button>
         </div>
@@ -160,8 +158,8 @@ export const ModelInsights: React.FC = () => {
           {/* Dual Line Chart Comparison */}
           <div className="glass-card" style={{ padding: '24px' }}>
             <div style={{ marginBottom: '16px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <BarChart3 size={20} color="var(--accent-emerald)" /> Detection Efficacy Comparison: Static Rule vs. Isolation Forest ML
+              <h2 style={{ fontSize: '18px', fontWeight: 600 }}>
+                Detection Efficacy Comparison: Static Rule vs. Isolation Forest ML
               </h2>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                 Green line demonstrates ML model capturing <b>+35% stealth anomalies</b> missed by static rules.

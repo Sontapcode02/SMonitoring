@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, User, LogOut, Key, ChevronRight } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {
   activeTabTitle: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
+  const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeAlertCount, setActiveAlertCount] = useState<number>(0);
@@ -101,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
       {/* Breadcrumb Path & Simulator Status Badge */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-secondary)' }}>
         <span>Ubuntu Monitor</span>
-        <ChevronRight size={14} />
+        <span style={{ opacity: 0.5 }}>/</span>
         <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{activeTabTitle}</span>
 
         {/* Simulator Toggle & Active Badge */}
@@ -125,7 +126,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
               }}
             >
               <span className="pulse-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24' }}></span>
-              🧪 SIMULATOR ACTIVE (ISOLATED)
+              SIMULATOR ACTIVE
             </button>
           ) : (
             <button
@@ -141,7 +142,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
                 cursor: 'pointer'
               }}
             >
-              🧪 Enable Simulator
+              Enable Simulator
             </button>
           )}
 
@@ -158,39 +159,39 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
               border: '1px solid rgba(245, 158, 11, 0.4)'
             }}>
               <div style={{ fontWeight: 700, fontSize: '12px', color: '#fbbf24', marginBottom: '8px' }}>
-                ⚡ Demo Telemetry Event Triggers
+                Demo Telemetry Event Triggers
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <button
                   onClick={() => { handleTriggerEvent('cpu_spike', 'ubuntu-server-01'); setShowSimMenu(false); }}
                   style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'rgba(244,63,94,0.15)', border: '1px solid rgba(244,63,94,0.3)', color: '#fb7185', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
                 >
-                  🔥 Trigger CPU Spike (99% - srv-01)
+                  Trigger CPU Spike (99% - srv-01)
                 </button>
                 <button
                   onClick={() => { handleTriggerEvent('node_offline', 'ubuntu-server-02'); setShowSimMenu(false); }}
                   style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
                 >
-                  🔴 Trigger Node Offline (srv-02)
+                  Trigger Node Offline (srv-02)
                 </button>
                 <button
                   onClick={() => { handleTriggerEvent('ml_anomaly', 'windows-host-master'); setShowSimMenu(false); }}
                   style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
                 >
-                  🤖 Trigger ML Anomaly (windows-host)
+                  Trigger ML Anomaly (windows-host)
                 </button>
                 <button
                   onClick={() => { handleResetSimulator(); setShowSimMenu(false); }}
                   style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
                 >
-                  🟢 Reset All (Healthy)
+                  Reset All (Healthy)
                 </button>
                 <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '4px 0' }} />
                 <button
                   onClick={() => { handleToggleSimulator(false); setShowSimMenu(false); }}
                   style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '11px', cursor: 'pointer' }}
                 >
-                  ❌ Disable Simulator Mode
+                  Disable Simulator Mode
                 </button>
               </div>
             </div>
@@ -202,7 +203,6 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         {/* Quick Search */}
         <div style={{ position: 'relative', width: '280px' }}>
-          <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             placeholder="Search servers, metrics, alerts..."
@@ -210,7 +210,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: '100%',
-              padding: '8px 12px 8px 36px',
+              padding: '8px 16px',
               borderRadius: '20px',
               background: 'rgba(0, 0, 0, 0.3)',
               border: '1px solid var(--border-color)',
@@ -221,39 +221,31 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
           />
         </div>
 
-        {/* Notification Bell */}
+        {/* Notification Alert Count */}
         <div style={{ position: 'relative', cursor: 'pointer' }} title={hasUnreadAlerts ? `${activeAlertCount} new unhandled alerts` : 'No new alerts'}>
           <div style={{
-            padding: '10px',
-            borderRadius: '50%',
+            padding: '6px 14px',
+            borderRadius: '20px',
             background: hasUnreadAlerts ? 'rgba(253, 164, 175, 0.15)' : 'rgba(255, 255, 255, 0.05)',
             border: `1px solid ${bellBorder}`,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.3s'
+            gap: '6px',
+            color: hasUnreadAlerts ? '#fb7185' : 'var(--text-secondary)',
+            fontSize: '12px',
+            fontWeight: 700
           }}>
-            <Bell size={18} color={hasUnreadAlerts ? 'var(--accent-rose)' : 'var(--text-secondary)'} />
-            {hasUnreadAlerts && (
-              <span style={{
-                position: 'absolute',
-                top: '2px',
-                right: '2px',
-                width: '18px',
-                height: '18px',
-                borderRadius: '50%',
-                background: 'var(--accent-rose)',
-                color: '#0f172a',
-                fontSize: '10px',
-                fontWeight: 800,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 0 8px rgba(253, 164, 175, 0.5)'
-              }}>
-                {activeAlertCount}
-              </span>
-            )}
+            <span>ALERTS</span>
+            <span style={{
+              padding: '2px 6px',
+              borderRadius: '10px',
+              background: hasUnreadAlerts ? 'var(--accent-rose)' : 'rgba(255,255,255,0.1)',
+              color: hasUnreadAlerts ? '#0f172a' : 'var(--text-secondary)',
+              fontSize: '11px',
+              fontWeight: 800
+            }}>
+              {activeAlertCount}
+            </span>
           </div>
         </div>
 
@@ -266,7 +258,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
               alignItems: 'center',
               gap: '10px',
               cursor: 'pointer',
-              padding: '4px 10px',
+              padding: '4px 12px',
               borderRadius: '20px',
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid var(--border-color)'
@@ -276,17 +268,31 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
               width: '32px',
               height: '32px',
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--accent-cyan), var(--accent-blue))',
+              background: user?.role === 'admin' ? 'linear-gradient(135deg, #f43f5e, #e11d48)' :
+                          user?.role === 'operator' ? 'linear-gradient(135deg, #3b82f6, #2563eb)' :
+                          'linear-gradient(135deg, #10b981, #059669)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              fontWeight: 700,
-              fontSize: '14px'
+              fontWeight: 800,
+              fontSize: '14px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
             }}>
-              A
+              {user?.username ? user.username.substring(0, 1).toUpperCase() : 'U'}
             </div>
-            <div style={{ fontSize: '13px', fontWeight: 600 }}>Admin</div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#f8fafc' }}>{user?.username || 'Guest'}</span>
+              <span style={{
+                fontSize: '10px',
+                fontWeight: 800,
+                color: user?.role === 'admin' ? '#fb7185' : user?.role === 'operator' ? '#60a5fa' : '#34d399',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                {user?.role || 'VIEWER'}
+              </span>
+            </div>
           </div>
 
           {/* User Dropdown Menu */}
@@ -295,46 +301,31 @@ export const Header: React.FC<HeaderProps> = ({ activeTabTitle }) => {
               position: 'absolute',
               right: 0,
               top: '48px',
-              width: '200px',
+              width: '220px',
               padding: '8px',
               zIndex: 200,
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+              boxShadow: '0 10px 30px rgba(0,0,0,0.6)'
             }}>
               <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-color)', marginBottom: '4px' }}>
-                <div style={{ fontWeight: 600, fontSize: '13px' }}>Administrator</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>admin@ubuntu.local</div>
+                <div style={{ fontWeight: 700, fontSize: '13px', color: '#f8fafc' }}>{user?.full_name || user?.username}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{user?.email || `@${user?.username}`}</div>
               </div>
-              <button style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 12px',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-secondary)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                textAlign: 'left'
-              }}>
-                <Key size={14} /> Change Password
-              </button>
-              <button style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 12px',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--accent-rose)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                textAlign: 'left'
-              }}>
-                <LogOut size={14} /> Logout
+              <button
+                onClick={() => { logout(); setShowUserMenu(false); }}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: 'rgba(244, 63, 94, 0.1)',
+                  border: '1px solid rgba(244, 63, 94, 0.2)',
+                  color: '#fb7185',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  textAlign: 'left'
+                }}
+              >
+                Đăng Xuất
               </button>
             </div>
           )}

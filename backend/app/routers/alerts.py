@@ -4,7 +4,8 @@ from typing import List, Optional
 from datetime import datetime
 
 from app.core.database import get_db
-from app.models.schemas import AlertModel, AlertResponse, ServerModel
+from app.core.dependencies import require_roles
+from app.models.schemas import AlertModel, AlertResponse, ServerModel, UserModel
 
 router = APIRouter()
 
@@ -17,8 +18,12 @@ def get_alerts(status_filter: Optional[str] = None, db: Session = Depends(get_db
     return query.order_by(AlertModel.timestamp.desc()).all()
 
 @router.post("/{alert_id}/ack", response_model=AlertResponse)
-def acknowledge_alert(alert_id: int, db: Session = Depends(get_db)):
-    """Chuyển trạng thái cảnh báo sang Đang xử lý (Acknowledged)."""
+def acknowledge_alert(
+    alert_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(require_roles(["admin", "operator"]))
+):
+    """Chuyển trạng thái cảnh báo sang Đang xử lý (Acknowledged - Yêu cầu Operator/Admin)."""
     alert = db.query(AlertModel).filter(AlertModel.id == alert_id).first()
     if not alert:
         raise HTTPException(status_code=404, detail="Không tìm thấy cảnh báo!")
@@ -29,8 +34,12 @@ def acknowledge_alert(alert_id: int, db: Session = Depends(get_db)):
     return alert
 
 @router.post("/{alert_id}/resolve", response_model=AlertResponse)
-def resolve_alert(alert_id: int, db: Session = Depends(get_db)):
-    """Phục hồi / Giải quyết sự cố cảnh báo (Resolved State)."""
+def resolve_alert(
+    alert_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(require_roles(["admin", "operator"]))
+):
+    """Phục hồi / Giải quyết sự cố cảnh báo (Resolved State - Yêu cầu Operator/Admin)."""
     alert = db.query(AlertModel).filter(AlertModel.id == alert_id).first()
     if not alert:
         raise HTTPException(status_code=404, detail="Không tìm thấy cảnh báo!")
@@ -41,18 +50,16 @@ def resolve_alert(alert_id: int, db: Session = Depends(get_db)):
     return alert
 
 @router.post("/auto-recover")
-def auto_recover_alerts(db: Session = Depends(get_db)):
-    """Cơ chế Tự Động Phục Hồi Cảnh Báo (Auto-Recovery Engine).
-    Quét các cảnh báo đang Active ('new' / 'ack'). Nếu chỉ số máy chủ đã hạ dưới ngưỡng an toàn 
-    trong 2 chu kỳ liên tiếp hoặc ML Isolation Score >= 0.0, cảnh báo sẽ tự động chuyển sang 'resolved'.
-    """
+def auto_recover_alerts(
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(require_roles(["admin", "operator"]))
+):
+    """Cơ chế Tự Động Phục Hồi Cảnh Báo (Auto-Recovery Engine)."""
     active_alerts = db.query(AlertModel).filter(AlertModel.status.in_(["new", "ack"])).all()
     recovered_count = 0
     recovered_details = []
 
     for alert in active_alerts:
-        # Auto-recover criteria logic:
-        # If alert is older than 5 minutes or metrics are back in safe range, auto-resolve
         alert.status = "resolved"
         recovered_count += 1
         recovered_details.append({
@@ -73,9 +80,10 @@ def auto_recover_alerts(db: Session = Depends(get_db)):
 @router.delete("/purge")
 def purge_old_alerts(
     status_to_purge: str = "resolved",
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(require_roles(["admin"]))
 ):
-    """Xóa sạch các cảnh báo rác / đã giải quyết (Resolved) khỏi Database."""
+    """Xóa sạch các cảnh báo rác / đã giải quyết (Resolved) khỏi Database (Chỉ dành cho Admin)."""
     query = db.query(AlertModel)
     if status_to_purge:
         query = query.filter(AlertModel.status == status_to_purge)

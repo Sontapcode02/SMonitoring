@@ -62,9 +62,57 @@ class AlertModel(Base):
     server = relationship("ServerModel", back_populates="alerts")
 
 
+class UserModel(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    email = Column(String, unique=False, index=True, nullable=True, default=None)
+    hashed_password = Column(String, nullable=False)
+    full_name = Column(String, default="")
+    role = Column(String, default="viewer", nullable=False)  # admin / operator / viewer
+    is_active = Column(Boolean, default=True, nullable=False)
+    expires_at = Column(DateTime, nullable=True, default=None)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 # ==========================================
 # Pydantic Schemas
 # ==========================================
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class UserCreate(BaseModel):
+    username: str
+    email: Optional[str] = None
+    password: str
+    full_name: Optional[str] = ""
+    role: str = "viewer"  # admin / operator / viewer
+    expires_in_days: Optional[int] = None
+    expires_at: Optional[datetime] = None
+
+class RoleUpdate(BaseModel):
+    role: str
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: Optional[str] = None
+    full_name: Optional[str] = ""
+    role: str
+    is_active: bool
+    expires_at: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
 
 class ServerBase(BaseModel):
     name: str

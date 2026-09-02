@@ -413,6 +413,103 @@
   - **Cập Nhật Tức Thời Trực Tiếp Theo Từng Host:** Dữ liệu streaming từ Prometheus/API được bóc tách và ghi riêng cho từng host tương ứng. Khi chuyển đổi qua lại giữa các máy chủ, đồ thị ECharts hiển thị lại ngay lịch sử chuỗi thời gian sạch sẽ của chính host đó mà không bị vẽ nối đường thẳng xuyên host.
 - **Đóng Gói & Re-deploy:** Rebuild Docker image `kltn-frontend` và khởi chạy lại container thành công.
 
+---
+
+### [2026-08-24 14:10] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** PH3 Anomaly Center Manual Active Record Deletion
+**Prompt:**
+> thêm nút xóa chủ động trong PH3 cho từng record anomaly
+
+**Output dùng:**
+- **Tích Hợp Nút Xóa Chủ Động Cho Từng Anomaly Log (`AnomalyCenter.tsx` & `anomaly.py`):**
+  - **Backend API Endpoint:** Tạo mới/cập nhật endpoint `DELETE /api/anomaly/{anomaly_id}` cho phép xóa bản ghi bất thường đã được xử lý khỏi cơ sở dữ liệu.
+  - **Giao Diện Frontend:** Bổ sung nút xóa "Xóa" tại từng dòng bản ghi trong bảng Anomaly Log của PH3 với xác nhận trước khi xóa, giúp quản trị viên chủ động dọn dẹp dữ liệu rác/cảnh báo giả.
+- **Đóng Gói & Re-deploy:** Rebuild Docker image `kltn-frontend` và `kltn-backend`, cập nhật thành công.
+
+---
+
+### [2026-08-24 15:30] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** Backend PostgreSQL Async Connection & Container Initialization Fix
+**Prompt:**
+> container backend có vấn đề khi init trong docker
+
+**Output dùng:**
+- **Sửa Lỗi Khởi Tạo Database Backend Docker (`database.py` & `main.py`):**
+  - Khắc phục xung đột giữa `asyncpg` và các câu lệnh kết nối đồng bộ SQLAlchemy khi container khởi động.
+  - Cấu hình lại chuỗi `DATABASE_URL` cho phép tự động chuyển đổi giữa `postgresql+asyncpg://` và `postgresql://` phù hợp với async engine và sync migration helper.
+- **Đóng Gói & Re-deploy:** Khởi chạy lại container `kltn-backend` ổn định.
+
+---
+
+### [2026-08-24 16:45] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** PH2 Real-time Dashboard Historical Time Series Query & Range Retention Engine
+**Prompt:**
+> lỗi ở matrix PH2 vẫn chưa lấy data đúng thời điểm cũ, nó chỉ thể hiện dữ liệu khi được tạo mở kể từ khi khởi động
+
+**Output dùng:**
+- **Nâng Cấp Hệ Thống Lưu Trữ & Truy Vấn Lịch Sử Metrics PH2 (`metrics.py` & `RealtimeDashboard.tsx`):**
+  - **Backend Retention & Prometheus Range Query:** Cập nhật endpoint `/api/metrics/range` để truy vấn dữ liệu quá khứ trực tiếp từ Prometheus TSDB theo khoảng thời gian (`5m`, `15m`, `30m`, `1h`, `6h`, `12h`, `24h`) thay vì chỉ phụ thuộc vào bộ nhớ RAM tạm thời của WebSocket.
+  - **Tự Động Điền Chuỗi Thời Gian Cũ:** Khi người dùng chọn máy chủ hoặc khoảng thời gian (Time Window), frontend sẽ tự động tải chuỗi dữ liệu lịch sử chuẩn xác trước đó và vẽ lên đồ thị ECharts mà không bị đứt đoạn.
+- **Đóng Gói & Re-deploy:** Rebuild frontend & backend, cập nhật container thành công.
+
+---
+
+### [2026-08-31 10:15] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** Standard RBAC System Architecture, Login Security & Role Matrix Enforcement
+**Prompt:**
+> thiết kế phần đăng nhập để phân quyền theo các cấp tiêu chuẩn, đảm bảo tính bảo mật, và phân quyền đúng theo cấp tài khoản
+
+**Output dùng:**
+- **Xây Dựng Hệ Thống Phân Quyền Vai Trò Tiêu Chuẩn (Admin, Operator, Viewer):**
+  - **Backend RBAC Middleware (`dependencies.py` & `auth.py`):** Thiết lập cơ chế phân quyền RBAC chặt chẽ (Admin: toàn quyền; Operator: vận hành/xử lý sự cố; Viewer: chỉ xem).
+  - **Giao Diện Đăng Nhập & Auth Context (`Login.tsx` & `AuthContext.tsx`):** Thiết kế trang đăng nhập hiện đại chuẩn dark glassmorphism, lưu trữ Token bảo mật và tích hợp tự động kiểm tra quyền hạn thao tác trên từng trang và từng button.
+- **Đóng Gói & Re-deploy:** Rebuild frontend & backend, khởi chạy lại container thành công.
+
+---
+
+### [2026-08-31 14:20] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** RBAC Admin Role Protection & Operator/Viewer Privilege Restriction
+**Prompt:**
+> chỉnh lại ràng buộc để tài khoản admin kh bị thay đổi role; tk cấp operator ở PH4 kh thao tác ack được, cần vô hiệu hóa thao tác phần rule engine config ở cấp tài khoản operator và viewer luôn
+
+**Output dùng:**
+- **Khóa Bảo Vệ Tài Khoản Admin:** Thêm ràng buộc Backend & Frontend không cho phép sửa vai trò (Role) hoặc xóa tài khoản `admin` chính hệ thống.
+- **Giới Hạn Quyền Thao Tác Sự Cố & Rule Engine (PH4 Alert Hub):**
+  - Vô hiệu hóa nút Acknowledge/Resolve sự cố đối với các tài khoản không có quyền Admin hoặc Operator phù hợp.
+  - Vô hiệu hóa hoàn toàn khu vực cấu hình ngưỡng cảnh báo Rule Engine đối với các tài khoản `operator` và `viewer`, chỉ cho phép `admin` thay đổi tham số hệ thống.
+- **Đóng Gói & Re-deploy:** Cập nhật frontend & backend container thành công.
+
+---
+
+### [2026-09-02 11:30] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** System-wide Interface Minimalist Refactoring — Icon Purge (Navbar Retention Only)
+**Prompt:**
+> bỏ hết các icon trong giao diện hệ thống ngoại trừ các icon ở thanh bar các phân hệ
+
+**Output dùng:**
+- **Làm Sạch Giao Diện Toàn Hệ Thống theo Chuẩn Thiết Kế Tối Giản:**
+  - Loại bỏ toàn bộ các icon trang trí (`lucide-react`) không cần thiết trong tất cả các phân hệ: `OverviewDashboard.tsx` (PH1), `RealtimeDashboard.tsx` (PH2), `AnomalyCenter.tsx` (PH3), `AlertHub.tsx` (PH4), `ModelInsights.tsx` (PH5), `UserManagement.tsx` và `Header.tsx`.
+  - **Giữ Nguyên Navigation Bar (`App.tsx`):** Giữ lại các icon điều hướng trên thanh SideBar/TopBar các phân hệ để đảm bảo trải nghiệm định vị phân hệ trực quan.
+- **Đóng Gói & Re-deploy:** Rebuild Docker image `kltn-frontend` và khởi chạy lại container thành công.
+
+---
+
+### [2026-09-02 21:00] — Antigravity IDE (Gemini 3.6 Flash)
+**Module:** Account Creation Flow Modernization — Email Removal, Confirm Password & Expiration Presets
+**Prompt:**
+> ở phần tạo tài khoản loại bỏ phần email và bổ sung thêm phân xác nhận lại mk, ngày hết hạn tài khoản (chọn nhanh 30 days, ... never expried,...)
+
+**Output dùng:**
+- **Tái Thiết Kế Form Tạo Tài Khoản Mới (`UserManagement.tsx`, `schemas.py`, `auth.py`, `dependencies.py`):**
+  - **Loại Bỏ Email Bắt Buộc:** Chuyển trường `email` thành optional (`nullable=True`) ở cả Frontend và Backend DB schema, loại bỏ ô nhập email trong Modal tạo tài khoản.
+  - **Xác Nhận Mật Khẩu:** Bổ sung ô nhập "Xác nhận mật khẩu" với kiểm tra khớp mật khẩu theo thời gian thực (Real-time Validation) nhằm ngăn chặn việc tạo tài khoản sai mật khẩu.
+  - **Quản Lý Thời Hạn Tài Khoản (Account Expiration):**
+    - Tích hợp bộ nút chọn nhanh thời hạn: 30 ngày, 60 ngày, 90 ngày, 1 năm, Vĩnh viễn (Never Expired), và Tùy chọn ngày (`input type="date"`).
+    - Thêm cột `expires_at` vào bảng `users` trong PostgreSQL DB và tích hợp Middleware kiểm tra tự động khi đăng nhập & thao tác; khóa tự động tài khoản đã hết hạn.
+    - Cập nhật hiển thị cột "Thời Hạn Truy Cập" trên bảng quản lý người dùng với các badge trạng thái trực quan (`Vĩnh viễn`, `DD/MM/YYYY`, `⚠️ Đã hết hạn`).
+- **Đóng Gói & Re-deploy:** Cập nhật PostgreSQL schema (`ALTER TABLE users ADD COLUMN expires_at TIMESTAMP;`), Rebuild Docker image `kltn-frontend` & `kltn-backend` và khởi chạy lại container thành công.
+
+---
 
 
 

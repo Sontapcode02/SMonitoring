@@ -48,13 +48,17 @@ def get_ml_status(db: Session = Depends(get_db)):
         "servers": result
     }
 
+from app.core.dependencies import require_roles
+from app.models.schemas import ServerModel, MetricModel, UserModel
+
 @router.post("/retrain")
 def retrain_ml_model(
     server_name: Optional[str] = Query(None, description="Tên server cần retrain (bỏ trống để retrain toàn bộ cụm)"),
     days: int = Query(7, description="Số ngày dữ liệu lịch sử sử dụng để train"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(require_roles(["admin"]))
 ):
-    """Kích hoạt huấn luyện lại (Retrain) mô hình ML từ dữ liệu thực tế trong Database."""
+    """Kích hoạt huấn luyện lại (Retrain) mô hình ML từ dữ liệu thực tế trong Database (Chỉ dành cho Admin)."""
     if server_name:
         res = ml_engine.train_model_from_db(server_name, db, days=days)
         if res.get("status") == "error":

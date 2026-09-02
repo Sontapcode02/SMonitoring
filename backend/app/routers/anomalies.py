@@ -175,14 +175,20 @@ def get_anomalies(
 
     return combined
 
+from app.core.dependencies import require_roles
+from app.models.schemas import UserModel
+
 @router.delete("/{anomaly_id}")
-def delete_anomaly_record(anomaly_id: int):
-    """Xóa chủ động 1 bản ghi anomaly record khỏi danh sách PH3."""
+def delete_anomaly_record(
+    anomaly_id: int,
+    current_user: UserModel = Depends(require_roles(["admin", "operator"]))
+):
+    """Xóa chủ động 1 bản ghi anomaly record khỏi danh sách PH3 (Yêu cầu quyền Admin hoặc Operator)."""
     global recorded_anomalies_history, deleted_anomaly_ids
     deleted_anomaly_ids.add(anomaly_id)
     recorded_anomalies_history = [a for a in recorded_anomalies_history if a["id"] != anomaly_id]
     return {
         "status": "success",
-        "message": f"Đã xóa bản ghi anomaly #{anomaly_id} thành công!",
+        "message": f"Anomaly record #{anomaly_id} deleted successfully by {current_user.username}.",
         "deleted_id": anomaly_id
     }

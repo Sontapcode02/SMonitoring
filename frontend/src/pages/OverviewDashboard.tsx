@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { Server, ShieldAlert, Bell, Cpu, Activity, CheckCircle2, RefreshCw, Filter, HardDrive, Wifi, ArrowDownRight, ArrowUpRight, Clock } from 'lucide-react';
 
 interface ServerItem {
   id: number;
@@ -322,7 +321,6 @@ export const OverviewDashboard: React.FC = () => {
               fontWeight: 600,
               color: '#38bdf8'
             }}>
-              <Clock size={13} color="#38bdf8" />
               <span style={{ fontWeight: 700, fontFamily: 'monospace' }}>{(selectedServerMetric as any)?.timestamp || 'Syncing...'}</span>
             </div>
           </div>
@@ -332,7 +330,6 @@ export const OverviewDashboard: React.FC = () => {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.4)', padding: '4px 10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-            <Filter size={13} color="var(--accent-cyan)" />
             <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Active Node:</span>
             <select
               value={gaugeServer}
@@ -345,7 +342,7 @@ export const OverviewDashboard: React.FC = () => {
             </select>
           </div>
           <button className="btn-primary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={fetchOverviewData}>
-            <RefreshCw size={14} className={loading ? 'spin' : ''} /> Refresh
+            Refresh
           </button>
         </div>
       </div>
@@ -356,14 +353,13 @@ export const OverviewDashboard: React.FC = () => {
         <div className="glass-card" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>DISK READ / WRITE SPEED</span>
-            <HardDrive size={16} color="#60a5fa" />
           </div>
           <div style={{ fontSize: '15px', fontWeight: 700, marginTop: '4px', color: '#60a5fa', display: 'flex', gap: '10px' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-              <ArrowDownRight size={13} color="#34d399" /> R: {(selectedServerMetric.disk_read_mbps || 0).toFixed(3)} MB/s
+            <span>
+              R: {(selectedServerMetric.disk_read_mbps || 0).toFixed(3)} MB/s
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-              <ArrowUpRight size={13} color="#fb7185" /> W: {(selectedServerMetric.disk_write_mbps || 0).toFixed(3)} MB/s
+            <span>
+              W: {(selectedServerMetric.disk_write_mbps || 0).toFixed(3)} MB/s
             </span>
           </div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -375,7 +371,6 @@ export const OverviewDashboard: React.FC = () => {
         <div className="glass-card" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>NETWORK TRAFFIC RX</span>
-            <Wifi size={16} color="var(--accent-amber)" />
           </div>
           <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px', color: 'var(--accent-amber)' }}>
             {(selectedServerMetric.net_in_mbps || 0).toFixed(4)} Mbps
@@ -386,7 +381,6 @@ export const OverviewDashboard: React.FC = () => {
         <div className="glass-card" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>CLUSTER AVG CPU</span>
-            <Cpu size={16} color="var(--accent-cyan)" />
           </div>
           <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px', color: 'var(--accent-cyan)' }}>{avgCpuNum}%</div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Overall Processing Workload</div>
@@ -395,7 +389,6 @@ export const OverviewDashboard: React.FC = () => {
         <div className="glass-card" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>ML ANOMALY STATUS</span>
-            <ShieldAlert size={16} color="var(--accent-emerald)" />
           </div>
           <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '4px', color: '#34d399' }}>NORMAL</div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Isolation Forest Model Active</div>
@@ -409,7 +402,6 @@ export const OverviewDashboard: React.FC = () => {
           <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-cyan)' }}>CPU GAUGE</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.4)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-              <Filter size={12} color="var(--accent-cyan)" />
               <select
                 value={gaugeServer}
                 onChange={e => setGaugeServer(e.target.value)}
@@ -432,7 +424,6 @@ export const OverviewDashboard: React.FC = () => {
           <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ fontSize: '11px', fontWeight: 700, color: '#c084fc' }}>RAM GAUGE</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.4)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-              <Filter size={12} color="#c084fc" />
               <select
                 value={gaugeServer}
                 onChange={e => setGaugeServer(e.target.value)}
@@ -452,8 +443,8 @@ export const OverviewDashboard: React.FC = () => {
 
         {/* Server Fleet Health List */}
         <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Server size={16} color="var(--accent-cyan)" /> Server Fleet Node Health Overview
+          <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px' }}>
+            Server Fleet Node Health Overview
           </h2>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
             {sortedServers.map((srv) => {
@@ -511,14 +502,13 @@ export const OverviewDashboard: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '16px', height: '220px' }}>
         {/* Active Incident Stream */}
         <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px', color: '#fb7185' }}>
-            <Bell size={16} /> Active Incident Stream ({activeAlerts.length})
+          <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px', color: '#fb7185' }}>
+            Active Incident Stream ({activeAlerts.length})
           </h2>
 
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
             {activeAlerts.length === 0 ? (
               <div style={{ padding: '16px', textAlign: 'center', color: '#34d399', fontSize: '13px', background: 'rgba(16,185,129,0.08)', borderRadius: '8px', border: '1px solid rgba(16,185,129,0.2)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CheckCircle2 size={18} style={{ marginRight: '6px' }} />
                 All systems normal. No active incidents!
               </div>
             ) : (
@@ -547,8 +537,8 @@ export const OverviewDashboard: React.FC = () => {
 
         {/* Multi-Server CPU Comparative Chart */}
         <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Activity size={16} color="var(--accent-cyan)" /> Multi-Server CPU Comparison Stream
+          <h2 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '6px' }}>
+            Multi-Server CPU Comparison Stream
           </h2>
           <ReactECharts option={compareChartOption} notMerge={true} style={{ flex: 1, height: '100%', width: '100%' }} />
         </div>

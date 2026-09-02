@@ -6,10 +6,26 @@ import { RealtimeDashboard } from './pages/RealtimeDashboard';
 import { AnomalyCenter } from './pages/AnomalyCenter';
 import { AlertHub } from './pages/AlertHub';
 import { ModelInsights } from './pages/ModelInsights';
-import { LayoutDashboard, Server, ShieldAlert, BellRing, BarChart3, Activity, Gauge } from 'lucide-react';
+import { UserManagement } from './pages/UserManagement';
+import { LoginPage } from './pages/LoginPage';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { LayoutDashboard, Server, ShieldAlert, BellRing, BarChart3, Activity, Gauge, Users } from 'lucide-react';
 
-export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'servers' | 'dashboard' | 'anomalies' | 'alerts' | 'ml'>('overview');
+const MainLayout: React.FC = () => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'overview' | 'servers' | 'dashboard' | 'anomalies' | 'alerts' | 'ml' | 'users'>('overview');
+
+  if (isLoading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)', color: 'var(--text-secondary)' }}>
+        Đang khởi tạo hệ thống bảo mật SMonitoring...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
 
   const getTabTitle = () => {
     switch (activeTab) {
@@ -19,6 +35,7 @@ export const App: React.FC = () => {
       case 'anomalies': return 'PH3: Anomaly Detection Center';
       case 'alerts': return 'PH4: Alert Hub & Incident Response';
       case 'ml': return 'PH5: MLOps & Model Analytics';
+      case 'users': return 'Quản Lý Tài Khoản & Phân Quyền RBAC';
       default: return 'Dashboard';
     }
   };
@@ -49,7 +66,7 @@ export const App: React.FC = () => {
           </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: '15px', letterSpacing: '-0.3px', color: '#f4f5f7' }}>Ubuntu Monitor</div>
-            <div style={{ fontSize: '10px', color: '#ff9830', fontWeight: 700, letterSpacing: '0.5px' }}>GRAFANA METRICS ENGINE</div>
+            <div style={{ fontSize: '10px', color: '#ff9830', fontWeight: 700, letterSpacing: '0.5px' }}>RBAC SECURE ENGINE</div>
           </div>
         </div>
 
@@ -132,12 +149,29 @@ export const App: React.FC = () => {
           >
             <BarChart3 size={17} color={activeTab === 'ml' ? '#ff9830' : 'var(--text-muted)'} /> ML Analytics (PH5)
           </button>
+
+          {/* Admin User Management Item */}
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => setActiveTab('users')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', borderRadius: '4px',
+                border: 'none', background: activeTab === 'users' ? '#22252b' : 'transparent',
+                color: activeTab === 'users' ? '#f4f5f7' : 'var(--text-secondary)',
+                fontWeight: activeTab === 'users' ? 700 : 500, cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
+                borderLeft: activeTab === 'users' ? '4px solid #f43f5e' : '4px solid transparent',
+                marginTop: '12px'
+              }}
+            >
+              <Users size={17} color={activeTab === 'users' ? '#f43f5e' : '#fb7185'} /> User Admin (RBAC)
+            </button>
+          )}
         </nav>
 
         {/* System Version Footer */}
         <div style={{ padding: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '10px', fontSize: '12px', color: 'var(--text-muted)' }}>
           <div>KLTN Project — 2026</div>
-          <div style={{ color: 'var(--text-secondary)', marginTop: '2px', fontWeight: 600 }}>FastAPI + React + ECharts</div>
+          <div style={{ color: 'var(--text-secondary)', marginTop: '2px', fontWeight: 600 }}>FastAPI + JWT + RBAC</div>
         </div>
       </aside>
 
@@ -151,9 +185,18 @@ export const App: React.FC = () => {
           {activeTab === 'anomalies' && <AnomalyCenter />}
           {activeTab === 'alerts' && <AlertHub />}
           {activeTab === 'ml' && <ModelInsights />}
+          {activeTab === 'users' && user?.role === 'admin' && <UserManagement />}
         </main>
       </div>
     </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <MainLayout />
+    </AuthProvider>
   );
 };
 

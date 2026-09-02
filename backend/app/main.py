@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import servers, metrics, anomalies, alerts, ml, simulator
+from app.routers import servers, metrics, anomalies, alerts, ml, simulator, auth
 from app.core.database import engine, Base, SessionLocal
-from app.models.schemas import ServerModel
+from app.models.schemas import ServerModel, UserModel
+from app.core.security import get_password_hash
 from app.core.scheduler import start_scheduler
 from datetime import datetime
 
@@ -33,6 +34,7 @@ app.add_middleware(
 )
 
 # Routers
+app.include_router(auth.router,       prefix="/api/auth",       tags=["Auth"])
 app.include_router(servers.router,    prefix="/api/servers",    tags=["Servers"])
 app.include_router(metrics.router,    prefix="/api/metrics",    tags=["Metrics"])
 app.include_router(anomalies.router,  prefix="/api/anomalies",  tags=["Anomalies"])
@@ -73,12 +75,62 @@ def seed_default_servers():
     finally:
         db.close()
 
+def seed_default_users():
+    """Khởi tạo 3 tài khoản mặc định chuẩn phân quyền (admin, operator, viewer) vào Database."""
+    db = SessionLocal()
+    try:
+        default_users = [
+            {
+                "username": "admin",
+                "email": "admin@ubuntu.local",
+                "password": "admin123",
+                "full_name": "Quản Trị Viên Hệ Thống",
+                "role": "admin"
+            },
+            {
+                "username": "operator",
+                "email": "operator@ubuntu.local",
+                "password": "operator123",
+                "full_name": "Chuyên Viên SOC / Operator",
+                "role": "operator"
+            },
+            {
+                "username": "viewer",
+                "email": "viewer@ubuntu.local",
+                "password": "viewer123",
+                "full_name": "Người Xem / Kiểm Toán Viên",
+                "role": "viewer"
+            }
+        ]
+        for u in default_users:
+            existing = db.query(UserModel).filter(UserModel.username == u["username"]).first()
+            if not existing:
+                user_obj = UserModel(
+                    username=u["username"],
+                    email=u["email"],
+                    hashed_password=get_password_hash(u["password"]),
+                    full_name=u["full_name"],
+                    role=u["role"],
+                    is_active=True
+                )
+                db.add(user_obj)
+            else:
+                existing.role = u["role"]
+                existing.hashed_password = get_password_hash(u["password"])
+                existing.is_active = True
+        db.commit()
+        print("[Seed] Successfully seeded RBAC default accounts: admin, operator, viewer.")
+    except Exception as e:
+        print(f"[Seed] Error seeding default users: {e}")
+    finally:
+        db.close()
 
 
 @app.on_event("startup")
 async def startup():
     print("[Server] Starting Ubuntu Monitor API...")
     seed_default_servers()
+    seed_default_users()
     await start_scheduler()
     print("[Server] Ready.")
 
